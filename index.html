@@ -1,0 +1,542 @@
+/** =======================
+ *  SecureChoice Backend
+ *  - Lead intake -> Google Sheets + agent email
+ *  - Deliver customized PDF kit + follow-up sequence
+ *  - PolicyPro chat -> OpenAI Responses API (gpt-5-mini)
+ *  - Daily transcript digest email
+ *  ======================= */
+
+function doPost(e) {
+  try {
+    var body = e && e.postData && e.postData.contents ? e.postData.contents : "{}";
+    var data = JSON.parse(body);
+
+    var action = (data.action || "lead").toString();
+
+    if (action === "chat") {
+      var reply = policyProChat_(data);
+      return json_({ ok: true, reply: reply });
+    }
+
+    if (action === "deliverKit") {
+      var ok = deliverKit_(data);
+      return json_({ ok: ok });
+    }
+
+    // default: lead
+    var res = handleLead_(data);
+    return json_(res);
+
+  } catch (err) {
+    return json_({ ok: false, error: String(err) });
+  }
+}
+
+function json_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/** ===== Config ===== */
+function cfg_() {
+  var p = PropertiesService.getScriptProperties();
+  return {
+    SHEET_ID: p.getProperty("SHEET_ID"),
+    NOTIFY_EMAIL: p.getProperty("NOTIFY_EMAIL") || "securechoicein@gmail.com",
+    OPENAI_API_KEY: p.getProperty("OPENAI_API_KEY")
+  };
+}
+
+function ss_() {
+  var c = cfg_();
+  if (!c.SHEET_ID) throw new Error("Missing Script Property SHEET_ID");
+  return SpreadsheetApp.openById(c.SHEET_ID);
+}
+
+function sheet_(name) {
+  var ss = ss_();
+  return ss.getSheetByName(name) || ss.insertSheet(name);
+}
+
+/** ===== Lead Intake ===== */
+function handleLead_(data) {
+  var sh = sheet_("Leads");
+
+  // headers
+  if (sh.getLastRow() === 0) {
+    sh.appendRow([
+      "timestamp","source","channel",
+      "firstName","lastName","zip","email","phone",
+      "homeowner","propertyType","roofAge","homeClaims",
+      "vehicles","drivers","autoClaims","currentCarrier",
+      "contactPref","timeframe","notes","consent",
+      "leadScore","leadLabel","leadReasons",
+      "kitDelivered","kitType",
+      "transcriptJson"
+    ]);
+  }
+
+  var ts = data.timestamp || new Date().toISOString();
+  var row = [
+    ts,
+    data.source || "",
+    data.channel || "",
+    data.firstName || "",
+    data.lastName || "",
+    data.zip || "",
+    data.email || "",
+    data.phone || "",
+    data.homeowner || "",
+    data.propertyType || "",
+    data.roofAge || "",
+    data.homeClaims || "",
+    data.vehicles || "",
+    data.drivers || "",
+    data.autoClaims || "",
+    data.currentCarrier || "",
+    data.contactPref || "",
+    data.timeframe || "",
+    data.notes || "",
+    data.consent ? "Yes" : "No",
+    data.leadScore || "",
+    data.leadLabel || "",
+    data.leadReasons || "",
+    "", // kitDelivered
+    data.kitType || (data.deliverKit ? "FIRE_HAIL_ENDORSEMENTS" : ""),
+    data.transcript ? JSON.stringify(data.transcript).slice(0, 45000) : ""
+  ];
+
+  sh.appendRow(row);
+
+  // highlight HOT leads
+  try {
+    var lastRow = sh.getLastRow();
+    if ((data.leadLabel || "").toUpperCase() === "HOT") {
+      sh.getRange(lastRow, 1, 1, sh.getLastColumn()).setBackground("#ffe4e6"); // light red
+      sh.getRange(lastRow, 22, 1, 1).setFontWeight("bold"); // leadLabel
+    }
+  } catch (e) {}
+
+  // email agent
+  notifyAgent_(data);
+
+  // deliver kit to prospect if requested and email present
+  var delivered = false;
+  if (data.deliverKit && isEmail_(data.email)) {
+    delivered = deliverKit_({
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      zip: data.zip,
+      homeowner: data.homeowner,
+      roofAge: data.roofAge,
+      vehicles: data.vehicles,
+      kitType: data.kitType || "FIRE_HAIL_ENDORSEMENTS",
+      transcript: data.transcript || []
+    });
+
+    if (delivered) {
+      // mark kit delivered
+      try {
+        var r = sh.getLastRow();
+        // kitDelivered col = 24, kitType col = 25
+        sh.getRange(r, 24).setValue("Yes");
+        sh.getRange(r, 25).setValue(data.kitType || "FIRE_HAIL_ENDORSEMENTS");
+      } catch (e) {}
+    }
+  }
+
+  return { ok: true, kitDelivered: delivered };
+}
+
+function notifyAgent_(data) {
+  var c = cfg_();
+  var to = c.NOTIFY_EMAIL;
+
+  var subject = "New Lead — " + (data.firstName || "Unknown") + " — " + (data.zip || "No ZIP");
+  var body =
+    "New lead\n\n" +
+    "Name: " + (data.firstName||"") + " " + (data.lastName||"") + "\n" +
+    "ZIP: " + (data.zip||"") + "\n" +
+    "Email: " + (data.email||"") + "\n" +
+    "Phone: " + (data.phone||"") + "\n\n" +
+    "Lead: " + (data.leadLabel||"") + " " + (data.leadScore||"") + "/100\n" +
+    "Reasons: " + (data.leadReasons||"") + "\n\n" +
+    "Home status: " + (data.homeowner||"") + "\n" +
+    "Property type: " + (data.propertyType||"") + "\n" +
+    "Roof age: " + (data.roofAge||"") + "\n" +
+    "Home claims: " + (data.homeClaims||"") + "\n\n" +
+    "Vehicles: " + (data.vehicles||"") + "\n" +
+    "Drivers: " + (data.drivers||"") + "\n" +
+    "Auto claims: " + (data.autoClaims||"") + "\n" +
+    "Carrier: " + (data.currentCarrier||"") + "\n\n" +
+    "Preferred contact: " + (data.contactPref||"") + "\n" +
+    "Timeframe: " + (data.timeframe||"") + "\n" +
+    "Notes: " + (data.notes||"") + "\n\n" +
+    "Consent: " + (data.consent ? "Yes" : "No") + "\n" +
+    "Source: " + (data.source||"") + " | Channel: " + (data.channel||"") + "\n" +
+    "Timestamp: " + (data.timestamp||"");
+
+  MailApp.sendEmail(to, subject, body);
+}
+
+/** ===== Deliver customized PDF kit + follow-up ===== */
+function deliverKit_(data) {
+  var c = cfg_();
+  if (!isEmail_(data.email)) return false;
+
+  var kitType = (data.kitType || "FIRE_HAIL_ENDORSEMENTS").toString();
+  var pdfBlob = buildCoverageGuidePdf_(data, kitType);
+
+  // Email the PDF
+  var subject = "Your Fire + Hail Coverage Endorsement Guide (Secure Choice)";
+  var msg =
+    "Hi " + (data.firstName || "there") + ",\n\n" +
+    "Attached is your coverage guide focused on protecting homes and cars from wildfire and hail-related losses.\n\n" +
+    "This is general information (not a quote). If you'd like a tailored review, reply to this email and include:\n" +
+    "- Homeowner vs renter\n" +
+    "- Roof age\n" +
+    "- Number of autos\n\n" +
+    "— Secure Choice Insurance\n";
+
+  MailApp.sendEmail({
+    to: String(data.email).trim(),
+    subject: subject,
+    body: msg,
+    attachments: [pdfBlob]
+  });
+
+  // Schedule follow-ups (Day 1 hail, Day 3 fire, Day 5 deductible math)
+  scheduleFollowUps_(data.email, {
+    firstName: data.firstName || "",
+    zip: data.zip || "",
+    homeowner: data.homeowner || "",
+    roofAge: data.roofAge || "",
+    vehicles: data.vehicles || ""
+  });
+
+  return true;
+}
+
+function buildCoverageGuidePdf_(data, kitType) {
+  var homeowner = (data.homeowner || "").toString();
+  var roofAge = (data.roofAge || "").toString();
+  var vehicles = (data.vehicles || "").toString();
+  var zip = (data.zip || "81501").toString().trim() || "81501";
+
+  var whoBlock = (homeowner.toLowerCase().indexOf("rent") !== -1)
+    ? "<h3>Renter focus</h3><ul><li>Personal property: Replacement cost endorsement if available</li><li>Loss of use: critical after wildfire evacuations</li><li>Liability: protect against guest injuries and smoke-related claims</li></ul>"
+    : "<h3>Homeowner focus</h3><ul><li>Dwelling: Extended/guaranteed replacement cost (if available)</li><li>Building ordinance/law</li><li>Debris removal + tree/shrub</li><li>Loss of use (ALE)</li></ul>";
+
+  var roofBlock =
+    "<h3>Roof + hail protection</h3>" +
+    "<ul>" +
+    "<li><b>Roof settlement options:</b> Replacement cost vs actual cash value (ACV). Older roofs may be ACV—ask before switching.</li>" +
+    "<li><b>Hail/wind deductible:</b> flat vs % deductible. Run the math before choosing a %.</li>" +
+    "<li><b>Cosmetic damage:</b> some policies limit it—confirm how it’s handled.</li>" +
+    "</ul>" +
+    (roofAge ? "<p><b>Your roof age input:</b> " + esc_(roofAge) + " (carriers may require inspection depending on age/condition)</p>" : "");
+
+  var fireBlock =
+    "<h3>Wildfire + severe weather protection</h3>" +
+    "<ul>" +
+    "<li><b>Extended replacement cost:</b> helps when rebuilding costs surge after a catastrophe.</li>" +
+    "<li><b>Contents replacement cost:</b> avoids depreciation on personal property.</li>" +
+    "<li><b>Smoke/ash cleaning:</b> confirm coverage for remediation and HVAC cleaning.</li>" +
+    "<li><b>Loss of use:</b> hotel/rental during repairs or displacement.</li>" +
+    "</ul>" +
+    "<p><b>Example:</b> In ZIP <b>81501</b>, it’s reasonable to plan for heightened wildfire + hail exposure and review deductibles accordingly.</p>";
+
+  var autoBlock =
+    "<h3>Auto endorsements for hail + fire-related losses</h3>" +
+    "<ul>" +
+    "<li><b>Comprehensive:</b> hail, wildfire ember damage, smoke, theft, vandalism.</li>" +
+    "<li><b>Rental reimbursement:</b> keeps you mobile after a total loss or hail event.</li>" +
+    "<li><b>Towing/roadside:</b> useful during storm disruptions.</li>" +
+    "<li><b>Gap insurance:</b> if financed and value drops after a loss.</li>" +
+    "</ul>" +
+    (vehicles ? "<p><b>Auto count input:</b> " + esc_(vehicles) + "</p>" : "");
+
+  var html =
+    "<html><head><meta charset='UTF-8' />" +
+    "<style>body{font-family:Arial,sans-serif;color:#0f172a;} h1{font-size:18px;} h3{margin-top:16px;} ul{margin:8px 0 0 18px;} .small{font-size:11px;color:#475569;margin-top:14px;}</style>" +
+    "</head><body>" +
+    "<h1>Fire + Hail Coverage Endorsement Guide</h1>" +
+    "<p><b>Secure Choice Insurance</b> • General information only (not a quote)</p>" +
+    "<p><b>Reference ZIP:</b> " + esc_(zip || "81501") + "</p>" +
+    whoBlock +
+    roofBlock +
+    fireBlock +
+    autoBlock +
+    "<div class='small'>Disclaimer: Coverage varies by carrier, underwriting, and policy form. Confirm availability and pricing with a licensed agent.</div>" +
+    "</body></html>";
+
+  var blob = HtmlService.createHtmlOutput(html).getBlob();
+  blob = blob.getAs("application/pdf").setName("SecureChoice_Fire-Hail_Endorsements_Guide.pdf");
+  return blob;
+}
+
+function scheduleFollowUps_(email, meta) {
+  var sh = sheet_("FollowUps");
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(["email","type","scheduledFor","sentAt","metaJson"]);
+  }
+
+  // Avoid duplicates for same email in last 14 days
+  var values = sh.getDataRange().getValues();
+  var now = new Date();
+  for (var i=1;i<values.length;i++){
+    var e = values[i][0];
+    var scheduledFor = values[i][2];
+    if (e === email && scheduledFor && (now - new Date(scheduledFor)) < 14*24*3600*1000) {
+      // already scheduled recently
+      return;
+    }
+  }
+
+  var d1 = new Date(now.getTime() + 1*24*3600*1000);
+  var d3 = new Date(now.getTime() + 3*24*3600*1000);
+  var d5 = new Date(now.getTime() + 5*24*3600*1000);
+
+  sh.appendRow([email, "DAY1_HAIL", d1.toISOString(), "", JSON.stringify(meta)]);
+  sh.appendRow([email, "DAY3_FIRE", d3.toISOString(), "", JSON.stringify(meta)]);
+  sh.appendRow([email, "DAY5_DEDUCTIBLE", d5.toISOString(), "", JSON.stringify(meta)]);
+
+  // Installable trigger (runs hourly and sends what’s due)
+  ensureTrigger_("processFollowUps_", "HOUR");
+}
+
+function processFollowUps_() {
+  var sh = sheet_("FollowUps");
+  var range = sh.getDataRange();
+  var values = range.getValues();
+  if (values.length < 2) return;
+
+  var now = new Date();
+  var updated = false;
+
+  for (var i=1;i<values.length;i++) {
+    var email = values[i][0];
+    var type = values[i][1];
+    var scheduledFor = values[i][2];
+    var sentAt = values[i][3];
+    var metaJson = values[i][4];
+
+    if (!email || sentAt) continue;
+    if (!scheduledFor) continue;
+
+    var due = new Date(scheduledFor);
+    if (now < due) continue;
+
+    var meta = {};
+    try { meta = JSON.parse(metaJson || "{}"); } catch(e){}
+
+    sendFollowUp_(email, type, meta);
+
+    sh.getRange(i+1, 4).setValue(new Date().toISOString());
+    updated = true;
+  }
+
+  if (updated) SpreadsheetApp.flush();
+}
+
+function sendFollowUp_(email, type, meta) {
+  var firstName = meta.firstName || "there";
+  var zip = meta.zip || "81501";
+
+  var subject = "Secure Choice — quick help on Colorado storm coverage";
+  var body = "";
+
+  if (type === "DAY1_HAIL") {
+    subject = "Day 1: Hail claims — what to double-check before the next storm";
+    body =
+      "Hi " + firstName + ",\n\n" +
+      "Quick hail checklist:\n" +
+      "• Is your roof coverage Replacement Cost or ACV?\n" +
+      "• Is your wind/hail deductible flat or %?\n" +
+      "• Do you have any cosmetic damage limits?\n\n" +
+      "If you want, reply with your roof age and I’ll outline what to ask your current carrier.\n\n" +
+      "— Secure Choice Insurance\n";
+  } else if (type === "DAY3_FIRE") {
+    subject = "Day 3: Wildfire + smoke — endorsements that matter most";
+    body =
+      "Hi " + firstName + ",\n\n" +
+      "Wildfire/smoke reminders (example ZIP 81501):\n" +
+      "• Extended replacement cost can matter when rebuild costs spike.\n" +
+      "• Loss of use (ALE) is key if you’re displaced.\n" +
+      "• Confirm smoke/ash remediation coverage.\n\n" +
+      "Reply with homeowner vs renter and we’ll tailor what to prioritize.\n\n" +
+      "— Secure Choice Insurance\n";
+  } else if (type === "DAY5_DEDUCTIBLE") {
+    subject = "Day 5: Deductible math — how to pick the ‘right’ hail deductible";
+    body =
+      "Hi " + firstName + ",\n\n" +
+      "Deductible math tip:\n" +
+      "A % hail deductible sounds small, but on higher dwelling limits it can be thousands.\n" +
+      "If you tell me your approximate dwelling limit (or just a range), I can show the simple comparison.\n\n" +
+      "— Secure Choice Insurance\n";
+  } else {
+    body = "Hi " + firstName + ",\n\nJust checking in. Reply if you'd like a quick coverage review.\n\n— Secure Choice Insurance\n";
+  }
+
+  MailApp.sendEmail(email, subject, body);
+}
+
+/** ===== Daily transcript digest ===== */
+function setupDailyDigest() {
+  // Run once manually to install daily trigger at ~7:30am local time
+  ensureTrigger_("sendDailyDigest_", "DAY");
+}
+
+function sendDailyDigest_() {
+  var c = cfg_();
+  var to = c.NOTIFY_EMAIL;
+
+  var sh = sheet_("Leads");
+  var values = sh.getDataRange().getValues();
+  if (values.length < 2) return;
+
+  var header = values[0];
+  var idx = {};
+  header.forEach(function(h, i){ idx[h] = i; });
+
+  var since = new Date();
+  since.setDate(since.getDate() - 1);
+
+  var items = [];
+  for (var i=1;i<values.length;i++){
+    var ts = values[i][idx["timestamp"]];
+    var t = ts ? new Date(ts) : null;
+    if (!t || t < since) continue;
+
+    var name = (values[i][idx["firstName"]] || "") + " " + (values[i][idx["lastName"]] || "");
+    var zip = values[i][idx["zip"]] || "";
+    var label = values[i][idx["leadLabel"]] || "";
+    var email = values[i][idx["email"]] || "";
+    var transcriptJson = values[i][idx["transcriptJson"]] || "";
+
+    items.push("• " + name.trim() + " (" + zip + ") [" + label + "] " + email + "\n" + summarizeTranscript_(transcriptJson));
+  }
+
+  if (!items.length) return;
+
+  MailApp.sendEmail(
+    to,
+    "Daily PolicyPro™ digest (" + items.length + " conversations/leads)",
+    items.join("\n\n-----------------\n\n")
+  );
+}
+
+function summarizeTranscript_(json) {
+  if (!json) return "(no transcript)";
+  try {
+    var arr = JSON.parse(json);
+    if (!Array.isArray(arr)) return "(transcript unreadable)";
+    // keep it short
+    var lines = arr.slice(-10).map(function(x){
+      if (x.user) return "User: " + String(x.user).slice(0, 250);
+      if (x.assistant) return "PP: " + String(x.assistant).slice(0, 250);
+      return "";
+    }).filter(Boolean);
+    return lines.join("\n");
+  } catch(e){
+    return "(transcript unreadable)";
+  }
+}
+
+/** ===== PolicyPro Chat via OpenAI Responses API =====
+ * Uses Responses API (recommended) and model gpt-5-mini. :contentReference[oaicite:0]{index=0}
+ */
+function policyProChat_(data) {
+  var c = cfg_();
+  if (!c.OPENAI_API_KEY) return fallbackAgentAnswer_(data.user || "");
+
+  var userText = String(data.user || "").trim();
+  if (!userText) return "Ask me anything about home or auto insurance in Colorado.";
+
+  var system = String(data.system || defaultSystem_());
+  var history = Array.isArray(data.history) ? data.history : [];
+
+  // Build Responses API "input" as a message list
+  var input = [];
+  input.push({ role: "system", content: system });
+  history.slice(-16).forEach(function(m){
+    if (m && m.role && m.content) input.push({ role: m.role, content: String(m.content) });
+  });
+  input.push({ role: "user", content: userText });
+
+  var payload = {
+    model: "gpt-5-mini",
+    input: input,
+    reasoning: { effort: "minimal" }, // optional speed bias
+    text: { verbosity: "medium" }     // optional
+  };
+
+  var res = UrlFetchApp.fetch("https://api.openai.com/v1/responses", {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + c.OPENAI_API_KEY },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  });
+
+  var code = res.getResponseCode();
+  var txt = res.getContentText();
+
+  if (code < 200 || code > 299) {
+    return fallbackAgentAnswer_(userText);
+  }
+
+  var obj = JSON.parse(txt);
+
+  // Pull text out of Responses API shape
+  var out = "";
+  try {
+    if (obj && obj.output && obj.output.length) {
+      obj.output.forEach(function(item){
+        if (item && item.content) {
+          item.content.forEach(function(c){
+            if (c && c.type === "output_text" && c.text) out += c.text;
+          });
+        }
+      });
+    }
+  } catch(e){}
+
+  out = (out || "").trim();
+  return out || fallbackAgentAnswer_(userText);
+}
+
+function defaultSystem_() {
+  return [
+    "You are PolicyPro™, a professional Colorado-licensed home & auto insurance agent assistant.",
+    "Answer directly and specifically to the user's question.",
+    "Carrier-agnostic: explain options and tradeoffs without naming insurers unless asked.",
+    "Avoid tables unless requested.",
+    "Never guarantee savings/approval/coverage.",
+    "For wildfire/hail examples, reference ZIP 81501 as an example without citing stats.",
+    "If user asks to buy/quote, explain you can't bind here and suggest the lead form."
+  ].join(" ");
+}
+
+function fallbackAgentAnswer_(q) {
+  return "I can help—what’s the exact situation (home vs auto, deductible level, and whether the concern is hail, wildfire/smoke, theft, water, or an accident)? If you want tailored options, use the pre-check form so a licensed agent can follow up.";
+}
+
+/** ===== Helpers ===== */
+function isEmail_(s){ return s && String(s).indexOf("@") > 0 && String(s).indexOf(".") > 0; }
+function esc_(s){ return String(s||"").replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"})[c];}); }
+
+function ensureTrigger_(handlerName, cadence) {
+  // cadence: "HOUR" or "DAY"
+  var triggers = ScriptApp.getProjectTriggers();
+  var exists = triggers.some(function(t){ return t.getHandlerFunction() === handlerName; });
+  if (exists) return;
+
+  if (cadence === "HOUR") {
+    ScriptApp.newTrigger(handlerName).timeBased().everyHours(1).create();
+  } else if (cadence === "DAY") {
+    ScriptApp.newTrigger(handlerName).timeBased().everyDays(1).atHour(7).nearMinute(30).create();
+  }
+}
