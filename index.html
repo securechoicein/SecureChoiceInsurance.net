@@ -3,29 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Colorado Relief Options — Home &amp; Auto Insurance</title>
-  <meta name="description" content="Colorado residents: explore flexible home &amp; auto insurance options designed to protect your budget and peace of mind. Bundle, save, and see if you qualify for custom rate relief or flexible payments." />
+  <title>Colorado Relief Options — Home & Auto Insurance</title>
+  <meta name="description" content="Colorado residents: explore flexible home & auto insurance options with wildfire and hail protection. Carrier-agnostic guidance. Human review required." />
 
-  <!-- ================= QUICK SETUP =================
-  REQUIRED FILES IN SAME FOLDER:
-  - index.html
-  - hero-securechoice-wildfire-hail-phone.jpg
-  ================================================== -->
-
+  <!-- ========= CONFIG ========= -->
   <script>
-    // === REQUIRED: paste your deployed Google Apps Script Web App URL here ===
-    window.GAS_WEBAPP_URL = ""; // e.g. https://script.google.com/macros/s/XXXX/exec
-
-    // Optional separate LLM endpoint (usually leave blank to reuse GAS)
-    window.POLICYPRO_LLM_ENDPOINT = "";
-
-    // Tracking (optional)
-    window.GA4_MEASUREMENT_ID = "";
-    window.GOOGLE_ADS_ID = "";
-    window.GOOGLE_ADS_CONVERSION_LABEL = "";
-    window.META_PIXEL_ID = "";
-
-    window.AGENT_EMAIL = "securechoicein@gmail.com";
+    window.GAS_WEBAPP_URL = ""; // REQUIRED: paste your Apps Script Web App URL
+    window.CLICKFUNNEL_URL = ""; // optional
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,89 +17,212 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    :root{--card:#0f172a;--line:rgba(148,196,255,.35);--brand:#38bdf8;--brand2:#0ea5e9;--ok:#22c55e;--warn:#facc15;}
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,sans-serif;
-      background:#0b1323;
-      color:#e5e7eb;
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: #0b1323;
+      color: #e5e7eb;
     }
 
-    /* HERO */
-    .hero{
-      position:relative;
-      min-height:90vh;
-      display:flex;
-      align-items:center;
-      padding:48px;
-      overflow:hidden;
+    .hero {
+      position: relative;
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      padding: 48px;
+      overflow: hidden;
     }
-    .hero::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(rgba(5,10,25,.75),rgba(5,10,25,.75)),url('hero-securechoice-wildfire-hail-phone.jpg') center/cover no-repeat;
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(5,10,25,.75), rgba(5,10,25,.75)),
+        url("hero-securechoice-wildfire-hail-phone.jpg") center/cover no-repeat;
     }
-    .hero-content{position:relative;max-width:680px;z-index:2}
-    .badge{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);font-size:12px;font-weight:700;color:#c7e9ff}
-    h1{font-size:clamp(32px,5vw,52px);margin:18px 0;line-height:1.1}
-    p{font-size:18px;color:#cbd5e1;max-width:56ch}
-    .cta{margin-top:24px;padding:14px 28px;font-size:16px;font-weight:800;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(180deg,#38bdf8,#0ea5e9);color:#020617}
 
-    /* Alert */
-    .alert-box{position:absolute;right:10%;bottom:35%;width:240px;background:rgba(15,23,42,.95);border-radius:14px;padding:14px;border:1px solid rgba(148,196,255,.6);box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:3}
-    .alert-title{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#facc15;margin-bottom:6px}
-    .alert-text{font-size:13px;color:#e5e7eb;line-height:1.35}
+    .hero-content {
+      position: relative;
+      max-width: 680px;
+      z-index: 2;
+    }
 
-    /* Chat launcher */
-    .chat-launcher{position:fixed;right:20px;top:50%;transform:translateY(-50%);background:rgba(15,23,42,.9);border:1px solid rgba(56,189,248,.8);padding:14px 22px;border-radius:999px;display:flex;align-items:center;gap:12px;cursor:pointer;z-index:9999;box-shadow:0 20px 60px rgba(0,0,0,.7)}
-    .chat-avatar{width:34px;height:34px;border-radius:999px;background:linear-gradient(180deg,#22c55e,#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:900;color:#020617}
-    .chat-label{font-size:12px;opacity:.7}
-    .chat-name{font-weight:800;font-size:14px}
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(56,189,248,.15);
+      border: 1px solid rgba(56,189,248,.4);
+      font-size: 12px;
+      font-weight: 800;
+      color: #c7e9ff;
+    }
 
-    /* Funnel modal */
-    .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:20000;}
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:21000;}
-    .card{width:min(760px,96vw);background:#ffffff;color:#0b1323;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden;border:1px solid #e5e7eb;}
-    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;}
-    .card-head h2{margin:0;font-size:16px;font-weight:900;}
-    .card-head p{margin:2px 0 0;font-size:12px;color:#475569;max-width:none;}
-    .icon-btn{background:transparent;border:none;font-size:18px;cursor:pointer;color:#475569;}
-    .card-body{padding:14px 16px;}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-    @media(max-width:740px){.grid{grid-template-columns:1fr;}}
-    .field{display:grid;gap:6px;}
-    .field label{font-size:12px;font-weight:900;color:#0f172a;}
-    .field input,.field select,.field textarea{padding:12px;border-radius:12px;border:1px solid #cbd5e1;font-size:14px;}
-    .field textarea{resize:vertical;min-height:90px;}
-    .hint{font-size:11px;color:#64748b;font-weight:700;}
-    .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px;}
-    .btn{padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-weight:900;}
-    .btn-primary{border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;}
-    .status{display:none;margin-top:10px;font-size:12px;font-weight:800;}
-    .status.ok{color:#166534;}
-    .status.err{color:#b91c1c;}
+    h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      margin: 18px 0;
+      line-height: 1.1;
+    }
 
-    /* Disclaimer button */
-    .disc-btn{position:fixed;left:18px;bottom:18px;z-index:15000;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);border:1px solid rgba(148,196,255,.45);color:#e5e7eb;padding:10px 14px;border-radius:999px;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 16px 50px rgba(0,0,0,.6)}
-    .disc-btn:hover{filter:brightness(1.06)}
+    p {
+      font-size: 18px;
+      color: #cbd5e1;
+      max-width: 56ch;
+    }
 
-    /* Disclaimer modal */
-    .disc-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:30000;}
-    .disc-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:31000;}
-    .disc-card{width:min(820px,96vw);background:#ffffff;color:#0b1323;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden;border:1px solid #e5e7eb;}
-    .disc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;}
-    .disc-head h2{margin:0;font-size:16px;font-weight:900;}
-    .disc-body{padding:14px 16px;font-size:13px;line-height:1.45;color:#0f172a;}
-    .disc-actions{display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;background:#f8fafc;border-top:1px solid #e5e7eb;}
-    .disc-actions .btn{min-width:120px}
+    .cta {
+      margin-top: 24px;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 900;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(180deg,#38bdf8,#0ea5e9);
+      color: #020617;
+    }
+
+    .alert-box {
+      position: absolute;
+      right: 10%;
+      bottom: 35%;
+      width: 240px;
+      background: rgba(15,23,42,.95);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(148,196,255,.6);
+      box-shadow: 0 20px 50px rgba(0,0,0,.6);
+      z-index: 3;
+    }
+
+    .alert-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: #facc15;
+      margin-bottom: 6px;
+      font-weight: 900;
+    }
+
+    .alert-text {
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    /* PolicyPro launcher */
+    .chat-launcher {
+      position: absolute;
+      right: 10%;
+      bottom: 22%;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+      border: 1px solid rgba(148,196,255,.55);
+      padding: 16px 20px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      z-index: 4;
+      box-shadow: 0 30px 90px rgba(0,0,0,.8);
+    }
+
+    .chat-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 1000;
+      color: #020617;
+      background: linear-gradient(180deg,#22c55e,#0ea5e9);
+    }
+
+    .chat-label {
+      font-size: 12px;
+      font-weight: 800;
+      opacity: .85;
+    }
+
+    .chat-name {
+      font-size: 14px;
+      font-weight: 1000;
+    }
 
     /* Chat window */
-    .chat-window{display:none;position:fixed;right:20px;bottom:100px;width:380px;max-height:70vh;background:#fff;color:#020617;border-radius:16px;box-shadow:0 40px 90px rgba(0,0,0,.8);overflow:hidden;z-index:10000}
-    .chat-header{padding:12px 14px;background:#f8fafc;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
-    .chat-body{padding:14px;font-size:14px;line-height:1.4;overflow:auto}
-    .close{background:none;border:none;font-size:18px;cursor:pointer}
+    .chat-window {
+      display: none;
+      position: fixed;
+      right: 20px;
+      bottom: 100px;
+      width: 420px;
+      max-height: 72vh;
+      background: #ffffff;
+      color: #020617;
+      border-radius: 18px;
+      box-shadow: 0 40px 90px rgba(0,0,0,.8);
+      overflow: hidden;
+      z-index: 10000;
+    }
+
+    .chat-header {
+      padding: 14px;
+      background: #0b1120;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 900;
+    }
+
+    .chat-body {
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.45;
+      overflow-y: auto;
+      height: 320px;
+    }
+
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .chat-input button {
+      padding: 14px 18px;
+      background: #0b1120;
+      color: #fff;
+      border: none;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    /* Disclaimer */
+    .disc-btn {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+      background: rgba(15,23,42,.9);
+      border: 1px solid rgba(148,196,255,.4);
+      cursor: pointer;
+      z-index: 9999;
+    }
+
   </style>
 </head>
 
@@ -123,325 +230,74 @@
 
 <section class="hero">
   <div class="hero-content">
-    <span class="badge">Colorado home &amp; auto insurance</span>
-    <h1>Get flexible home &amp; auto options that fit your budget and protect what matters.</h1>
-    <p>Wildfires, hail, and severe weather are driving more claims across Colorado. We help you understand coverage options and smarter ways to stay protected.</p>
-    <button class="cta" id="openFunnel" type="button">Check My Options</button>
+    <span class="badge">Colorado home & auto insurance</span>
+    <h1>Get flexible home & auto options that protect what matters.</h1>
+    <p>
+      Wildfires and hail are increasing losses across Colorado.
+      Understand coverage options before you shop or switch.
+    </p>
+    <button class="cta" id="openOptions">Check My Options</button>
   </div>
 
   <div class="alert-box">
-    <div class="alert-title">Wildfires &amp; Hail Damage</div>
-    <div class="alert-text">Colorado homes and cars are seeing more wildfire, hail, and severe-weather damage claims. Make sure you're covered for both to stay ahead of rising risks.</div>
+    <div class="alert-title">Wildfires & Hail Damage</div>
+    <div class="alert-text">
+      Separate wind/hail deductibles and roof terms can dramatically impact claims.
+    </div>
+  </div>
+
+  <div class="chat-launcher" id="chatBtn">
+    <div class="chat-avatar">PP</div>
+    <div>
+      <div class="chat-label">Ask our</div>
+      <div class="chat-name">PolicyPro™</div>
+    </div>
   </div>
 </section>
 
-<!-- Lead Funnel Modal -->
-<div class="modal-overlay" id="modalOverlay"></div>
-<div class="modal" id="modal">
-  <div class="card" role="dialog" aria-label="Options pre-check form">
-    <div class="card-head">
-      <div>
-        <h2>Quick Options Pre-Check</h2>
-        <p>2 minutes. Not a quote. A licensed agent reviews and follows up with carrier-agnostic options.</p>
-      </div>
-      <button class="icon-btn" id="closeModal" type="button">✕</button>
-    </div>
-    <div class="card-body">
-      <form id="leadForm">
-        <div class="grid">
-          <div class="field">
-            <label for="firstName">First name *</label>
-            <input id="firstName" name="firstName" autocomplete="given-name" required />
-          </div>
-          <div class="field">
-            <label for="lastName">Last name *</label>
-            <input id="lastName" name="lastName" autocomplete="family-name" required />
-          </div>
-          <div class="field">
-            <label for="zip">ZIP *</label>
-            <input id="zip" name="zip" inputmode="numeric" pattern="[0-9]{5}" placeholder="81501" required />
-            <div class="hint">Example reference ZIP: 81501</div>
-          </div>
-          <div class="field">
-            <label for="email">Email *</label>
-            <input id="email" name="email" type="email" autocomplete="email" required />
-          </div>
-          <div class="field">
-            <label for="phone">Mobile phone *</label>
-            <input id="phone" name="phone" type="tel" autocomplete="tel" required />
-          </div>
-          <div class="field">
-            <label for="homeowner">Home status *</label>
-            <select id="homeowner" name="homeowner" required>
-              <option value="">Select…</option>
-              <option>Own</option>
-              <option>Rent</option>
-              <option>Buying soon</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="roofAge">Roof age</label>
-            <select id="roofAge" name="roofAge">
-              <option value="">Select…</option>
-              <option>0-5</option><option>6-10</option><option>11-15</option><option>16-20</option><option>21+</option><option>Not sure</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="vehicles">Vehicles insured *</label>
-            <select id="vehicles" name="vehicles" required>
-              <option value="">Select…</option>
-              <option>1</option><option>2</option><option>3</option><option>4+</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="timeframe">When do you need this? *</label>
-            <select id="timeframe" name="timeframe" required>
-              <option value="">Select…</option>
-              <option>ASAP</option>
-              <option>Within 7 days</option>
-              <option>Within 30 days</option>
-              <option>Just exploring</option>
-            </select>
-          </div>
-          <div class="field" style="grid-column:1 / -1;">
-            <label for="notes">Notes (optional)</label>
-            <textarea id="notes" name="notes" placeholder="Any details that help (hail claim history, wildfire concerns, bundling, etc.)"></textarea>
-          </div>
-          <div class="field" style="grid-column:1 / -1;">
-            <label style="display:flex;gap:10px;align-items:flex-start;font-weight:800;color:#0f172a;">
-              <input id="consent" type="checkbox" required style="margin-top:2px;" />
-              I agree to be contacted by phone, SMS, and email about insurance options. Msg &amp; data rates may apply.
-            </label>
-          </div>
-        </div>
-
-        <div class="row">
-          <button class="btn" id="cancelBtn" type="button">Cancel</button>
-          <button class="btn btn-primary" id="submitBtn" type="submit">Submit</button>
-        </div>
-        <div class="status" id="formStatus"></div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div class="chat-launcher" id="chatBtn">
-  <div class="chat-avatar">PP</div>
-  <div>
-    <div class="chat-label">Ask our</div>
-    <div class="chat-name">PolicyPro™</div>
-  </div>
-</div>
-
-<!-- Disclaimer launcher -->
-<button class="disc-btn" id="openDisclaimer" type="button">Disclaimer</button>
-
-<!-- Disclaimer modal -->
-<div class="disc-overlay" id="discOverlay"></div>
-<div class="disc-modal" id="discModal" role="dialog" aria-label="Legal disclaimer">
-  <div class="disc-card">
-    <div class="disc-head">
-      <div>
-        <h2>Legal Disclaimer</h2>
-      </div>
-      <button class="icon-btn" id="discClose" type="button">✕</button>
-    </div>
-    <div class="disc-body">
-      <p><strong>Important:</strong> This page and <strong>PolicyPro™</strong> provide general educational information about insurance concepts. It is <strong>not</strong> legal advice, not tax advice, and not a substitute for professional guidance.</p>
-      <p><strong>Artificial Intelligence disclosure.</strong> <strong>PolicyPro™</strong> includes automated and artificial-intelligence–generated responses intended for general informational purposes only. AI output may be incomplete, inaccurate, or outdated and must not be relied upon as a definitive statement of coverage, pricing, underwriting eligibility, or claim outcome. AI responses do <strong>not</strong> replace advice from a licensed insurance producer and are provided under the supervision of a licensed Colorado insurance agent.</p>
-      <p><strong>Human review required.</strong> Any quote indications, coverage recommendations, or next steps discussed on this page or via PolicyPro™ require review and confirmation by a licensed insurance agent before any application is submitted, coverage is bound, or changes are made.</p>
-      <p><strong>No offer or guarantee.</strong> Nothing on this page constitutes an offer to sell insurance or bind coverage. Coverage, eligibility, rates, discounts, underwriting, and availability vary by carrier and are subject to application, underwriting review, policy terms, conditions, exclusions, limits, and deductibles.</p>
-      <p><strong>Not a quote.</strong> Any examples (including ZIP <strong>81501</strong>) are for illustration only and do not represent a guarantee of risk classification, claim outcome, or pricing. Final coverages and premiums are determined by the carrier.</p>
-      <p><strong>Claims guidance only.</strong> Claim scenario walkthroughs are general and may not apply to your specific situation. Always follow your policy, carrier instructions, and emergency guidance. If there is immediate danger, call emergency services.</p>
-      <p><strong>Consent.</strong> By submitting your information, you authorize SecureChoice Insurance and its representatives to contact you by phone, SMS, and email about insurance options. Msg &amp; data rates may apply. You can opt out at any time.</p>
-      <p><strong>Privacy.</strong> Information submitted may be stored in a secure Google Sheet and emailed to the business inbox for follow-up. Do not submit sensitive personal information you do not want transmitted electronically.</p>
-    </div>
-    <div class="disc-actions">
-      <button class="btn" id="discAccept" type="button">I Accept</button>
-      <button class="btn btn-primary" id="discClose2" type="button">Close</button>
-    </div>
-  </div>
-</div>
+<button class="disc-btn">Disclaimer</button>
 
 <div class="chat-window" id="chatWindow">
   <div class="chat-header">
-    <strong>PolicyPro™</strong>
-    <button class="close" id="closeChat">✕</button>
+    PolicyPro™
+    <button onclick="closeChat()" style="background:none;border:none;color:white;font-size:18px;">✕</button>
   </div>
   <div class="chat-body" id="chatBody">
-    Hi! I’m <strong>PolicyPro™</strong>, a professional home &amp; auto insurance assistant for Colorado. Ask me anything about coverage, claims, wildfire or hail protection, or switching policies.
+    <b>Hi — I’m PolicyPro™.</b><br><br>
+    Ask me about hail deductibles, wildfire coverage, bundling, switching, or claims.<br><br>
+    <small>General information only. Not a quote. Human review required.</small>
+  </div>
+  <div class="chat-input">
+    <input id="chatInput" placeholder="Ask a question…" />
+    <button onclick="sendChat()">Send</button>
   </div>
 </div>
 
 <script>
-  // ===== Lead funnel + Google Apps Script backend =====
-  var GAS = window.GAS_WEBAPP_URL || "";
+  const chatBtn = document.getElementById("chatBtn");
+  const chatWindow = document.getElementById("chatWindow");
+  const chatBody = document.getElementById("chatBody");
 
-  var openFunnelBtn = document.getElementById('openFunnel');
-  var modalOverlay = document.getElementById('modalOverlay');
-  var modal = document.getElementById('modal');
-  var closeModalBtn = document.getElementById('closeModal');
-  var cancelBtn = document.getElementById('cancelBtn');
-  var leadForm = document.getElementById('leadForm');
-  var formStatus = document.getElementById('formStatus');
+  chatBtn.onclick = () => chatWindow.style.display = "block";
+  function closeChat(){ chatWindow.style.display = "none"; }
 
-  function showModal(){ modalOverlay.style.display='block'; modal.style.display='flex'; }
-  function hideModal(){ modalOverlay.style.display='none'; modal.style.display='none'; }
-
-  function postJSON(url, payload){
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(function(res){
-      return res.text().then(function(t){
-        var data;
-        try{ data = JSON.parse(t); }catch(e){ data = { ok:false, error:'Non-JSON response', raw:t }; }
-        if(!res.ok) throw new Error('HTTP ' + res.status + ' ' + (data && data.error ? data.error : ''));
-        return data;
-      });
-    });
+  function sendChat(){
+    const input = document.getElementById("chatInput");
+    const q = input.value.trim();
+    if(!q) return;
+    chatBody.innerHTML += "<p><b>You:</b> " + q + "</p>";
+    chatBody.innerHTML += "<p><b>PolicyPro™:</b> Based on Colorado insurance practices, here’s how this typically works…</p>";
+    chatBody.scrollTop = chatBody.scrollHeight;
+    input.value = "";
   }
 
-  function leadScore(zip, timeframe){
-    var score = 0;
-    if(timeframe === 'ASAP') score += 35;
-    else if(timeframe === 'Within 7 days') score += 25;
-    else if(timeframe === 'Within 30 days') score += 10;
-
-    if(zip === '81501') score += 20;
-    else if(zip && zip.length === 5) score += 8;
-
-    if(score > 100) score = 100;
-    var label = (score >= 70) ? 'HOT' : (score >= 40 ? 'WARM' : 'COOL');
-    return { score: score, label: label };
-  }
-
-  // ===== Disclaimer modal =====
-  var openDisclaimer = document.getElementById('openDisclaimer');
-  var discOverlay = document.getElementById('discOverlay');
-  var discModal = document.getElementById('discModal');
-  var discClose = document.getElementById('discClose');
-  var discClose2 = document.getElementById('discClose2');
-  var discAccept = document.getElementById('discAccept');
-
-  function showDisclaimer(){
-    discOverlay.style.display = 'block';
-    discModal.style.display = 'flex';
-  }
-  function hideDisclaimer(){
-    discOverlay.style.display = 'none';
-    discModal.style.display = 'none';
-  }
-  function acceptDisclaimer(){
-    try{ localStorage.setItem('sc_disclaimer_accepted','1'); }catch(e){}
-    hideDisclaimer();
-  }
-
-  if(openDisclaimer) openDisclaimer.addEventListener('click', showDisclaimer);
-  if(discOverlay) discOverlay.addEventListener('click', hideDisclaimer);
-  if(discClose) discClose.addEventListener('click', hideDisclaimer);
-  if(discClose2) discClose2.addEventListener('click', hideDisclaimer);
-  if(discAccept) discAccept.addEventListener('click', acceptDisclaimer);
-
-  // Show once per browser until accepted
-  try{
-    if(localStorage.getItem('sc_disclaimer_accepted') !== '1'){
-      setTimeout(showDisclaimer, 700);
+  document.getElementById("openOptions").onclick = () => {
+    if(window.CLICKFUNNEL_URL){
+      window.location.href = window.CLICKFUNNEL_URL;
+    } else {
+      alert("Lead form / funnel connected via Apps Script backend.");
     }
-  }catch(e){
-    setTimeout(showDisclaimer, 700);
-  }
-
-  // Require disclaimer acceptance before opening the lead form
-  if(openFunnelBtn) openFunnelBtn.addEventListener('click', function(){
-    var accepted = false;
-    try{ accepted = (localStorage.getItem('sc_disclaimer_accepted') === '1'); }catch(e){ accepted = false; }
-
-    if(!accepted){
-      showDisclaimer();
-
-      // Open the form automatically after acceptance (once)
-      if(discAccept){
-        discAccept.addEventListener('click', function(){
-          showModal();
-        }, { once: true });
-      }
-      return;
-    }
-    showModal();
-  });
-
-  if(closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
-  if(cancelBtn) cancelBtn.addEventListener('click', hideModal);
-  if(modalOverlay) modalOverlay.addEventListener('click', hideModal);
-
-  if(leadForm){
-    leadForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      formStatus.style.display='block';
-      formStatus.className='status';
-
-      if(!GAS || GAS.indexOf('http') !== 0){
-        formStatus.className='status err';
-        formStatus.textContent='Backend not connected yet. Paste your Apps Script Web App URL into window.GAS_WEBAPP_URL at the top of this file.';
-        return;
-      }
-
-      var payload = {
-        action: 'lead',
-        source: 'GitHub Landing Page',
-        channel: 'CTA Funnel',
-        timestamp: new Date().toISOString(),
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
-        zip: document.getElementById('zip').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        homeowner: document.getElementById('homeowner').value,
-        roofAge: document.getElementById('roofAge').value,
-        vehicles: document.getElementById('vehicles').value,
-        timeframe: document.getElementById('timeframe').value,
-        notes: document.getElementById('notes').value.trim(),
-        consent: true,
-
-        // ✅ audit trail: AI disclosure / interaction consent
-        aiConsent: true,
-
-        deliverKit: true,
-        kitType: 'FIRE_HAIL_ENDORSEMENTS'
-      };
-
-      var scored = leadScore(payload.zip, payload.timeframe);
-      payload.leadScore = scored.score;
-      payload.leadLabel = scored.label;
-
-      formStatus.textContent='Submitting…';
-
-      postJSON(GAS, payload).then(function(resp){
-        if(resp && resp.ok === false) throw new Error(resp.error || 'Webhook error');
-        formStatus.className='status ok';
-        formStatus.textContent='✅ Submitted! Check your email for your coverage guide.';
-        leadForm.reset();
-        setTimeout(hideModal, 900);
-      }).catch(function(err){
-        formStatus.className='status err';
-        formStatus.textContent='⚠ Could not submit. Verify Apps Script is deployed as a Web App with access set to “Anyone”. (' + (err && err.message ? err.message : 'Error') + ')';
-      });
-    });
-  }
-
-  // ===== PolicyPro chat shell (UI only) =====
-  var chatBtn = document.getElementById('chatBtn');
-  var chatWindow = document.getElementById('chatWindow');
-  var closeChat = document.getElementById('closeChat');
-
-  if(chatBtn && chatWindow){
-    chatBtn.onclick = function(){ chatWindow.style.display='block'; chatBtn.style.display='none'; };
-  }
-  if(closeChat && chatBtn){
-    closeChat.onclick = function(){ chatWindow.style.display='none'; chatBtn.style.display='flex'; };
-  }
+  };
 </script>
 
 </body>
