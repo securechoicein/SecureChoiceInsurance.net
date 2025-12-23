@@ -9,7 +9,7 @@
   <!-- ================= QUICK SETUP =================
   REQUIRED FILES IN SAME FOLDER:
   - index.html
-  - hero-securechoice-wildfire-hail-phone.jpg
+  - hero-securechoice-wildfire-hail-phone.png
   ================================================== -->
 
   <script>
@@ -18,6 +18,10 @@
 
     // Optional separate LLM endpoint (usually leave blank to reuse GAS)
     window.POLICYPRO_LLM_ENDPOINT = "";
+
+    // ✅ Default: run PolicyPro in LOCAL mode (no API keys required)
+    // To use a secure server later, set: window.POLICYPRO_MODE = "remote" and window.POLICYPRO_LLM_ENDPOINT = "https://..."
+    window.POLICYPRO_MODE = "local";
 
     // Tracking (optional)
     window.GA4_MEASUREMENT_ID = "";
@@ -31,6 +35,9 @@
     // Paste your ClickFunnels page URL here. If set, the CTA will open ClickFunnels instead of the on-page modal.
     window.CLICKFUNNEL_URL = ""; // e.g. https://yourfunnel.clickfunnels.com/step1
   </script>
+
+  <!-- Preload hero image to reduce flashes / failed paints -->
+  <link rel="preload" as="image" href="hero-securechoice-wildfire-hail-phone.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,7 +67,7 @@
       content:"";
       position:absolute;
       inset:0;
-      background:linear-gradient(rgba(5,10,25,.75),rgba(5,10,25,.75)),url('hero-securechoice-wildfire-hail-phone.jpg') center/cover no-repeat;
+      background:linear-gradient(rgba(5,10,25,.75),rgba(5,10,25,.75)),url('hero-securechoice-wildfire-hail-phone.png') center/cover no-repeat;
     }
     .hero-content{position:relative;max-width:680px;z-index:2}
     .badge{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);font-size:12px;font-weight:700;color:#c7e9ff}
@@ -620,8 +627,13 @@
   var chatInput = document.getElementById('chatInput');
   var chatSend = document.getElementById('chatSend');
 
-  // Where to send chat requests (optional). If blank, we fall back to on-page guidance.
-  var CHAT_ENDPOINT = (window.POLICYPRO_LLM_ENDPOINT || '').trim() || (window.GAS_WEBAPP_URL || '').trim();
+  // Where to send chat requests.
+  // ✅ No API key required: PolicyPro runs in LOCAL mode by default (rule-based + curated insurance guidance).
+  // If you ever add a secure server endpoint later, set window.POLICYPRO_LLM_ENDPOINT to https://... and change POLICYPRO_MODE to 'remote'.
+  var POLICYPRO_MODE = ((window.POLICYPRO_MODE || '') + '').trim().toLowerCase() || 'local';
+  var CHAT_ENDPOINT = (POLICYPRO_MODE === 'remote')
+    ? (((window.POLICYPRO_LLM_ENDPOINT || '').trim() || (window.GAS_WEBAPP_URL || '').trim()))
+    : '';
 
   var chatHistory = []; // minimal local memory
 
@@ -781,105 +793,223 @@
 
   function classifyIntent_(q){
     var s = String(q||'').toLowerCase();
-    var has = function(w){ return s.indexOf(w) !== -1; };
+    var has = function(){
+      for(var i=0;i<arguments.length;i++){
+        if(s.indexOf(String(arguments[i]).toLowerCase()) !== -1) return true;
+      }
+      return false;
+    };
 
+    // Perils / topics
     if(has('hail')) return 'hail';
-    if(has('wildfire') || has('fire') || has('smoke')) return 'wildfire';
+    if(has('wildfire','fire','smoke','embers')) return 'wildfire';
+    if(has('wind','storm')) return 'wind';
+    if(has('water backup','sump','sewer','drain','backup')) return 'water_backup';
+    if(has('flood')) return 'flood';
+
+    // Money / policy mechanics
     if(has('deductible')) return 'deductible';
-    if(has('comprehensive') || has('comp ')) return 'auto_comp';
-    if(has('collision')) return 'auto_collision';
-    if(has('liability') || has('bodily injury') || has('property damage')) return 'liability';
-    if(has('endorsement') || has('rider') || has('extra coverage')) return 'endorsements';
-    if(has('rent') || has('renter') || has('apartment')) return 'renters';
+    if(has('replacement cost','rcv')) return 'replacement_cost';
+    if(has('actual cash value','acv')) return 'acv';
+    if(has('roof','shingles','roof age','hail deductible')) return 'roof';
+    if(has('endorsement','rider','extra coverage','add-on')) return 'endorsements';
+    if(has('limit','coverage amount','how much coverage')) return 'limits';
+
+    // Home policy components
+    if(has('dwelling','coverage a','home value','rebuild')) return 'dwelling';
+    if(has('personal property','contents','coverage c')) return 'personal_property';
+    if(has('loss of use','ale','additional living expense','temporary housing')) return 'loss_of_use';
+    if(has('liability','coverage e','bodily injury','property damage')) return 'liability';
+    if(has('medical payments','med pay','coverage f')) return 'medpay';
+    if(has('rent','renter','apartment')) return 'renters';
+
+    // Auto policy components
+    if(has('comprehensive','comp','theft','vandalism','animal','deer')) return 'auto_comp';
+    if(has('collision','at fault','crash')) return 'auto_collision';
+    if(has('uninsured','underinsured','um','uim')) return 'um_uim';
+    if(has('pip')) return 'pip';
+    if(has('sr-22','sr22')) return 'sr22';
+
+    // Shopping / switching
     if(has('umbrella')) return 'umbrella';
-    if(has('cancel') || has('lapse') || has('renewal')) return 'switching';
-    if(has('bundle')) return 'bundle';
-    if(has('claim')) return 'claims';
-    if(has('cheapest') || has('save') || has('lower') || has('rate')) return 'price';
+    if(has('cancel','lapse','renewal','switch','shopping')) return 'switching';
+    if(has('bundle','multi-policy')) return 'bundle';
+    if(has('claim','file a claim','claims','denied')) return 'claims';
+    if(has('cheapest','save','lower','rate','premium','expensive')) return 'price';
 
     return 'general';
   }
 
   function fallbackAnswer_(q){
+    // LOCAL mode: curated, carrier-agnostic guidance (no API key, no external calls)
     var intent = classifyIntent_(q);
 
     if(intent === 'hail'){
       return (
-        '<b>Hail coverage—here\'s what matters most:</b><br>' +
-        '• <b>Home:</b> check whether your policy has a separate <b>wind/hail deductible</b> (often a %), and whether the roof settles as <b>Replacement Cost</b> or <b>Actual Cash Value</b> / a roof schedule.<br>' +
-        '• <b>Auto:</b> hail is typically covered under <b>Comprehensive</b> (not Collision), subject to your comp deductible.<br><br>' +
-        '<b>Quick tip:</b> If you\'re in a hail-prone area (example ZIP <b>81501</b>, for illustration), comparing deductibles + roof terms usually matters more than the headline premium.<br><br>' +
-        '<b>To tailor this:</b> do you know your current wind/hail deductible (flat $ vs %) and roof age?'
+        '<b>Hail coverage—what to check first:</b><br>' +
+        '• <b>Home:</b> many CO policies use a separate <b>wind/hail deductible</b> (often a % of Coverage A). Also check roof settlement: <b>Replacement Cost</b> vs <b>ACV/roof schedule</b>.<br>' +
+        '• <b>Auto:</b> hail is typically under <b>Comprehensive</b> (not Collision), subject to your comp deductible.<br><br>' +
+        '<b>Quick win:</b> comparing wind/hail deductible + roof terms often matters more than the headline premium in hail-prone areas (ZIP <b>81501</b> is an example only).<br><br>' +
+        '<b>1 question:</b> Is your home wind/hail deductible a flat $ amount or a %?'
+      );
+    }
+
+    if(intent === 'roof'){
+      return (
+        '<b>Roof coverage (CO)—2 items change claim payouts the most:</b><br>' +
+        '• <b>Roof settlement:</b> <b>Replacement Cost</b> pays to replace (after deductible + depreciation recovered). <b>ACV/roof schedule</b> reduces payment for age/wear.<br>' +
+        '• <b>Wind/Hail deductible:</b> often separate and can be a % of Coverage A.<br><br>' +
+        '<b>Ask your agent/carrier:</b> “Is my roof on RCV or ACV/schedule? What is my wind/hail deductible?”<br><br>' +
+        '<b>1 question:</b> About how old is the roof (0–5, 6–10, 11–15, 16+)?'
       );
     }
 
     if(intent === 'wildfire'){
       return (
-        '<b>Wildfire/smoke protection—focus on these coverage parts:</b><br>' +
-        '• <b>Dwelling replacement cost</b> (and any <b>extended replacement</b> option)<br>' +
-        '• <b>Loss of use</b> (temporary housing) limits<br>' +
-        '• <b>Ordinance or Law</b> (code upgrades after a loss)<br>' +
-        '• Underwriting items like <b>defensible space</b> and roof condition can affect eligibility in some areas.<br><br>' +
-        '<b>Auto note:</b> wildfire-related vehicle damage is typically <b>Comprehensive</b> (heat/embers/smoke), subject to your comp deductible.<br><br>' +
-        '<b>To tailor this:</b> homeowner vs renter, and how old is the roof?'
+        '<b>Wildfire/smoke—focus on these coverage parts:</b><br>' +
+        '• <b>Dwelling (Coverage A)</b> adequacy + any <b>extended replacement</b> option<br>' +
+        '• <b>Loss of use / ALE</b> for temporary housing<br>' +
+        '• <b>Ordinance or Law</b> (code upgrades after a covered loss)<br>' +
+        '• Underwriting items: <b>defensible space</b>, roof condition, and proximity to brush can impact eligibility in some areas.<br><br>' +
+        '<b>Auto note:</b> fire/embers/smoke-related vehicle damage is typically <b>Comprehensive</b> (deductible applies).<br><br>' +
+        '<b>1 question:</b> Homeowner, condo, or renter?'
+      );
+    }
+
+    if(intent === 'water_backup'){
+      return (
+        '<b>Water backup (sewer/drain/sump) is usually NOT covered by default.</b><br><br>' +
+        'Most homeowners/renters policies exclude sewer/drain backup unless you add a <b>water backup endorsement</b> (with a separate limit, e.g., $5k–$25k depending on carrier).<br><br>' +
+        '<b>Tip:</b> confirm the endorsement limit, whether finished basement contents are included, and if there are maintenance requirements.<br><br>' +
+        '<b>1 question:</b> Are you asking about a future add-on or an active loss/claim?'
+      );
+    }
+
+    if(intent === 'flood'){
+      return (
+        '<b>Flood is typically separate from homeowners/renters.</b><br><br>' +
+        'Most standard policies exclude flood (rising water / surface water). Flood coverage is usually purchased as a separate policy.<br><br>' +
+        '<b>1 question:</b> Is your concern river/flash flooding, or water backup from a drain/sewer?'
       );
     }
 
     if(intent === 'deductible'){
       return (
-        '<b>Deductibles—direct breakdown:</b><br>' +
-        '• <b>Home:</b> you may have multiple deductibles (All Other Perils + a separate wind/hail %). Lowering a wind/hail deductible can raise premium in CO.<br>' +
-        '• <b>Auto:</b> Collision and Comprehensive deductibles are separate; higher deductibles reduce premium but increase out-of-pocket for hail/theft (comp) or at-fault crashes (collision).<br><br>' +
-        '<b>Rule of thumb:</b> choose a deductible you can comfortably pay tomorrow, then shop carriers for roof terms + eligibility.<br><br>' +
-        'What deductible are you aiming for (home + auto), and is your priority lowest cost or best hail terms?'
+        '<b>Deductibles—straight breakdown:</b><br>' +
+        '• <b>Home:</b> often multiple deductibles (All Other Perils + separate wind/hail %). Lower wind/hail deductible can raise premium in CO.<br>' +
+        '• <b>Auto:</b> Collision and Comprehensive deductibles are separate. Higher deductibles lower premium but increase out-of-pocket.<br><br>' +
+        '<b>Rule of thumb:</b> pick a deductible you can comfortably pay tomorrow, then shop for better roof terms/eligibility.<br><br>' +
+        '<b>1 question:</b> Are you trying to lower premium or reduce out-of-pocket on hail losses?'
       );
     }
 
-    if(intent === 'bundle'){
+    if(intent === 'replacement_cost'){
       return (
-        '<b>Bundling home + auto:</b> It can improve pricing and sometimes eligibility, but it\'s only a win if coverage terms don\'t degrade.<br><br>' +
-        '<b>What to compare:</b><br>' +
-        '• Home wind/hail deductible + roof settlement method<br>' +
-        '• Auto liability limits + comp/collision deductibles<br>' +
-        '• Discounts that require both policies (multi-policy, homeowner, telematics, etc.)<br><br>' +
-        'If you tell me your renewal date and roof age, I\'ll outline the cleanest way to switch without a lapse.'
+        '<b>Replacement Cost vs ACV (simple):</b><br>' +
+        '• <b>Replacement Cost</b>: pays to repair/replace with like kind/quality (deductible applies).<br>' +
+        '• <b>ACV</b>: replacement cost <i>minus depreciation</i>—lower payout for older items/roofs.<br><br>' +
+        '<b>On roofs:</b> some carriers use an ACV/scheduled roof approach in hail-heavy areas—this is a big deal on claims.<br><br>' +
+        '<b>1 question:</b> Are you asking about your roof or personal property/contents?'
       );
     }
 
-    if(intent === 'switching'){
+    if(intent === 'acv'){
       return (
-        '<b>Switching carriers (safe sequence):</b><br>' +
-        '1) Bind the new policy first (confirm effective date + coverage).<br>' +
-        '2) Verify lender/financed vehicle requirements and any escrow needs.<br>' +
-        '3) Cancel the old policy only after the new one is active to avoid a lapse.<br><br>' +
-        '<b>Common pitfall:</b> saving money but ending up with a worse hail deductible or roof settlement.<br><br>' +
-        'What\'s your renewal date and what\'s the #1 thing you want to improve?'
+        '<b>ACV (Actual Cash Value) means depreciation applies.</b><br><br>' +
+        'If something is settled on ACV, the insurer reduces payout for age/wear. This most commonly surprises people on <b>older roofs</b> and sometimes personal property categories.<br><br>' +
+        '<b>Action:</b> ask if you can upgrade roof settlement to Replacement Cost (if available) and what it does to premium/eligibility.<br><br>' +
+        '<b>1 question:</b> What item are you worried about (roof, TV/furniture, etc.)?'
+      );
+    }
+
+    if(intent === 'liability'){
+      return (
+        '<b>Liability coverage—what it does:</b><br>' +
+        'It helps if you’re legally responsible for injury/property damage to others (home or auto, depending on policy). Limits matter most (e.g., $100k/$300k, $300k, $500k, etc.).<br><br>' +
+        '<b>Common upgrade path:</b> increase underlying liability limits and consider an <b>umbrella</b> if you have assets/income to protect.<br><br>' +
+        '<b>1 question:</b> Are you asking about home liability or auto liability?'
+      );
+    }
+
+    if(intent === 'um_uim'){
+      return (
+        '<b>UM/UIM (uninsured/underinsured motorist):</b><br>' +
+        'Helps cover injuries (and sometimes property damage, depending on state/options) if the at-fault driver has no insurance or not enough.<br><br>' +
+        '<b>Why it matters:</b> it protects you when someone else can’t pay for the damage they caused.<br><br>' +
+        '<b>1 question:</b> Are you mainly worried about medical bills/injuries or vehicle damage?'
       );
     }
 
     if(intent === 'renters'){
       return (
-        '<b>Renters insurance (Colorado):</b> It typically covers your personal property, liability, and loss-of-use. It does <b>not</b> insure the building (that\'s the landlord).<br><br>' +
-        '<b>Wildfire/hail angle:</b> smoke damage and evacuation/temporary housing is where loss-of-use limits matter.<br><br>' +
-        'Do you want lowest cost or stronger liability + loss-of-use limits?'
+        '<b>Renters insurance (Colorado):</b> usually covers your personal property, liability, and loss-of-use (temporary housing). It does <b>not</b> insure the building.<br><br>' +
+        '<b>Wildfire/smoke angle:</b> loss-of-use limits are important if you must evacuate or can’t live there during repairs.<br><br>' +
+        '<b>1 question:</b> Do you want lowest cost or stronger liability + loss-of-use?'
       );
     }
 
     if(intent === 'endorsements'){
       return (
-        '<b>Endorsements that often matter for hail + fire protection:</b><br>' +
-        '• <b>Ordinance or Law</b> (code upgrade coverage)<br>' +
-        '• <b>Extended replacement</b> (where available)<br>' +
-        '• <b>Roof settlement upgrade</b> (Replacement Cost vs schedule/ACV)<br>' +
-        '• <b>Loss of use</b> adequacy (often overlooked)<br><br>' +
-        'If you share homeowner vs renter + roof age, I\'ll prioritize what to ask for first.'
+        '<b>Common add-ons that help in hail + fire scenarios:</b><br>' +
+        '• <b>Ordinance or Law</b> (code upgrades)<br>' +
+        '• <b>Water backup</b> (sewer/drain/sump)<br>' +
+        '• <b>Roof settlement upgrade</b> (RCV vs ACV/schedule, if offered)<br>' +
+        '• <b>Scheduled valuables</b> (jewelry, firearms, etc.) if you have high-value items<br><br>' +
+        '<b>1 question:</b> Is your priority hail/roof, wildfire/evacuation, or water backup?'
       );
     }
 
+    if(intent === 'bundle'){
+      return (
+        '<b>Bundling home + auto:</b> can reduce premium and sometimes help eligibility, but only if coverage terms stay strong.<br><br>' +
+        '<b>Compare these before you switch:</b><br>' +
+        '• Home wind/hail deductible + roof settlement method<br>' +
+        '• Auto liability limits + comp/collision deductibles<br>' +
+        '• Any required programs (telematics, inspections, roof age rules)<br><br>' +
+        '<b>1 question:</b> When is your renewal date (rough month is fine)?'
+      );
+    }
+
+    if(intent === 'switching'){
+      return (
+        '<b>Switching carriers—safe sequence:</b><br>' +
+        '1) Bind the new policy first (confirm effective date + coverage).<br>' +
+        '2) Confirm lender/escrow and financed-vehicle requirements.<br>' +
+        '3) Cancel the old policy only after the new one is active to avoid a lapse.<br><br>' +
+        '<b>Watch-outs in CO:</b> wind/hail deductibles and roof settlement can change dramatically between carriers.<br><br>' +
+        '<b>1 question:</b> Are you switching because of premium, coverage terms, or a non-renewal?'
+      );
+    }
+
+    if(intent === 'claims'){
+      return (
+        '<b>Claims—best practice (general):</b><br>' +
+        '• Document damage (photos/video), protect property from further damage, and report promptly per policy terms.<br>' +
+        '• Keep receipts for emergency repairs/temporary living costs (if applicable).<br>' +
+        '• For hail: get a reputable inspection and understand depreciation/deductible effects before authorizing major work.<br><br>' +
+        '<b>Important:</b> for an active loss, follow your carrier’s claim instructions and seek emergency help if unsafe.<br><br>' +
+        '<b>1 question:</b> Is this a home hail claim, wildfire/smoke, or auto claim?'
+      );
+    }
+
+    if(intent === 'price'){
+      return (
+        '<b>Ways people usually lower premium (without wrecking coverage):</b><br>' +
+        '• Right-size deductibles (especially wind/hail vs all-other-perils)<br>' +
+        '• Bundle home + auto where it doesn’t weaken roof terms<br>' +
+        '• Verify discounts (protective devices, claim-free, paid-in-full, telematics where comfortable)<br>' +
+        '• Review limits intelligently (don’t underinsure dwelling; consider liability needs)<br><br>' +
+        '<b>Heads-up:</b> the cheapest quote can come with an ACV/scheduled roof and a large hail deductible in CO.<br><br>' +
+        '<b>1 question:</b> Is your main goal “lowest monthly payment” or “best hail/roof terms”?'
+      );
+    }
+
+    // Default / general
     return (
-      '<b>I can help—what specific question do you have?</b><br><br>' +
-      '<b>Example context (illustration only):</b> In ZIP <b>81501</b>, comparing wind/hail deductibles and roof terms can matter a lot because severe weather losses can impact pricing and eligibility.<br><br>' +
-      '<b>To tailor your answer:</b> homeowner vs renter, roof age, and number of vehicles?'
+      '<b>I can help with general home &amp; auto insurance questions.</b><br><br>' +
+      '<b>Common Colorado topics:</b> wind/hail deductibles, roof settlement (RCV vs ACV), wildfire/defensible space, bundling, and switching without a lapse.<br><br>' +
+      '<b>Ask me something like:</b> “Is hail covered on auto?”, “What is a wind/hail deductible?”, “Do I need water backup?”<br><br>' +
+      '<b>1 question:</b> Are you asking about home, auto, renters, or umbrella?'
     );
   }
 
@@ -895,51 +1025,55 @@
     // After the user engages, show the email/CTA nudge if we don't have their email yet
     setTimeout(maybeShowChatLeadNudge_, 250);
 
-    if(!CHAT_ENDPOINT || CHAT_ENDPOINT.indexOf('http') !== 0){
-      var ans = fallbackAnswer_(q);
-      chatHistory.push({ role:'assistant', content: ans.replace(/<[^>]*>/g,'') });
-      replaceLastBot_(ans + '<div class="meta">General info • Not a quote • Human review required</div>');
+    // ✅ Default behavior: LOCAL answers (no API key, no external calls)
+    // If you later set POLICYPRO_MODE='remote' AND provide a secure endpoint, this will try it.
+    if(CHAT_ENDPOINT && CHAT_ENDPOINT.indexOf('http') === 0){
+      var payloadChat = {
+        action: 'chat',
+        message: q,
+        history: chatHistory.slice(-12),
+        channel: 'PolicyPro Chat',
+        // Safety: keep answers general; binding/quotes require human review
+        policy: 'GENERAL_INFO_ONLY'
+      };
+
+      fetch(CHAT_ENDPOINT, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payloadChat)
+      }).then(function(res){
+        return res.text().then(function(t){
+          var obj;
+          try{ obj = JSON.parse(t); }catch(e){ obj = null; }
+          if(!res.ok) throw new Error('HTTP ' + res.status);
+
+          var reply = '';
+          if(obj){
+            if(typeof obj.reply === 'string') reply = obj.reply;
+            else if(typeof obj.message === 'string') reply = obj.message;
+            else if(typeof obj.output_text === 'string') reply = obj.output_text;
+            else if(obj.choices && obj.choices[0] && obj.choices[0].message && typeof obj.choices[0].message.content === 'string') reply = obj.choices[0].message.content;
+          }
+          if(!reply) reply = fallbackAnswer_(q);
+
+          chatHistory.push({ role:'assistant', content: String(reply) });
+
+          // IMPORTANT: newline-to-<br> must use a valid regex literal.
+          // This fixes the "Invalid regular expression: missing /" runtime error.
+          replaceLastBot_(esc_(reply).replace(/\r?\n/g, '<br>') + '<div class="meta">General info • Not a quote • Human review required</div>');
+        });
+      }).catch(function(){
+        var ansRemoteFail = fallbackAnswer_(q);
+        chatHistory.push({ role:'assistant', content: ansRemoteFail.replace(/<[^>]*>/g,'') });
+        replaceLastBot_(ansRemoteFail + '<div class="meta">General info • Not a quote • Human review required</div>');
+      });
       return;
     }
 
-    var systemPrompt = "You are PolicyPro™, a licensed-insurance-agent style assistant for Colorado home & auto insurance. Give direct, professional, carrier-agnostic answers to the user's exact question. Avoid tables. Use short paragraphs + bullets when helpful. Always include: (1) the direct answer, (2) key limits/caveats (not a quote; human review required), and (3) at most 1–2 targeted follow-up questions if truly needed. Reference ZIP 81501 only as an illustrative example when relevant.";
-
-    var payloadChat = {
-      action: 'chat',
-      system: systemPrompt,
-      message: q,
-      history: chatHistory.slice(-12),
-      zipExample: '81501',
-      channel: 'PolicyPro Chat'
-    };
-
-    fetch(CHAT_ENDPOINT, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payloadChat)
-    }).then(function(res){
-      return res.text().then(function(t){
-        var obj;
-        try{ obj = JSON.parse(t); }catch(e){ obj = null; }
-        if(!res.ok) throw new Error('HTTP ' + res.status);
-
-        var reply = '';
-        if(obj){
-          if(typeof obj.reply === 'string') reply = obj.reply;
-          else if(typeof obj.message === 'string') reply = obj.message;
-          else if(typeof obj.output_text === 'string') reply = obj.output_text;
-          else if(obj.choices && obj.choices[0] && obj.choices[0].message && typeof obj.choices[0].message.content === 'string') reply = obj.choices[0].message.content;
-        }
-        if(!reply) reply = fallbackAnswer_(q);
-
-        chatHistory.push({ role:'assistant', content: reply });
-        replaceLastBot_(esc_(reply).replace(/\r?\n/g, '<br>') + '<div class="meta">General info • Not a quote • Human review required</div>');
-      });
-    }).catch(function(){
-      var ans2 = fallbackAnswer_(q);
-      chatHistory.push({ role:'assistant', content: ans2.replace(/<[^>]*>/g,'') });
-      replaceLastBot_(ans2 + '<div class="meta">General info • Not a quote • Human review required</div>');
-    });
+    // Local answer
+    var ans = fallbackAnswer_(q);
+    chatHistory.push({ role:'assistant', content: ans.replace(/<[^>]*>/g,'') });
+    replaceLastBot_(ans + '<div class="meta">General info • Not a quote • Human review required</div>');
   }
 
   if(chatForm){
@@ -1075,9 +1209,16 @@
       console.assert(esc_('<>&"\'') === '&lt;&gt;&amp;&quot;&#39;', 'esc_ should escape HTML');
       console.assert(isEmail_('a@b.co') === true, 'isEmail_ basic should pass');
       console.assert(isEmail_('nope') === false, 'isEmail_ basic should fail');
+
+      // Existing newline test
       var sample = 'a\n b\r\n c';
       var out = sample.replace(/\r?\n/g, '<br>');
       console.assert(out.indexOf('<br>') !== -1, 'newline regex should work');
+
+      // ✅ Added tests to ensure regex never becomes invalid / split across lines
+      console.assert('x\n'.replace(/\r?\n/g,'<br>') === 'x<br>', 'LF should replace');
+      console.assert('x\r\n'.replace(/\r?\n/g,'<br>') === 'x<br>', 'CRLF should replace');
+
       var lsOk = true;
       try{ localStorage.setItem('_t','1'); localStorage.removeItem('_t'); }catch(e){ lsOk = false; }
       console.assert(lsOk === true || lsOk === false, 'localStorage check ran');
