@@ -14,8 +14,9 @@
 
   <script>
     // === REQUIRED: paste your deployed Google Apps Script Web App URL here ===
-   window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzkm0aZJa5j8iA6MEixLYqmK8eeSGzDZmIsfLYocT63UL-JKs29p8ThlmeQHA5Az66iKA/exec";
+    window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyWoyQwiNZGLj7Bh-8Hap2rceF-3XWTP5mqpkjRpN5MwWmKLY1eQcDSmrw_IjS5avJ_XA/exec"; // e.g. https://script.google.com/macros/s/XXXX/exec
 
+    // Optional separate LLM endpoint (usually leave blank to reuse GAS)
     window.POLICYPRO_LLM_ENDPOINT = "";
 
     // ✅ Default: run PolicyPro in LOCAL mode (no API keys required)
@@ -36,14 +37,15 @@
   </script>
 
   <!-- Preload hero image to reduce flashes / failed paints -->
-  <link rel="preload" as="image" href="hero-securechoice-wildfire-hail-phone.png">
+<!-- NOTE: If your file accidentally became .jpg.png (common on Windows), the JS below will auto-detect it. -->
+<link rel="preload" as="image" href="hero-securechoice-wildfire-hail-phone.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    :root{--card:#0f172a;--line:rgba(148,196,255,.35);--brand:#38bdf8;--brand2:#0ea5e9;--ok:#22c55e;--warn:#facc15;}
+    :root{--card:#0f172a;--line:rgba(148,196,255,.35);--brand:#38bdf8;--brand2:#0ea5e9;--ok:#22c55e;--warn:#facc15;--hero-image:url('hero-securechoice-wildfire-hail-phone.png');}
 
     *{box-sizing:border-box}
     body{
@@ -66,7 +68,7 @@
       content:"";
       position:absolute;
       inset:0;
-      background:linear-gradient(rgba(5,10,25,.75),rgba(5,10,25,.75)),url('hero-securechoice-wildfire-hail-phone.png') center/cover no-repeat;
+      background:linear-gradient(rgba(5,10,25,.75),rgba(5,10,25,.75)),var(--hero-image) center/cover no-repeat;
     }
     .hero-content{position:relative;max-width:680px;z-index:2}
     .badge{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);font-size:12px;font-weight:700;color:#c7e9ff}
@@ -122,12 +124,12 @@
       opacity:.55;
     }
     .chat-launcher:hover{
-      transform:translateY(-50%) scale(1.035);
+      transform:translateY(-2px) scale(1.035);
       filter:brightness(1.06);
       box-shadow:0 34px 120px rgba(0,0,0,.82);
     }
     .chat-launcher:active{
-      transform:translateY(-50%) scale(0.99);
+      transform:translateY(0) scale(0.99);
     }
 
     .chat-avatar{
@@ -195,6 +197,105 @@
     @keyframes pulse{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.06);opacity:.25}}
     @keyframes notify{0%,100%{box-shadow:0 0 0 0 rgba(56,189,248,.45);transform:scale(1)}50%{box-shadow:0 0 0 12px rgba(56,189,248,0);transform:scale(1.05)}}
     @keyframes ppGlow{0%,100%{opacity:.65}50%{opacity:.95}}
+
+    /* ================= MOBILE LAYOUT FIXES ================= */
+    @media (max-width: 900px){
+      /* Overall hero spacing */
+      .hero{
+        padding:18px;
+        min-height:100vh;
+        align-items:flex-start;
+        padding-top:72px; /* breathing room below browser chrome */
+        gap:18px;
+      }
+
+      .hero-content{
+        max-width:100%;
+      }
+
+      .badge{
+        margin-bottom:10px;
+      }
+
+      h1{
+        font-size:clamp(28px,8vw,42px);
+        margin:14px 0 12px;
+      }
+
+      p{
+        font-size:16px;
+        line-height:1.55;
+        margin-bottom:18px;
+      }
+
+      /* Primary CTA first */
+      .cta{
+        width:100%;
+        max-width:520px;
+        margin-top:10px;
+      }
+
+      /* Alert comes AFTER CTA */
+      .alert-box{
+        position:relative;
+        right:auto;bottom:auto;
+        width:100%;
+        max-width:520px;
+        margin-top:18px;
+      }
+
+      /* PolicyPro launcher LAST, clearly separated */
+      .chat-launcher{
+        position:relative;
+        right:auto;bottom:auto;
+        width:100%;
+        max-width:520px;
+        margin-top:20px;
+        justify-content:flex-start;
+      }
+
+      /* Floating buttons/windows: fit small screens + safe area */
+      .disc-btn{
+        left:14px;
+        bottom:calc(14px + env(safe-area-inset-bottom));
+      }
+
+      .chat-window{
+        left:12px;
+        right:12px;
+        width:auto;
+        bottom:calc(12px + env(safe-area-inset-bottom));
+        max-height:80vh;
+      }
+    }
+      .hero-content{max-width:100%;}
+      h1{font-size:clamp(28px,8vw,44px);}
+      p{font-size:16px;}
+      .cta{width:100%;max-width:520px;}
+
+      /* Put alert + PolicyPro in the normal document flow so they don't overlap content */
+      .alert-box{
+        position:relative;
+        right:auto;bottom:auto;
+        width:100%;max-width:520px;
+        margin-top:18px;
+      }
+      .chat-launcher{
+        position:relative;
+        right:auto;bottom:auto;
+        width:100%;max-width:520px;
+        margin-top:14px;
+      }
+
+      /* Floating buttons/windows: fit small screens + safe area */
+      .disc-btn{left:14px;bottom:calc(14px + env(safe-area-inset-bottom));}
+      .chat-window{
+        left:12px;right:12px;
+        width:auto;
+        bottom:calc(12px + env(safe-area-inset-bottom));
+        max-height:78vh;
+      }
+    }
 
     /* Funnel modal */
     .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:20000;}
@@ -569,6 +670,32 @@
 </div>
 
 <script>
+  // ===== Hero image auto-detect (fixes accidental double extensions like .jpg.png) =====
+  (function(){
+    var candidates = [
+      'hero-securechoice-wildfire-hail-phone.png',
+      'hero-securechoice-wildfire-hail-phone.jpg',
+      'hero-securechoice-wildfire-hail-phone.jpeg',
+      'hero-securechoice-wildfire-hail-phone.webp',
+      // Common mistake when Windows hides extensions:
+      'hero-securechoice-wildfire-hail-phone.jpg.png'
+    ];
+
+    function setHero(url){
+      try{ document.documentElement.style.setProperty('--hero-image', "url('" + url + "')"); }catch(e){}
+    }
+
+    function tryNext(i){
+      if(i >= candidates.length) return;
+      var img = new Image();
+      img.onload = function(){ setHero(candidates[i]); };
+      img.onerror = function(){ tryNext(i+1); };
+      img.src = candidates[i] + '?v=' + Date.now();
+    }
+
+    tryNext(0);
+  })();
+
   // ===== Lead funnel + Google Apps Script backend =====
   var GAS = window.GAS_WEBAPP_URL || "";
   var CLICKFUNNEL_URL = (window.CLICKFUNNEL_URL || '').trim();
@@ -588,18 +715,18 @@
   if(cancelBtn) cancelBtn.addEventListener('click', hideModal);
   if(modalOverlay) modalOverlay.addEventListener('click', hideModal);
 
-  function postJSON(url, payload){
+  function postToGAS(url, payload){
+    // IMPORTANT: GitHub Pages -> Apps Script JSON fetch triggers CORS preflight.
+    // This sends a "simple" form-encoded POST with mode:no-cors so the browser will allow the request.
+    // We can't read the response in no-cors mode, so treat a successful fetch() as "submitted".
+    var params = new URLSearchParams();
+    params.set('payload', JSON.stringify(payload || {}));
+
     return fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(function(res){
-      return res.text().then(function(t){
-        var data;
-        try{ data = JSON.parse(t); }catch(e){ data = { ok:false, error:'Non-JSON response', raw:t }; }
-        if(!res.ok) throw new Error('HTTP ' + res.status + ' ' + (data && data.error ? data.error : ''));
-        return data;
-      });
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: params.toString()
     });
   }
 
@@ -697,7 +824,7 @@
       kitType: 'FIRE_HAIL_ENDORSEMENTS'
     };
 
-    return postJSON(GAS, payload);
+    return postToGAS(GAS, payload);
   }
 
   function handleChatLeadSubmit_(){
@@ -1189,15 +1316,14 @@
 
       formStatus.textContent='Submitting…';
 
-      postJSON(GAS, payloadLead).then(function(resp){
-        if(resp && resp.ok === false) throw new Error(resp.error || 'Webhook error');
+      postToGAS(GAS, payloadLead).then(function(){
         formStatus.className='status ok';
         formStatus.textContent='✅ Submitted! Check your email for your coverage guide.';
         leadForm.reset();
         setTimeout(hideModal, 900);
       }).catch(function(err){
         formStatus.className='status err';
-        formStatus.textContent='⚠ Could not submit. Verify Apps Script is deployed as a Web App with access set to “Anyone”. (' + (err && err.message ? err.message : 'Error') + ')';
+        formStatus.textContent='⚠ Could not submit (network error). Double-check the Apps Script URL and that it is deployed as a Web App. (' + (err && err.message ? err.message : 'Error') + ')';
       });
     });
   }
@@ -1227,6 +1353,3 @@
 
 </body>
 </html>
-
-
-
