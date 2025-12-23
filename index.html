@@ -209,13 +209,24 @@
         gap:18px;
       }
 
-      .hero-content{max-width:100%;}
+      /* Add bottom breathing room so fixed buttons never cover content */
+      .hero-content{
+        max-width:100%;
+        padding-bottom:170px; /* room for PolicyPro pill + Disclaimer */
+      }
 
       h1{font-size:clamp(28px,8vw,42px);margin:14px 0 12px;}
       p{font-size:16px;line-height:1.55;margin-bottom:18px;}
 
-      .cta{width:100%;max-width:520px;margin-top:10px;}
+      /* CTA full width and never hidden behind floating elements */
+      .cta{
+        width:100%;
+        max-width:520px;
+        margin-top:10px;
+        margin-bottom:18px;
+      }
 
+      /* Put alert in normal flow so it never overlaps */
       .alert-box{
         position:relative;
         right:auto;bottom:auto;
@@ -224,31 +235,40 @@
         margin-top:18px;
       }
 
+      /* PolicyPro launcher stays visible while scrolling (sticky pill) */
       .chat-launcher{
         position:fixed;
         right:14px;
-        bottom:calc(70px + env(safe-area-inset-bottom));
         left:14px;
+        bottom:calc(64px + env(safe-area-inset-bottom)); /* keep above Disclaimer */
+        width:auto;
         max-width:520px;
         margin:0 auto;
         z-index:25000;
       }
+      .chat-launcher:hover{transform:none;}
+      .chat-launcher:active{transform:none;}
 
+      /* Chat window: edge-to-edge friendly on small screens */
       .chat-window{
         left:12px;
         right:12px;
         width:auto;
-        bottom:calc(140px + env(safe-area-inset-bottom));
+        bottom:calc(136px + env(safe-area-inset-bottom)); /* leave room for sticky pill */
         max-height:78vh;
       }
 
+      /* Disclaimer fixed bottom-right on mobile (small, unobtrusive) */
       .disc-btn{
         position:fixed;
         right:14px;
-        bottom:calc(14px + env(safe-area-inset-bottom));
         left:auto;
         top:auto;
+        bottom:calc(14px + env(safe-area-inset-bottom));
         z-index:26000;
+        padding:8px 12px;
+        font-size:11px;
+        opacity:.92;
       }
     }
 
@@ -257,7 +277,6 @@
       h1{font-size:clamp(28px,8vw,42px);margin:14px 0 12px;}
       p{font-size:16px;line-height:1.55;margin-bottom:18px;}
 
-      /* Primary CTA full width */
       .cta{width:100%;max-width:520px;margin-top:10px;}
 
       /* Put alert in normal flow so it never overlaps */
@@ -273,8 +292,8 @@
       .chat-launcher{
         position:fixed;
         right:14px;
-        bottom:calc(14px + env(safe-area-inset-bottom));
         left:14px;
+        bottom:calc(70px + env(safe-area-inset-bottom));
         width:auto;
         max-width:520px;
         margin:0 auto;
@@ -288,16 +307,17 @@
         left:12px;
         right:12px;
         width:auto;
-        bottom:calc(74px + env(safe-area-inset-bottom)); /* leave room for sticky PolicyPro pill */
+        bottom:calc(140px + env(safe-area-inset-bottom)); /* leave room for sticky PolicyPro pill */
         max-height:78vh;
       }
 
-      /* Move Disclaimer away from the CTA on mobile */
+      /* Disclaimer fixed bottom-right on mobile */
       .disc-btn{
+        position:fixed;
+        right:14px;
         left:auto;
-        bottom:auto;
-        right:12px;
-        top:12px;
+        top:auto;
+        bottom:calc(14px + env(safe-area-inset-bottom));
         z-index:26000;
       }
     }
@@ -909,22 +929,19 @@
 
   function openChat_(){
     if(chatWindow){ chatWindow.style.display = 'block'; }
+    // Hide the floating launcher while chat is open (per your request)
+    if(chatBtn){ chatBtn.style.display = 'none'; }
     seedChat_();
     setTimeout(function(){ if(chatInput) chatInput.focus(); }, 50);
   }
 
   function closeChat_(){
     if(chatWindow){ chatWindow.style.display = 'none'; }
-  }
+    // Show the launcher again when chat closes
     if(chatBtn){ chatBtn.style.display = 'flex'; }
   }
 
-  if(chatBtn) chatBtn.addEventListener('click', function(){
-    // Toggle behavior so the PolicyPro pill can stay visible on mobile
-    var isOpen = (chatWindow && chatWindow.style.display === 'block');
-    if(isOpen) closeChat_();
-    else openChat_();
-  });
+  if(chatBtn) chatBtn.addEventListener('click', openChat_);
   if(closeChat) closeChat.addEventListener('click', closeChat_);
 
   function classifyIntent_(q){
