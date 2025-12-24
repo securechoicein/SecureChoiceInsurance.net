@@ -331,6 +331,31 @@
 
     /* ================== POLICY HEALTH CHECK ================== */
 
+    /* Option A (Desktop): collapsed by default to reduce form height */
+    .phc-collapse{border:1px solid #e5e7eb;border-radius:18px;background:#ffffff;box-shadow:0 14px 40px rgba(2,6,23,.06);overflow:hidden;}
+    .phc-collapse-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px;background:linear-gradient(180deg,#ffffff,#f8fafc);}
+    .phc-collapse-title{display:flex;flex-direction:column;gap:4px;}
+    .phc-collapse-title .t{font-weight:1000;color:#0b1120;font-size:13px;}
+    .phc-collapse-title .s{font-weight:800;color:#64748b;font-size:11.5px;line-height:1.35;max-width:70ch;}
+    .phc-toggle{flex:0 0 auto;padding:10px 12px;border-radius:999px;border:1px solid #0b1120;background:#0b1120;color:#fff;font-weight:1000;font-size:12px;cursor:pointer;}
+    .phc-toggle.alt{border:1px solid #cbd5e1;background:#fff;color:#0b1120;}
+
+    .phc-collapsible{padding:0 12px 12px;}
+    .phc-collapsible-inner{padding:12px 0 0;}
+    .phc-collapse.collapsed .phc-collapsible{display:none;}
+
+    /* Keep mobile flow unchanged */
+    @media (max-width: 600px){
+      .phc-collapse{box-shadow:none;}
+      .phc-collapse-head{padding:0;background:transparent;border:0;}
+      .phc-toggle{display:none;}
+      .phc-collapse-title .t{font-size:0;}
+      .phc-collapse-title .s{font-size:0;}
+      .phc-collapse.collapsed .phc-collapsible{display:block;}
+    }
+
+    /* ================== END PHC COLLAPSE ================== */
+
     .phc-wrap{
       max-width:960px;
       margin:32px auto 18px;
@@ -463,8 +488,39 @@
     .phc-result-label{font-weight:1000;color:#0b1120;font-size:12px;letter-spacing:.08em;text-transform:uppercase;}
 
     .phc-result-copy{margin:10px 0 8px;color:#0b1120;font-weight:900;font-size:13px;line-height:1.35;}
+
+/* Subhead animation (shown after PHC completes) */
+.phc-subhead{
+  margin:10px 0 6px;
+  color:#0b1120;
+  font-weight:700;
+  font-size:13px;
+  line-height:1.45;
+  opacity:0;
+  transform:translateY(6px);
+  animation:phcSubheadIn .55s ease-out forwards;
+  animation-delay:.15s;
+}
+
+/* Subhead animation timing varies by result */
+.phc-subhead.green{
+  animation-delay:.1s;
+}
+.phc-subhead.red{
+  animation-delay:.28s;
+}
+
+@keyframes phcSubheadIn{
+  to{opacity:1;transform:translateY(0);}
+}
     .phc-result-why{margin:0;padding-left:18px;display:grid;gap:6px;}
-    .phc-result-why li{color:#475569;font-weight:800;font-size:12px;line-height:1.35;}
+    $1
+
+    /* Loyalty callout (shown on Red results) */
+    .phc-loyalty{display:none;margin-top:12px;padding:12px 12px;border-radius:16px;border:1px solid rgba(15,23,42,.12);background:linear-gradient(180deg, #ffffff, #f8fafc);box-shadow:0 12px 26px rgba(2,6,23,.06);}
+    .phc-loyalty.show{display:block;}
+    .phc-loyalty .m{font-weight:1000;color:#0b1120;font-size:13px;line-height:1.3;margin:0 0 10px;}
+    .phc-loyalty .btn{width:100%;}
 
     /* Micro-summary (above CTA) */
     .phc-summary{
@@ -1126,6 +1182,17 @@
 
           <!-- STEP 3: Policy Health Check -->
           <section class="step" data-step="2" aria-label="Step 3">
+            <!-- Option A: desktop collapsed PHC to reduce clutter/height -->
+            <div class="phc-collapse collapsed" id="phcCollapse">
+              <div class="phc-collapse-head">
+                <div class="phc-collapse-title">
+                  <div class="t">Policy Health Check</div>
+                  <div class="s">Answer a few quick questions to spot common coverage gaps (general info only; agent review required). <span style="white-space:nowrap;">Takes ~30 seconds</span></div>
+                </div>
+                <button class="phc-toggle" id="phcToggle" type="button" aria-expanded="false" aria-controls="phcCollapsible">Show</button>
+              </div>
+              <div class="phc-collapsible" id="phcCollapsible">
+                <div class="phc-collapsible-inner">
             <div class="grid phc-desktop-grid">
               <div class="field" style="grid-column:1 / -1;">
                 <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
@@ -1218,7 +1285,14 @@
                 <button class="btn phc-run" id="phcRun" type="button">Show my result</button>
               </div>
               <div class="phc-result-copy" id="phcCopy"></div>
+              <div class="phc-subhead" id="phcSubhead">Most people don't switch because they're happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.</div>
               <ul class="phc-result-why" id="phcWhy"></ul>
+
+              <!-- Red-result interstitial: message + lead CTA -->
+              <div class="phc-loyalty" id="phcLoyalty" aria-live="polite">
+                <p class="m" id="phcLoyaltyMsg">Loyalty isn't the same as protection.</p>
+                <button class="btn btn-primary" id="phcLeadCta" type="button">Check My Options</button>
+              </div>
               <div class="phc-summary" id="phcSummary" style="display:none;"></div>
               <div class="phc-result-actions">
                 <button class="btn btn-primary phc-continue" id="phcCta" type="button" style="display:none;">Continue to Options</button>
@@ -1301,11 +1375,21 @@
                     </div>
                   </div>
                   <div class="phc-result-copy" id="phcCopyMobile"></div>
+                  <div class="phc-subhead" id="phcSubheadMobile">Most people don't switch because they're happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.</div>
                   <ul class="phc-result-why" id="phcWhyMobile"></ul>
+
+                  <!-- Red-result interstitial: message + lead CTA -->
+                  <div class="phc-loyalty" id="phcLoyaltyMobile" aria-live="polite">
+                    <p class="m" id="phcLoyaltyMsgMobile">Loyalty isn't the same as protection.</p>
+                    <button class="btn btn-primary" id="phcLeadCtaMobile" type="button">Check My Options</button>
+                  </div>
                   <div class="phc-summary" id="phcSummaryMobile" style="display:none;"></div>
                   <div class="phc-result-actions">
                     <button class="btn btn-primary phc-continue" id="phcCtaMobile" type="button" style="display:none;">Continue to Options</button>
                   </div>
+                </div>
+              </div>
+            </div>
                 </div>
               </div>
             </div>
@@ -1546,6 +1630,39 @@
 
 <script>
   // ===== Lead funnel + Google Apps Script backend =====
+
+  // ===== PHC (Option A) collapse behavior =====
+  var phcCollapse = document.getElementById('phcCollapse');
+  var phcToggle = document.getElementById('phcToggle');
+  function phcSetCollapsed_(collapsed){
+    if(!phcCollapse || !phcToggle) return;
+    phcCollapse.classList.toggle('collapsed', !!collapsed);
+    phcToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    phcToggle.textContent = collapsed ? 'Show' : 'Hide';
+    phcToggle.classList.toggle('alt', !collapsed);
+  }
+  function phcInitCollapse_(){
+    // Desktop: collapsed by default. Mobile uses the tap flow.
+    try{
+      if(window.matchMedia && window.matchMedia('(min-width: 601px)').matches){
+        phcSetCollapsed_(true);
+      }else{
+        phcSetCollapsed_(false);
+      }
+    }catch(e){ phcSetCollapsed_(true); }
+  }
+  if(phcToggle){
+    phcToggle.addEventListener('click', function(){
+      var isCollapsed = phcCollapse && phcCollapse.classList.contains('collapsed');
+      phcSetCollapsed_(!isCollapsed);
+      if(isCollapsed){
+        try{ phcCollapse.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
+      }
+    });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', phcInitCollapse_);
+  else phcInitCollapse_();
+
   var GAS = window.GAS_WEBAPP_URL || "";
   var CLICKFUNNEL_URL = (window.CLICKFUNNEL_URL || '').trim();
 
@@ -1615,7 +1732,17 @@
   // Policy Health Check button opens the same stepper flow directly on Step 3 (Policy Health Check)
   if(openHealthCheckBtn) openHealthCheckBtn.addEventListener('click', function(){
     showModal();
-    try{ if(isMobile_()) setStep_(2); }catch(e){}
+    try{
+      if(isMobile_()){
+        setStep_(2);
+      }else{
+        // Desktop: expand PHC since they explicitly asked for it
+        phcSetCollapsed_(false);
+        setTimeout(function(){
+          try{ if(phcCollapse) phcCollapse.scrollIntoView({ behavior:'smooth', block:'start' }); }catch(e){}
+        }, 50);
+      }
+    }catch(e){}
   });
 
   // Open funnel: ClickFunnels if configured, otherwise in-page modal
@@ -1859,7 +1986,11 @@
       phc_based_on:'Based on what you shared…',
       phc_cta_green:'Confirm My Coverage',
       phc_cta_yellow:'Fix Potential Gaps',
-      phc_cta_red:'Review My Policy Now'
+      phc_cta_red:'Review My Policy Now',
+
+      /* Red-result interstitial */
+      phc_loyalty:"Loyalty isn't the same as protection.",
+      phc_lead_cta:'Check My Options'
     },
     es:{
       doc_title:'Opciones en Colorado — Seguro de hogar y auto',
@@ -1900,7 +2031,11 @@
       phc_based_on:'Según lo que compartiste…',
       phc_cta_green:'Confirmar mi cobertura',
       phc_cta_yellow:'Corregir posibles vacíos',
-      phc_cta_red:'Revisar mi póliza ahora'
+      phc_cta_red:'Revisar mi póliza ahora',
+
+      /* Intersticial (resultado rojo) */
+      phc_loyalty:'La lealtad no es lo mismo que la protección.',
+      phc_lead_cta:'Ver mis opciones'
     },
     ja:{
       doc_title:'コロラド保険オプション — 住宅・自動車',
@@ -2784,6 +2919,11 @@
     var cta = document.getElementById(where === 'mobile' ? 'phcCtaMobile' : 'phcCta');
     var summary = document.getElementById(where === 'mobile' ? 'phcSummaryMobile' : 'phcSummary');
 
+    // Red-result interstitial
+    var loyalty = document.getElementById(where === 'mobile' ? 'phcLoyaltyMobile' : 'phcLoyalty');
+    var loyaltyMsg = document.getElementById(where === 'mobile' ? 'phcLoyaltyMsgMobile' : 'phcLoyaltyMsg');
+    var loyaltyBtn = document.getElementById(where === 'mobile' ? 'phcLeadCtaMobile' : 'phcLeadCta');
+
     if(!root || !dot || !lab || !copy || !why) return;
 
     dot.className = 'phc-dot' + (health.label === 'Yellow' ? ' yellow' : (health.label === 'Red' ? ' red' : ''));
@@ -2799,6 +2939,14 @@
       li.textContent = triggerExplain_(triggers[i]);
       why.appendChild(li);
     }
+
+    // Show the interstitial only for RED results
+    try{
+      var sL = getStrings_(getLang_());
+      if(loyalty) loyalty.classList.toggle('show', health.label === 'Red');
+      if(loyaltyMsg && sL && sL.phc_loyalty) loyaltyMsg.textContent = sL.phc_loyalty;
+      if(loyaltyBtn && sL && sL.phc_lead_cta) loyaltyBtn.textContent = sL.phc_lead_cta;
+    }catch(e){}
 
     // Micro-summary above CTA
     try{
@@ -2846,6 +2994,9 @@
     var ctaDesk = document.getElementById('phcCta');
     var ctaMob = document.getElementById('phcCtaMobile');
 
+    var leadDesk = document.getElementById('phcLeadCta');
+    var leadMob = document.getElementById('phcLeadCtaMobile');
+
     function runDesk(){
       if(!phcRequiredComplete_()){
         try{
@@ -2876,8 +3027,24 @@
       }catch(e){}
     }
 
+    // Red-result lead CTA: jump to lead capture fields so you get the lead
+    function goLeadCapture_(){
+      try{
+        if(isMobile_()){
+          setStep_(0);
+        }else{
+          var fn = document.getElementById('firstName');
+          if(fn) fn.scrollIntoView({ behavior:'smooth', block:'start' });
+          try{ fn.focus(); }catch(e){}
+        }
+      }catch(e){}
+    }
+
     if(ctaDesk) ctaDesk.addEventListener('click', goOptions_);
     if(ctaMob) ctaMob.addEventListener('click', goOptions_);
+
+    if(leadDesk) leadDesk.addEventListener('click', goLeadCapture_);
+    if(leadMob) leadMob.addEventListener('click', goLeadCapture_);
   }
 
   try{ bindPHCResultUI_(); }catch(e){}
