@@ -113,9 +113,13 @@
 
     /* Desktop: show the full PNG hero (less cropping than object-fit:cover) */
     @media (min-width: 901px){
+      /* Desktop: fill the viewport more naturally */
+      .hero{ min-height:100vh; }
+
+      /* Use cover on desktop so wide screens don’t show huge side gutters */
       .hero-rotator{ background:#0b1323; }
       .hero-slide{
-        object-fit:contain;
+        object-fit:cover;
         object-position:center;
         transform:none;
       }
@@ -682,6 +686,9 @@
   </div>
 </section>
 
+<!-- Hidden iframe used to post leads to Google Apps Script without CORS issues -->
+<iframe id="gas_iframe" name="gas_iframe" style="display:none;"></iframe>
+
 <!-- Lead Funnel Modal (fallback if CLICKFUNNEL_URL is blank) -->
 <div class="modal-overlay" id="modalOverlay"></div>
 <div class="modal" id="modal">
@@ -1109,46 +1116,51 @@
 
 
   function postToGAS(url, payload){
-    // Tries CORS JSON first (best for debugging + reliable delivery),
-    // then falls back to no-cors form-encoded (legacy GAS patterns).
+    // Most reliable from GitHub Pages → Google Apps Script:
+    // submit a classic HTML form into a hidden iframe (no CORS / no preflight).
     url = String(url||'').trim();
     payload = payload || {};
 
-    // Helpful debug
-    try{ console.log('[Lead] Posting to GAS:', url, payload); }catch(e){}
+    try{ console.log('[Lead] Posting to GAS (form/iframe):', url, payload); }catch(e){}
 
-    // 1) Preferred: JSON + CORS (lets us see status/errors if GAS allows it)
-    return fetch(url, {
-      method: 'POST',
-      mode: 'cors',
-      redirect: 'follow',
-      cache: 'no-store',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(function(res){
-      if(!res || !res.ok){
-        // If GAS returns HTML/login/redirect etc, capture a little text for troubleshooting
-        return res.text().then(function(t){
-          throw new Error('GAS HTTP ' + (res ? res.status : '?') + (t ? (': ' + String(t).slice(0,180)) : ''));
-        });
+    return new Promise(function(resolve, reject){
+      try{
+        if(!url || url.indexOf('http') !== 0) throw new Error('Invalid GAS URL');
+
+        // Ensure the iframe exists
+        var iframe = document.getElementById('gas_iframe');
+        if(!iframe){
+          iframe = document.createElement('iframe');
+          iframe.id = 'gas_iframe';
+          iframe.name = 'gas_iframe';
+          iframe.style.display = 'none';
+          document.body.appendChild(iframe);
+        }
+
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.target = 'gas_iframe';
+        form.style.display = 'none';
+
+        // Keep your original parameter name so existing Apps Script continues to work
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'payload';
+        input.value = JSON.stringify(payload);
+        form.appendChild(input);
+
+        document.body.appendChild(form);
+
+        // Resolve after submit—GAS will receive the request even though we can’t read the response.
+        form.submit();
+        setTimeout(function(){
+          try{ form.remove(); }catch(e){}
+          resolve({ ok:true });
+        }, 350);
+      }catch(err){
+        reject(err);
       }
-      // Some GAS scripts return JSON, some plain text
-      return res.text();
-    }).catch(function(err){
-      // 2) Fallback: no-cors form payload (opaque response; we can't read status)
-      try{ console.warn('[Lead] CORS post failed, using fallback no-cors. Reason:', err && err.message ? err.message : err); }catch(e){}
-      var params = new URLSearchParams();
-      // Keep your original parameter name so existing Apps Script continues to work
-      params.set('payload', JSON.stringify(payload));
-
-      return fetch(url, {
-        method: 'POST',
-        mode: 'no-cors',
-        redirect: 'follow',
-        cache: 'no-store',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: params.toString()
-      });
     });
   }
 
