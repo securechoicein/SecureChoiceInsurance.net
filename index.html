@@ -53,6 +53,13 @@
       --brand2:#0ea5e9;
       --ok:#22c55e;
       --warn:#facc15;
+
+      /* Desktop hero fitting:
+        - "contain" shows the full PNG (no cropping)
+        - "cover" fills the hero (may crop)
+      */
+      --hero-fit-desktop: cover;
+      --hero-bg-desktop: #000;
     }
 
     *{box-sizing:border-box}
@@ -71,10 +78,14 @@
       min-height:90vh;
       display:flex;
       align-items:center;
+      justify-content:flex-start;
       padding:48px;
       overflow:hidden;
       isolation:isolate;
     }
+
+    /* Make hero content readable + consistent across screen sizes */
+    .hero-content{position:relative;max-width:680px;z-index:2;width:100%;}
 
     /* Dark overlay so text stays readable on photos */
     .hero::before{
@@ -90,9 +101,10 @@
     .hero-rotator{
       position:absolute;
       inset:0;
-      height:100%; /* mobile paint safety */
+      height:100%;
       z-index:0;
       pointer-events:none;
+      background:transparent;
     }
 
     .hero-slide{
@@ -100,48 +112,38 @@
       inset:0;
       width:100%;
       height:100%;
-      object-fit:cover;         /* ALWAYS fill the hero */
-      object-position:50% 50%;  /* per-slide focal point set via [data-pos] */
+      object-fit:cover;
+      object-position:50% 50%;
       opacity:0;
       filter:saturate(1.05) contrast(1.05);
       transition:opacity 900ms ease;
       will-change:opacity;
     }
 
-    /* Optional per-slide focal points */
-    .hero-slide[data-pos]{ object-position: var(--pos, 50% 50%); }
-    .hero-slide[data-pos="center"][style]{ }
-
-
     .hero-slide.active{ opacity:1; }
 
-    /* Desktop: show the full PNG hero (less cropping than object-fit:cover) */
+    /* Desktop: prefer showing full PNG without awkward cropping */
     @media (min-width: 901px){
-      .hero{ min-height:100vh; padding:72px 72px; }
-      .hero-content{ max-width:760px; }
-
-      /* If your PNGs have any empty/transparent padding, scaling helps them fully fill */
-      .hero-rotator{ background:#000; }
-      .hero-slide{
-        transform:scale(1.12);
-        transform-origin:center;
-        /* Slightly bias up so heads don’t get cropped on wide screens */
-        object-position:50% 35%;
-      }
-    }
-      .hero-content{ max-width:760px; }
-      /* Slightly bias up so heads don’t get cropped on wide screens */
-      .hero-slide{ object-position:50% 35%; }
-    }
+  /* Desktop: show full PNG (no awkward cropping) */
+  .hero{ min-height:100vh; padding:72px 72px; }
+  .hero-content{ max-width:760px; }
+  .hero-rotator{ background: var(--hero-bg-desktop); }
+  .hero-slide{
+    object-fit: var(--hero-fit-desktop);
+    object-position: 50% 50%;
+    /* Remove scaling on desktop so images don't overflow */
+    transform:none;
+  }
+}
 
 /* Reduce motion for accessibility */
-    @media (prefers-reduced-motion: reduce){
-      .hero-slide{ transition:none; }
+@media (prefers-reduced-motion: reduce){
+  .hero-slide{ transition:none; }
+}
     }
 
     .hero-content{position:relative;max-width:680px;z-index:2}
     .badge{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);font-size:12px;font-weight:700;color:#c7e9ff}
-    h1{font-size:clamp(32px,5vw,52px);margin:18px 0;line-height:1.1}
 
     /* Hero header (uses the same font as the PP mark) */
     .hero-headline{
@@ -156,6 +158,7 @@
     }
 
     /* Primary CTA – ChannelTalk-style (white, PP font) */
+    .hero-cta-wrap{display:flex;flex-direction:column;gap:10px;max-width:520px;}
     .cta{
       margin-top:24px;
       padding:14px 28px;
@@ -177,15 +180,250 @@
     }
     .cta:active{transform:translateY(0);box-shadow:0 14px 40px rgba(0,0,0,.22);}
 
+    /* Secondary CTA */
+    .cta.cta-secondary{ margin-top:0; background:rgba(255,255,255,.92); }
+
+    /* Policy Health Check hook (A/B + subtle attention draw) */
+    .phc-hook{
+      margin:0 0 6px;
+      font-size:15px;
+      font-weight:800;
+      line-height:1.45;
+      color:#e5e7eb;
+      text-shadow:0 12px 36px rgba(0,0,0,.45);
+      opacity:.96;
+    }
+    .phc-hook.attn{ animation:phcGlow 2.4s ease-in-out 1; }
+    @keyframes phcGlow{
+      0%{opacity:.85;}
+      40%{opacity:1; text-shadow:0 0 0 rgba(56,189,248,0);}
+      70%{text-shadow:0 0 28px rgba(56,189,248,.45);}
+      100%{opacity:.96;}
+    }
+
+    /* Optional: gently guide users to start with the Health Check once per visitor */
+    body.phc-gate #openFunnel{ opacity:.82; filter:saturate(.92) brightness(.98); transform:translateY(0); }
+    body.phc-gate #ctaMicro{ opacity:.92; }
+    body.phc-gate #openHealthCheck{ box-shadow:0 22px 80px rgba(56,189,248,.10), 0 18px 55px rgba(0,0,0,.25); }
+
+    /* Microcopy under CTA */
+    .cta-micro{
+      font-size:12px;
+      font-weight:800;
+      color:rgba(226,232,240,.92);
+      text-shadow:0 10px 30px rgba(0,0,0,.45);
+      letter-spacing:.01em;
+    }
+
+    /* Mobile: make the primary CTA easier to tap and not oversized */
+    @media (max-width: 900px){
+      .hero-cta-wrap{max-width:520px;width:100%;}
+      .cta{
+        width:100%;
+        max-width:520px;
+        margin-top:10px;
+        margin-bottom:0;
+        padding:14px 18px;
+        font-size:15px;
+        min-height:50px;
+      }
+      .cta-micro{font-size:12px;opacity:.95;}
+    }
+
     /* Alert */
-    .alert-box{position:absolute;right:10%;bottom:35%;width:240px;background:rgba(15,23,42,.92);border-radius:14px;padding:14px;border:1px solid rgba(148,196,255,.55);box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:2}
+    .alert-box{position:absolute;right:8%;bottom:12%;width:260px;background:rgba(15,23,42,.92);border-radius:14px;padding:14px;border:1px solid rgba(148,196,255,.55);box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:2}
     .alert-title{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#facc15;margin-bottom:6px}
     .alert-text{font-size:13px;color:#e5e7eb;line-height:1.35}
 
-    /* ================== CHAT: Channel.io-like launcher ==================
-       Bottom-right floating bubble + subtle label.
-    */
+    /* Hide floating alert on smaller screens so it doesn't overlap CTA */
+    @media (max-width: 1100px){
+      .alert-box{display:none;}
+    }
 
+    /* ================== POLICY HEALTH CHECK ================== */
+
+    .phc-wrap{
+      max-width:960px;
+      margin:32px auto 18px;
+      padding:0 16px;
+    }
+
+    .phc-card{
+      background:#ffffff;
+      border-radius:20px;
+      border:1px solid #e5e7eb;
+      box-shadow:0 20px 60px rgba(2,6,23,.12);
+      padding:22px 22px 18px;
+    }
+
+    .phc-header{
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      margin-bottom:16px;
+    }
+
+    .phc-badge{
+      flex:0 0 auto;
+      width:36px;height:36px;
+      border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      background:#0ea5e9;
+      color:#fff;
+      font-weight:900;
+    }
+
+    .phc-title{
+      font-size:18px;
+      font-weight:900;
+      color:#0b1120;
+      margin:0;
+    }
+
+    .phc-hook{
+      margin:6px 0 0;
+      font-size:13px;
+      line-height:1.4;
+      color:#475569;
+      font-weight:700;
+    }
+
+    .phc-steps{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+
+    .phc-step{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      padding:14px 14px 12px;
+      background:#f8fafc;
+    }
+
+    .phc-step h4{
+      margin:0 0 6px;
+      font-size:13px;
+      font-weight:900;
+      color:#0b1120;
+    }
+
+    .phc-options{
+      display:grid;
+      gap:8px;
+    }
+
+    .phc-opt{
+      border:1px solid #cbd5e1;
+      background:#ffffff;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12.5px;
+      font-weight:800;
+      cursor:pointer;
+      text-align:left;
+    }
+
+    .phc-opt.active{
+      border-color:#0ea5e9;
+      background:rgba(14,165,233,.08);
+    }
+
+    .phc-footer{
+      margin-top:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .phc-progress{
+      font-size:11px;
+      color:#64748b;
+      font-weight:800;
+    }
+
+    .phc-submit{
+      padding:10px 18px;
+      border-radius:999px;
+      border:1px solid #0b1120;
+      background:#0b1120;
+      color:#ffffff;
+      font-weight:900;
+      font-size:13px;
+      cursor:pointer;
+    }
+
+    /* Desktop tightening */
+    @media (min-width: 1000px){
+      .phc-wrap{ max-width:880px; }
+      .phc-steps{ grid-template-columns:repeat(4,1fr); }
+      .phc-card{ padding:20px 20px 16px; }
+    }
+
+    /* Tablet */
+    @media (max-width: 999px){
+      .phc-steps{ grid-template-columns:repeat(2,1fr); }
+    }
+
+    /* Mobile */
+    @media (max-width: 560px){
+      .phc-steps{ grid-template-columns:1fr; }
+      .phc-card{ padding:18px 14px 14px; }
+      .phc-title{ font-size:17px; }
+    }
+
+    /* ================== POLICY HEALTH CHECK (MOBILE TAP FLOW) ================== */
+    .phc-mobile-flow{display:none;}
+
+    .phc-q{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      padding:12px 12px 10px;
+      background:#f8fafc;
+    }
+    .phc-q-title{margin:0 0 8px;font-weight:1000;color:#0b1120;font-size:13px;line-height:1.25;}
+    .phc-q-hint{margin:0 0 10px;color:#64748b;font-weight:800;font-size:11.5px;line-height:1.35;}
+
+    .phc-answers{display:grid;gap:10px;}
+    .phc-answer-btn{
+      width:100%;
+      text-align:left;
+      border:1px solid #cbd5e1;
+      background:#ffffff;
+      border-radius:14px;
+      padding:12px 12px;
+      font-weight:1000;
+      color:#0b1120;
+      cursor:pointer;
+      box-shadow:0 10px 22px rgba(2,6,23,.05);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .phc-answer-btn:active{transform:translateY(1px)}
+    .phc-answer-btn.active{
+      border-color:#0ea5e9;
+      background:rgba(14,165,233,.10);
+      box-shadow:0 12px 26px rgba(2,6,23,.07);
+    }
+
+    .phc-mobile-nav{display:flex;gap:10px;margin-top:12px;}
+    .phc-mobile-nav .btn{flex:1;}
+
+    /* Checkbox chips highlight when tapped */
+    .phc-chip.active{
+      border-color:#0ea5e9 !important;
+      background:rgba(14,165,233,.10) !important;
+    }
+
+    /* Mobile: turn PHC selects into tap-to-advance flow */
+    @media (max-width: 600px){
+      .phc-mobile-flow{display:block;}
+      .phc-desktop-grid{display:none !important;}
+      .phc-grid{gap:8px;}
+      .phc-chip{width:100%;justify-content:flex-start;}
+    }
+
+/* ================== CHAT: Channel.io-like launcher ================== */
     .chat-launcher{
       position:fixed;
       right:20px;
@@ -205,7 +443,7 @@
       gap:2px;
       padding:10px 12px;
       border-radius:14px;
-      background:#ffffff; /* match chatbox */
+      background:#ffffff;
       border:1px solid #e5e7eb;
       backdrop-filter:blur(10px);
       box-shadow:0 18px 55px rgba(0,0,0,.25);
@@ -214,7 +452,7 @@
       font-size:11px;
       opacity:.85;
       font-weight:700;
-      color:#0b1120; /* black lettering */
+      color:#0b1120;
       letter-spacing:.01em;
       font-family:'Playfair Display','Didot','Bodoni MT',serif;
     }
@@ -222,7 +460,7 @@
       font-weight:700;
       font-size:13px;
       letter-spacing:.01em;
-      color:#0b1120; /* black lettering */
+      color:#0b1120;
       font-family:'Playfair Display','Didot','Bodoni MT',serif;
     }
 
@@ -257,14 +495,7 @@
       100%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,0); }
     }
 
-    /* ================== CHAT WIDGET (ChannelTalk-like) ==================
-       Compact widget with:
-       - Photo header
-       - White rounded body
-       - Bottom tabs: Home / Messages / Settings
-       - Separate round close button bottom-right
-    */
-
+    /* ================== CHAT WIDGET (ChannelTalk-like) ================== */
     .chat-window{
       display:none;
       position:fixed;
@@ -374,19 +605,8 @@
       background:#fff;
     }
 
-    .chat-main{
-      display:flex;
-      flex-direction:column;
-      height:360px;
-      min-height:320px;
-    }
-
-    .chat-messages{
-      padding:12px;
-      overflow:auto;
-      flex:1;
-      background:#ffffff;
-    }
+    .chat-main{display:flex;flex-direction:column;height:360px;min-height:320px;}
+    .chat-messages{padding:12px;overflow:auto;flex:1;background:#ffffff;}
 
     .msg{display:flex;margin:10px 0}
     .msg.user{justify-content:flex-end}
@@ -394,7 +614,6 @@
     .bubble{max-width:86%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;box-shadow:0 10px 26px rgba(0,0,0,.06)}
     .bubble.user{background:#0b1120;color:#e5e7eb;border-top-right-radius:6px}
     .bubble.bot{background:#ffffff;color:#0f172a;border:1px solid #e5e7eb;border-top-left-radius:6px}
-    .meta{font-size:10px;color:#64748b;font-weight:900;margin-top:6px}
 
     .chat-inputbar{padding:10px;border-top:1px solid #eef2f7;background:#fff;display:flex;gap:10px;align-items:center}
     .chat-input{flex:1;padding:12px 12px;border-radius:14px;border:1px solid #cbd5e1;font-size:14px;outline:none}
@@ -404,25 +623,10 @@
 
     /* Suggested question chips (ChannelTalk-like) */
     .pp-suggest-wrap{padding:14px 14px 10px;}
-    .pp-suggest-title{
-      font-weight:1000;
-      font-size:12px;
-      color:#0b1120;
-      margin:0 0 12px;
-      letter-spacing:.01em;
-      text-align:left;
-    }
-
+    .pp-suggest-title{font-weight:1000;font-size:12px;color:#0b1120;margin:0 0 12px;letter-spacing:.01em;text-align:left;}
     .pp-suggest-section{display:grid;gap:10px;margin-bottom:14px;}
-    .pp-suggest-label{
-      font-weight:1000;
-      font-size:11px;
-      color:#94a3b8;
-      letter-spacing:.08em;
-    }
-
+    .pp-suggest-label{font-weight:1000;font-size:11px;color:#94a3b8;letter-spacing:.08em;}
     .pp-suggest-grid{display:flex;flex-wrap:wrap;gap:10px;}
-
     .pp-suggest-chip{
       border:1px solid #e2e8f0;
       background:#f8fafc;
@@ -477,11 +681,7 @@
     .pp-tab svg{width:18px;height:18px;opacity:.75;transition:transform .15s ease, opacity .15s ease}
 
     /* Nicer Settings gear */
-    .pp-tab#ppTabSettings svg{
-      width:19px;
-      height:19px;
-      stroke-width:1.8;
-    }
+    .pp-tab#ppTabSettings svg{width:19px;height:19px;stroke-width:1.8;}
     .pp-tab#ppTabSettings:hover svg{opacity:.95;transform:rotate(20deg)}
     .pp-tab#ppTabSettings.active svg{opacity:1;transform:rotate(0deg)}
 
@@ -548,12 +748,9 @@
 
     @media (max-width: 900px){
       .hero{padding:18px;min-height:100vh;align-items:flex-start;padding-top:72px;}
+      /* Keep headlines from feeling oversized on narrow screens */
+      .hero-headline{font-size:clamp(34px,9vw,52px);}
       .hero-content{max-width:100%;padding-bottom:90px;}
-      h1{font-size:clamp(28px,8vw,42px);margin:14px 0 12px;}
-      p{font-size:16px;line-height:1.55;margin-bottom:18px;}
-
-      .cta{width:100%;max-width:520px;margin-top:10px;margin-bottom:18px;}
-      .alert-box{position:relative;right:auto;bottom:auto;width:100%;max-width:520px;margin-top:18px;}
 
       .chat-launcher{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));}
       .chat-peek{display:none;}
@@ -568,62 +765,44 @@
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:21000;}
     .card{width:min(760px,96vw);background:#ffffff;color:#0b1323;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden;border:1px solid #e5e7eb;}
 
-/* Mobile-friendly CTA modal (bottom-sheet style) */
-@media (max-width: 600px){
-  .modal{align-items:flex-end;}
-  .card{
-    width:100%;
-    max-width:100%;
-    max-height:85vh;
-    border-radius:18px 18px 0 0;
-  }
-  .card-head{position:sticky;top:0;z-index:2;}
-  .card-body{overflow:auto;-webkit-overflow-scrolling:touch;}
-}
+    /* Mobile-friendly CTA modal (bottom-sheet style) */
+    @media (max-width: 600px){
+      .modal{align-items:flex-end;}
+      .card{width:100%;max-width:100%;max-height:85vh;border-radius:18px 18px 0 0;}
+      .card-head{position:sticky;top:0;z-index:2;}
+      .card-body{overflow:auto;-webkit-overflow-scrolling:touch;}
+    }
 
-/* Stepper (used mainly on mobile) */
-.stepper{
-  display:none;
-  padding:12px 2px 10px;
-  margin:0 0 8px;
-}
-.stepper-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
-.stepper-kicker{font-size:11px;font-weight:900;color:#64748b;letter-spacing:.02em;}
-.stepper-title{font-size:12px;font-weight:1000;color:#0b1120;}
-.stepper-dots{display:flex;gap:8px;margin-top:10px;}
-.dotx{width:10px;height:10px;border-radius:999px;background:#e2e8f0;}
-.dotx.active{background:#0b1120;}
-.stepper-bar{height:6px;border-radius:999px;background:#eef2f7;margin-top:10px;overflow:hidden;}
-.stepper-bar-fill{display:block;height:100%;width:33.33%;background:#0b1120;transition:width .2s ease;}
+    /* Stepper (used mainly on mobile) */
+    .stepper{display:none;padding:12px 2px 10px;margin:0 0 8px;}
+    .stepper-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+    .stepper-kicker{font-size:11px;font-weight:900;color:#64748b;letter-spacing:.02em;}
+    .stepper-title{font-size:12px;font-weight:1000;color:#0b1120;}
+    .stepper-dots{display:flex;gap:8px;margin-top:10px;}
+    .dotx{width:10px;height:10px;border-radius:999px;background:#e2e8f0;}
+    .dotx.active{background:#0b1120;}
+    .stepper-bar{height:6px;border-radius:999px;background:#eef2f7;margin-top:10px;overflow:hidden;}
+    .stepper-bar-fill{display:block;height:100%;width:25%;background:#0b1120;transition:width .2s ease;}
 
-.steps{margin-top:6px;}
-.step{display:none;}
-.step.active{display:block;}
+    .steps{margin-top:6px;}
+    .step{display:none;}
+    .step.active{display:block;}
 
-/* Desktop keeps the original two-column feel */
-@media (min-width: 601px){
-  .stepper{display:none;}
-  .step{display:block;}
-  .row-mobile{display:none !important;}
-}
+    /* Desktop keeps the original all-sections view */
+    @media (min-width: 601px){
+      .stepper{display:none;}
+      .step{display:block;}
+      .row-mobile{display:none !important;}
+    }
 
-/* Mobile: one step at a time + sticky step controls */
-@media (max-width: 600px){
-  .stepper{display:block;}
-  .grid{grid-template-columns:1fr !important;}
-  .row-desktop{display:none !important;}
-  .row-mobile{
-    position:sticky;
-    bottom:0;
-    left:0;right:0;
-    padding:12px 0 0;
-    background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 28%);
-    gap:10px;
-    justify-content:space-between;
-  }
-  .row-mobile .btn{flex:1;}
-}
-
+    /* Mobile: one step at a time + sticky step controls */
+    @media (max-width: 600px){
+      .stepper{display:block;}
+      .grid{grid-template-columns:1fr !important;}
+      .row-desktop{display:none !important;}
+      .row-mobile{position:sticky;bottom:0;left:0;right:0;padding:12px 0 0;background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 28%);gap:10px;justify-content:space-between;}
+      .row-mobile .btn{flex:1;}
+    }
 
     .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;}
     .card-head h2{margin:0;font-size:16px;font-weight:900;}
@@ -690,19 +869,22 @@
 <section class="hero">
   <!-- Rotating background images (PNG) -->
   <div class="hero-rotator" aria-hidden="true">
-    <img class="hero-slide active" id="heroImg0" data-pos="house" alt="" loading="eager" decoding="async" src="hero-house.png">
-    <img class="hero-slide" id="heroImg1" data-pos="auto" alt="" loading="eager" decoding="async" src="hero-auto.png">
-    <img class="hero-slide" id="heroImg2" data-pos="business" alt="" loading="eager" decoding="async" src="hero-business.png">
+    <img class="hero-slide active" id="heroImg0" alt="" loading="eager" decoding="async" src="hero-house.png">
+    <img class="hero-slide" id="heroImg1" alt="" loading="eager" decoding="async" src="hero-auto.png">
+    <img class="hero-slide" id="heroImg2" alt="" loading="eager" decoding="async" src="hero-business.png">
   </div>
 
   <div class="hero-content">
     <h1 class="hero-headline" id="heroHeader" data-i18n="hero_header_home">Home Insurance</h1>
-    <button class="cta" id="openFunnel" type="button" data-i18n="cta_check">Check My Options</button>
+
+    <div class="hero-cta-wrap">
+      <p class="phc-hook attn" id="phcHook" data-i18n="phc_hook_v1">If your life looks different than when you started your policy, your coverage may not match anymore.</p>
+      <button class="cta cta-secondary" id="openHealthCheck" type="button">30-Second Policy Health Check</button>
+      <button class="cta" id="openFunnel" type="button" data-i18n="cta_check">Check My Options</button>
+      <div class="cta-micro" id="ctaMicro">2 minutes • Not a quote • Agent follow-up</div>
+    </div>
   </div>
 </section>
-
-<!-- Hidden iframe used to post leads to Google Apps Script without CORS issues -->
-<iframe id="gas_iframe" name="gas_iframe" style="display:none;"></iframe>
 
 <!-- Lead Funnel Modal (fallback if CLICKFUNNEL_URL is blank) -->
 <div class="modal-overlay" id="modalOverlay"></div>
@@ -720,7 +902,7 @@
         <!-- Stepper (mobile-first) -->
         <div class="stepper" id="stepper" aria-label="Form progress">
           <div class="stepper-top">
-            <div class="stepper-kicker" id="stepperKicker">Step 1 of 3</div>
+            <div class="stepper-kicker" id="stepperKicker">Step 1 of 4</div>
             <div class="stepper-title">A quick pre-check</div>
           </div>
           <div class="stepper-dots" role="presentation">
@@ -732,7 +914,6 @@
           <div class="stepper-bar" aria-hidden="true"><span class="stepper-bar-fill" id="stepperBarFill"></span></div>
         </div>
 
-        <!-- Steps: keep the SAME field IDs so GAS submit still works -->
         <div class="steps" id="steps">
           <!-- STEP 1 -->
           <section class="step active" data-step="0" aria-label="Step 1">
@@ -793,9 +974,9 @@
             </div>
           </section>
 
-          <!-- STEP 3: Policy Health Check (3–5 quick questions) -->
+          <!-- STEP 3: Policy Health Check -->
           <section class="step" data-step="2" aria-label="Step 3">
-            <div class="grid">
+            <div class="grid phc-desktop-grid">
               <div class="field" style="grid-column:1 / -1;">
                 <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                   <span>Policy Health Check</span>
@@ -874,6 +1055,74 @@
                 </div>
               </div>
             </div>
+
+            <!-- Mobile: tap-to-advance flow (keeps the same underlying fields for submission) -->
+            <div class="phc-mobile-flow" id="phcMobileFlow" aria-label="Policy Health Check mobile flow">
+              <div class="phc-q" id="phcQ0">
+                <p class="phc-q-title">1) Any life changes in the last 12 months?</p>
+                <p class="phc-q-hint">Tap any that apply (you can choose multiple). Then continue.</p>
+                <div class="phc-answers" id="phcMobileChanges"></div>
+                <div class="phc-mobile-nav">
+                  <button class="btn" type="button" id="phcBack0" disabled>Back</button>
+                  <button class="btn btn-primary" type="button" id="phcNext0">Continue</button>
+                </div>
+              </div>
+
+              <div class="phc-q" id="phcQ1" style="display:none;">
+                <p class="phc-q-title">2) Property situation *</p>
+                <p class="phc-q-hint">Tap one option.</p>
+                <div class="phc-answers" id="phcMobileProperty"></div>
+                <div class="phc-mobile-nav">
+                  <button class="btn" type="button" id="phcBack1">Back</button>
+                  <button class="btn btn-primary" type="button" id="phcNext1">Continue</button>
+                </div>
+              </div>
+
+              <div class="phc-q" id="phcQ2" style="display:none;">
+                <p class="phc-q-title">3) Comfortable out-of-pocket if a claim happened tomorrow? *</p>
+                <p class="phc-q-hint">Tap one option.</p>
+                <div class="phc-answers" id="phcMobileDeductible"></div>
+                <div class="phc-mobile-nav">
+                  <button class="btn" type="button" id="phcBack2">Back</button>
+                  <button class="btn btn-primary" type="button" id="phcNext2">Continue</button>
+                </div>
+              </div>
+
+              <div class="phc-q" id="phcQ3" style="display:none;">
+                <p class="phc-q-title">4) If you were sued after an accident/injury, how protected do you feel? *</p>
+                <p class="phc-q-hint">Tap one option.</p>
+                <div class="phc-answers" id="phcMobileLiability"></div>
+                <div class="phc-mobile-nav">
+                  <button class="btn" type="button" id="phcBack3">Back</button>
+                  <button class="btn btn-primary" type="button" id="phcNext3">Continue</button>
+                </div>
+              </div>
+
+              <div class="phc-q" id="phcQ4" style="display:none;">
+                <p class="phc-q-title">5) Last full policy review with a licensed agent? *</p>
+                <p class="phc-q-hint">Tap one option.</p>
+                <div class="phc-answers" id="phcMobileReview"></div>
+                <div class="phc-mobile-nav">
+                  <button class="btn" type="button" id="phcBack4">Back</button>
+                  <button class="btn btn-primary" type="button" id="phcNext4">Continue</button>
+                </div>
+              </div>
+
+              <div class="phc-q" id="phcQ5" style="display:none;">
+                <p class="phc-q-title">Optional: Any property risk flags?</p>
+                <p class="phc-q-hint">Tap any that apply (you can choose multiple). Then finish.</p>
+                <div class="phc-answers" id="phcMobileRisks"></div>
+                <div class="phc-mobile-nav">
+                  <button class="btn" type="button" id="phcBack5">Back</button>
+                  <button class="btn btn-primary" type="button" id="phcFinish">Finish</button>
+                </div>
+              </div>
+
+              <div class="phc-q" id="phcQDone" style="display:none;">
+                <p class="phc-q-title">✅ Policy Health Check complete</p>
+                <p class="phc-q-hint">You can tap “Next” below to continue the form.</p>
+              </div>
+            </div>
           </section>
 
           <!-- STEP 4 -->
@@ -900,7 +1149,7 @@
           </section>
         </div>
 
-        <!-- Desktop buttons (unchanged) -->
+        <!-- Desktop buttons -->
         <div class="row row-desktop" id="rowDesktop">
           <button class="btn" id="cancelBtn" type="button">Cancel</button>
           <button class="btn btn-primary" id="submitBtn" type="submit">Submit</button>
@@ -1100,7 +1349,7 @@
         <span data-i18n="tab_messages">Messages</span>
       </button>
       <button class="pp-tab" id="ppTabSettings" type="button" role="tab" aria-selected="false" aria-controls="ppScreenSettings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7 1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7z"/></svg>
         <span data-i18n="tab_settings">Settings</span>
       </button>
     </div>
@@ -1115,6 +1364,54 @@
   var CLICKFUNNEL_URL = (window.CLICKFUNNEL_URL || '').trim();
 
   var openFunnelBtn = document.getElementById('openFunnel');
+  var openHealthCheckBtn = document.getElementById('openHealthCheck');
+
+  // ===== Optional: gently de-emphasize "Check My Options" until the Health Check has been seen once =====
+  var PHC_SEEN_KEY = 'sc_phc_seen_v1';
+  function hasSeenPHC_(){ try{ return localStorage.getItem(PHC_SEEN_KEY) === '1'; }catch(e){ return false; } }
+  function markSeenPHC_(){ try{ localStorage.setItem(PHC_SEEN_KEY,'1'); }catch(e){} }
+  function applyPHCGate_(){
+    try{
+      if(!document.body) return;
+      if(hasSeenPHC_()) document.body.classList.remove('phc-gate');
+      else document.body.classList.add('phc-gate');
+    }catch(e){}
+  }
+  function setupPHCGate_(){
+    applyPHCGate_();
+
+    // Clicking Health Check counts as "seen"
+    try{
+      if(openHealthCheckBtn){
+        openHealthCheckBtn.addEventListener('click', function(){
+          markSeenPHC_();
+          applyPHCGate_();
+        }, { once:false });
+      }
+    }catch(e){}
+
+    // If the hook or button becomes visible, count as "seen" (no click required)
+    try{
+      var hook = document.getElementById('phcHook');
+      var target = hook || openHealthCheckBtn;
+      if(target && 'IntersectionObserver' in window){
+        var io = new IntersectionObserver(function(entries){
+          for(var i=0;i<entries.length;i++){
+            if(entries[i].isIntersecting){
+              markSeenPHC_();
+              applyPHCGate_();
+              try{ io.disconnect(); }catch(err){}
+              break;
+            }
+          }
+        }, { root:null, threshold:0.35 });
+        io.observe(target);
+      }
+    }catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupPHCGate_);
+  else setupPHCGate_();
+
   var modalOverlay = document.getElementById('modalOverlay');
   var modal = document.getElementById('modal');
   var closeModalBtn = document.getElementById('closeModal');
@@ -1129,8 +1426,24 @@
   if(cancelBtn) cancelBtn.addEventListener('click', hideModal);
   if(modalOverlay) modalOverlay.addEventListener('click', hideModal);
 
-  // ===== Step-based mobile funnel (3 steps) =====
-  var stepper = document.getElementById('stepper');
+  // Policy Health Check button opens the same stepper flow directly on Step 3 (Policy Health Check)
+  if(openHealthCheckBtn) openHealthCheckBtn.addEventListener('click', function(){
+    showModal();
+    try{ if(isMobile_()) setStep_(2); }catch(e){}
+  });
+
+  // Open funnel: ClickFunnels if configured, otherwise in-page modal
+  if(openFunnelBtn){
+    openFunnelBtn.addEventListener('click', function(){
+      if(CLICKFUNNEL_URL){
+        window.location.href = CLICKFUNNEL_URL;
+      }else{
+        showModal();
+      }
+    });
+  }
+
+  // ===== Step-based mobile funnel =====
   var stepsWrap = document.getElementById('steps');
   var stepKicker = document.getElementById('stepperKicker');
   var stepBarFill = document.getElementById('stepperBarFill');
@@ -1149,9 +1462,7 @@
 
     if(stepsWrap){
       var stepEls = stepsWrap.querySelectorAll('.step');
-      for(var i=0;i<stepEls.length;i++){
-        stepEls[i].classList.toggle('active', i === __stepIndex);
-      }
+      for(var i=0;i<stepEls.length;i++) stepEls[i].classList.toggle('active', i === __stepIndex);
     }
 
     if(stepDots && stepDots.length){
@@ -1159,13 +1470,12 @@
     }
 
     if(stepKicker) stepKicker.textContent = 'Step ' + (__stepIndex+1) + ' of ' + __stepTotal;
-    if(stepBarFill) stepBarFill.style.width = (( (__stepIndex+1) / __stepTotal) * 100) + '%';
+    if(stepBarFill) stepBarFill.style.width = (((__stepIndex+1) / __stepTotal) * 100) + '%';
 
     if(stepBack) stepBack.style.display = (__stepIndex === 0) ? 'none' : 'inline-flex';
     if(stepNext) stepNext.style.display = (__stepIndex === __stepTotal-1) ? 'none' : 'inline-flex';
     if(stepSubmit) stepSubmit.style.display = (__stepIndex === __stepTotal-1) ? 'inline-flex' : 'none';
 
-    // Focus first input in step (mobile UX)
     try{
       if(isMobile_() && stepsWrap){
         var cur = stepsWrap.querySelector('.step.active');
@@ -1183,7 +1493,6 @@
     var cur = stepEls && stepEls[idx];
     if(!cur) return true;
 
-    // Validate only visible/required fields in this step
     var fields = cur.querySelectorAll('input,select,textarea');
     for(var i=0;i<fields.length;i++){
       var el = fields[i];
@@ -1197,114 +1506,96 @@
     return true;
   }
 
-  function resetStepper_(){
-    // Only enforce step UI on mobile; desktop shows all sections
-    if(!isMobile_()) return;
-    setStep_(0);
-  }
+  function resetStepper_(){ if(isMobile_()) setStep_(0); }
 
   if(stepBack) stepBack.addEventListener('click', function(){ setStep_(__stepIndex - 1); });
-  if(stepNext) stepNext.addEventListener('click', function(){
-    if(validateStep_(__stepIndex)) setStep_(__stepIndex + 1);
-  });
+  if(stepNext) stepNext.addEventListener('click', function(){ if(validateStep_(__stepIndex)) setStep_(__stepIndex + 1); });
 
-  // Ensure step state correct on resize/orientation
-  window.addEventListener('resize', function(){
-    try{ if(isMobile_()) resetStepper_(); }catch(e){}
-  });
+  window.addEventListener('resize', function(){ try{ if(isMobile_()) resetStepper_(); }catch(e){} });
 
-
+  // ===== Reliable Apps Script submit from GitHub Pages =====
+  // Your Apps Script doPost() reads JSON from e.postData.contents,
+  // so we send a JSON body via fetch() with mode:'no-cors' to avoid CORS/preflight issues.
   function postToGAS(url, payload){
-    // GitHub Pages -> Apps Script often hits CORS/preflight issues.
-    // Most reliable: submit a hidden form to a hidden iframe (no CORS needed).
     return new Promise(function(resolve, reject){
       try{
-        if(!url || url.indexOf('http') !== 0){
-          reject(new Error('Invalid GAS URL'));
-          return;
-        }
+        if(!url || url.indexOf('http') !== 0){ reject(new Error('Invalid GAS URL')); return; }
 
-        // Create (or reuse) hidden iframe
-        var iframeId = 'gas_post_iframe_v1';
-        var iframe = document.getElementById(iframeId);
-        if(!iframe){
-          iframe = document.createElement('iframe');
-          iframe.id = iframeId;
-          iframe.name = iframeId;
-          iframe.style.display = 'none';
-          document.body.appendChild(iframe);
-        }
-
-        // Create (or reuse) hidden form
-        var formId = 'gas_post_form_v1';
-        var form = document.getElementById(formId);
-        if(!form){
-          form = document.createElement('form');
-          form.id = formId;
-          form.method = 'POST';
-          form.style.display = 'none';
-
-          var input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = 'payload';
-          input.id = 'gas_payload_input_v1';
-          form.appendChild(input);
-
-          document.body.appendChild(form);
-        }
-
-        form.action = url;
-        form.target = iframeId;
-
-        var payloadInput = document.getElementById('gas_payload_input_v1');
-        payloadInput.value = JSON.stringify(payload || {});
-
-        // Submit
-        form.submit();
-
-        // We can't read the iframe response due to cross-origin, so treat as success
-        // after a short delay (Apps Script receives it server-side).
-        setTimeout(function(){ resolve({ ok:true, opaque:true }); }, 650);
+        fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload || {})
+        }).then(function(){
+          // no-cors responses are opaque; treat as success once request is sent.
+          resolve({ ok:true, opaque:true });
+        }).catch(function(err){
+          reject(err);
+        });
       }catch(e){
         reject(e);
       }
     });
   }
 
-  var POLICYPRO_MODE = ((window.POLICYPRO_MODE || '') + '').trim().toLowerCase() || 'local';
-  var CHAT_ENDPOINT = (POLICYPRO_MODE === 'remote')
-    ? (((window.POLICYPRO_LLM_ENDPOINT || '').trim() || (window.GAS_WEBAPP_URL || '').trim()))
-    : '';
-
+  // ===== PolicyPro DOM refs =====
   var chatHistory = [];
+  var chatBtn = document.getElementById('chatBtn');
+  var chatWindow = document.getElementById('chatWindow');
+  var closeChat = document.getElementById('closeChat');
+
+  var ppTabHome = document.getElementById('ppTabHome');
+  var ppTabMessages = document.getElementById('ppTabMessages');
+  var ppTabSettings = document.getElementById('ppTabSettings');
+
+  var ppScreenHome = document.getElementById('ppScreenHome');
+  var ppScreenMessages = document.getElementById('ppScreenMessages');
+  var ppScreenSettings = document.getElementById('ppScreenSettings');
+
+  var ppStartChat = document.getElementById('ppStartChat');
+  var ppLangSelect = document.getElementById('ppLangSelect');
+  var ppOpenDisclaimerLink = document.getElementById('ppOpenDisclaimerLink');
+
+  var chatMessages = document.getElementById('chatMessages');
+  var chatForm = document.getElementById('chatForm');
+  var chatInput = document.getElementById('chatInput');
+  var chatSend = document.getElementById('chatSend');
+
+  function setTab_(tab){
+    tab = String(tab || 'home').toLowerCase();
+    if(tab !== 'home' && tab !== 'messages' && tab !== 'settings') tab = 'home';
+
+    if(ppScreenHome) ppScreenHome.classList.toggle('active', tab === 'home');
+    if(ppScreenMessages) ppScreenMessages.classList.toggle('active', tab === 'messages');
+    if(ppScreenSettings) ppScreenSettings.classList.toggle('active', tab === 'settings');
+
+    function setTabBtn(btn, active){
+      if(!btn) return;
+      btn.classList.toggle('active', !!active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    }
+    setTabBtn(ppTabHome, tab === 'home');
+    setTabBtn(ppTabMessages, tab === 'messages');
+    setTabBtn(ppTabSettings, tab === 'settings');
+
+    if(tab === 'messages'){
+      try{ renderSuggestedQuestions_(); }catch(e){}
+      try{ if(chatInput) chatInput.focus(); }catch(e){}
+    }
+  }
 
   // Persist chat
   var PP_CHAT_KEY = 'pp_chat_state_v1';
-
-  function loadChatState_(){
-    try{
-      var raw = localStorage.getItem(PP_CHAT_KEY);
-      if(!raw) return null;
-      return JSON.parse(raw);
-    }catch(e){ return null; }
-  }
-
+  function loadChatState_(){ try{ var raw = localStorage.getItem(PP_CHAT_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
   function saveChatState_(){
     try{
-      var state = {
-        history: chatHistory.slice(-60),
-        rendered: []
-      };
+      var state = { history: chatHistory.slice(-60), rendered: [] };
       if(chatMessages){
         var msgEls = chatMessages.querySelectorAll('.msg');
         for(var i=0;i<msgEls.length;i++){
           var isUser = msgEls[i].classList.contains('user');
           var bub = msgEls[i].querySelector('.bubble');
           state.rendered.push({ role: isUser ? 'user' : 'bot', html: bub ? bub.innerHTML : '' });
-        }
-        var suggest = chatMessages.querySelector('.pp-suggest-wrap');
-        if(suggest && !state.rendered.length){
-          state.suggest = true;
         }
       }
       localStorage.setItem(PP_CHAT_KEY, JSON.stringify(state));
@@ -1329,263 +1620,247 @@
         });
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
-
       if(Array.isArray(state.history)) chatHistory = state.history;
     }catch(e){}
   }
-
   restoreChatUI_();
 
   // =========================
   // i18n
   // =========================
   var PP_LANG_KEY = 'pp_lang_v1';
-
-  function getLang_(){
-    try{ return (localStorage.getItem(PP_LANG_KEY) || 'en'); }catch(e){ return 'en'; }
-  }
-  function setLang_(v){
-    try{ localStorage.setItem(PP_LANG_KEY, String(v||'en')); }catch(e){}
-  }
+  function getLang_(){ try{ return (localStorage.getItem(PP_LANG_KEY) || 'en'); }catch(e){ return 'en'; } }
+  function setLang_(v){ try{ localStorage.setItem(PP_LANG_KEY, String(v||'en')); }catch(e){} }
 
   function i18nDict_(){
-    return {
-      en:{
-        doc_title:'Colorado Relief Options — Home & Auto Insurance',
-        meta_desc:'Colorado residents: explore flexible home & auto insurance options designed to protect your budget and peace of mind.',
-        hero_h1:'Get flexible home & auto options that fit your budget and protect what matters.',
-        hero_header_home:'Home Insurance',
-        hero_header_auto:'Car Insurance',
-        hero_header_business:'Business Insurance',
-        cta_check:'Check My Options',
-        disclaimer_btn:'Disclaimer',
-        chat_peek_label:'Need help?',
-        chat_peek_name:'Chat with PolicyPro™',
-        pp_home_title:'Hi — how can we help?',
-        pp_home_sub:'Ask a Colorado home or auto insurance question. General info only — a licensed agent reviews before any quote, application, or binding.',
-        pp_start_chat:'Start a chat',
-        tab_home:'Home',
-        tab_messages:'Messages',
-        tab_settings:'Settings',
-        settings_title:'Settings',
-        settings_contact:'Contact',
-        settings_language:'Language',
-        settings_disclaimer:'Disclaimer',
-        settings_available:'Available',
-        settings_open_disclaimer:'Open legal disclaimer',
-        chat_placeholder:'Ask about hail deductibles, wildfire coverage, bundling…',
-        chat_send:'Send',
-        suggest_title:'Popular questions',
-        suggest_home:'HOME INSURANCE',
-        suggest_auto:'CAR INSURANCE',
-        s_home_1:'Does home insurance cover hail and roof damage?',
-        s_home_2:'What is a wind/hail deductible (and why is it different)?',
-        s_home_3:'What should I check for wildfire/smoke coverage?',
-        s_auto_1:'Is hail damage covered on auto insurance?',
-        s_auto_2:'What does comprehensive vs collision cover?',
-        s_auto_3:'How can I lower my auto premium without losing coverage?'
-      },
-      es:{
-        doc_title:'Opciones en Colorado — Seguro de hogar y auto',
-        meta_desc:'Residentes de Colorado: explore opciones flexibles de seguro de hogar y auto para proteger su presupuesto y tranquilidad.',
-        hero_h1:'Obtén opciones flexibles de hogar y auto que se ajusten a tu presupuesto y protejan lo importante.',
-        hero_header_home:'Seguro de hogar',
-        hero_header_auto:'Seguro de auto',
-        hero_header_business:'Seguro para negocios',
-        cta_check:'Ver mis opciones',
-        disclaimer_btn:'Aviso legal',
-        chat_peek_label:'¿Necesitas ayuda?',
-        chat_peek_name:'Chatea con PolicyPro™',
-        pp_home_title:'Hola — ¿en qué podemos ayudar?',
-        pp_home_sub:'Haz una pregunta sobre seguro de hogar o auto en Colorado. Solo info general — un agente con licencia revisa antes de cualquier cotización o contratación.',
-        pp_start_chat:'Iniciar chat',
-        tab_home:'Inicio',
-        tab_messages:'Mensajes',
-        tab_settings:'Ajustes',
-        settings_title:'Ajustes',
-        settings_contact:'Contacto',
-        settings_language:'Idioma',
-        settings_disclaimer:'Aviso',
-        settings_available:'Disponible',
-        settings_open_disclaimer:'Abrir aviso legal',
-        chat_placeholder:'Pregunta sobre deducibles por granizo, cobertura de incendios, paquetes…',
-        chat_send:'Enviar',
-        suggest_title:'Preguntas populares',
-        suggest_home:'SEGURO DE HOGAR',
-        suggest_auto:'SEGURO DE AUTO',
-        s_home_1:'¿El seguro de hogar cubre granizo y daño del techo?',
-        s_home_2:'¿Qué es un deducible por viento/granizo?',
-        s_home_3:'¿Qué debo revisar para cobertura de incendio/humo?',
-        s_auto_1:'¿El granizo está cubierto en el seguro de auto?',
-        s_auto_2:'¿Qué cubre comprensivo vs colisión?',
-        s_auto_3:'¿Cómo bajo mi prima sin perder cobertura?'
-      },
-      ja:{
-        doc_title:'コロラド保険オプション — 住宅・自動車',
-        meta_desc:'コロラド州向け。住宅保険・自動車保険の柔軟な選択肢を確認できます。',
-        hero_h1:'予算に合う住宅・自動車の柔軟な選択肢。大切なものを守る。',
-        hero_header_home:'住宅保険',
-        hero_header_auto:'自動車保険',
-        hero_header_business:'事業保険',
-        cta_check:'オプションを見る',
-        disclaimer_btn:'免責事項',
-        chat_peek_label:'お困りですか？',
-        chat_peek_name:'PolicyPro™ に質問',
-        pp_home_title:'こんにちは — どうしましたか？',
-        pp_home_sub:'コロラドの住宅/自動車保険について質問できます（一般情報）。見積や加入前に有資格者が確認します。',
-        pp_start_chat:'チャットを開始',
-        tab_home:'ホーム',
-        tab_messages:'メッセージ',
-        tab_settings:'設定',
-        settings_title:'設定',
-        settings_contact:'連絡先',
-        settings_language:'言語',
-        settings_disclaimer:'免責事項',
-        settings_available:'利用可能',
-        settings_open_disclaimer:'免責事項を開く',
-        chat_placeholder:'雹の免責、山火事補償、バンドル…',
-        chat_send:'送信',
-        suggest_title:'よくある質問',
-        suggest_home:'住宅保険',
-        suggest_auto:'自動車保険',
-        s_home_1:'雹や屋根の損害は補償される？',
-        s_home_2:'風/雹の免責（％）って何？',
-        s_home_3:'山火事/煙の補償で確認すべき点は？',
-        s_auto_1:'雹被害は自動車保険で補償される？',
-        s_auto_2:'包括（Comprehensive）と衝突（Collision）の違いは？',
-        s_auto_3:'補償を落とさず保険料を下げる方法は？'
-      },
-      zh:{
-        doc_title:'科罗拉多方案 — 房屋与汽车保险',
-        meta_desc:'科罗拉多居民：了解更灵活的房屋与汽车保险方案，保护预算与安心。',
-        hero_h1:'获取适合预算的房屋与汽车保险方案，守护重要资产。',
-        hero_header_home:'房屋保险',
-        hero_header_auto:'汽车保险',
-        hero_header_business:'商业保险',
-        cta_check:'查看我的选项',
-        disclaimer_btn:'免责声明',
-        chat_peek_label:'需要帮助？',
-        chat_peek_name:'咨询 PolicyPro™',
-        pp_home_title:'你好 — 我们能帮什么？',
-        pp_home_sub:'可咨询科罗拉多房屋/汽车保险问题（仅一般信息）。报价/投保前由持牌代理复核。',
-        pp_start_chat:'开始聊天',
-        tab_home:'主页',
-        tab_messages:'消息',
-        tab_settings:'设置',
-        settings_title:'设置',
-        settings_contact:'联系',
-        settings_language:'语言',
-        settings_disclaimer:'免责声明',
-        settings_available:'可用',
-        settings_open_disclaimer:'打开免责声明',
-        chat_placeholder:'询问冰雹免赔、野火保障、打包优惠…',
-        chat_send:'发送',
-        suggest_title:'常见问题',
-        suggest_home:'房屋保险',
-        suggest_auto:'汽车保险',
-        s_home_1:'房屋保险是否涵盖冰雹与屋顶损失？',
-        s_home_2:'什么是风/冰雹免赔额（%）？',
-        s_home_3:'野火/烟雾保障应重点查看什么？',
-        s_auto_1:'汽车保险是否涵盖冰雹损失？',
-        s_auto_2:'综合险 vs 碰撞险分别保什么？',
-        s_auto_3:'不降低保障的情况下如何降保费？'
-      },
-      fr:{
-        doc_title:'Options Colorado — Assurance habitation & auto',
-        meta_desc:'Résidents du Colorado : explorez des options flexibles d’assurance habitation et auto pour protéger votre budget et votre tranquillité.',
-        hero_h1:"Obtenez des options habitation & auto flexibles, adaptées à votre budget et à ce qui compte.",
-        hero_header_home:'Assurance habitation',
-        hero_header_auto:'Assurance auto',
-        hero_header_business:"Assurance entreprise",
-        cta_check:'Voir mes options',
-        disclaimer_btn:'Avertissement',
-        chat_peek_label:'Besoin d’aide ?',
-        chat_peek_name:'Discuter avec PolicyPro™',
-        pp_home_title:'Bonjour — comment pouvons-nous aider ?',
-        pp_home_sub:"Posez une question sur l’assurance habitation/auto au Colorado (info générale). Un agent agréé vérifie avant toute offre ou souscription.",
-        pp_start_chat:'Démarrer le chat',
-        tab_home:'Accueil',
-        tab_messages:'Messages',
-        tab_settings:'Réglages',
-        settings_title:'Réglages',
-        settings_contact:'Contact',
-        settings_language:'Langue',
-        settings_disclaimer:'Avertissement',
-        settings_available:'Disponible',
-        settings_open_disclaimer:"Ouvrir l’avertissement légal",
-        chat_placeholder:'Grêle, incendies, franchises, regroupement…',
-        chat_send:'Envoyer',
-        suggest_title:'Questions fréquentes',
-        suggest_home:'ASSURANCE HABITATION',
-        suggest_auto:'ASSURANCE AUTO',
-        s_home_1:'La grêle et le toit sont-ils couverts ?',
-        s_home_2:'Qu’est-ce qu’une franchise vent/grêle (en %)?',
-        s_home_3:'Que vérifier pour la couverture feu/fumée ?',
-        s_auto_1:'La grêle est-elle couverte en assurance auto ?',
-        s_auto_2:'Que couvre “comprehensive” vs “collision” ?',
-        s_auto_3:'Comment baisser ma prime sans perdre de garanties ?'
-      },
-      ru:{
-        doc_title:'Варианты в Колорадо — Дом и авто',
-        meta_desc:'Жители Колорадо: гибкие варианты страхования дома и авто для защиты бюджета и спокойствия.',
-        hero_h1:'Гибкие варианты страхования дома и авто под ваш бюджет — защитите важное.',
-        hero_header_home:'Страхование дома',
-        hero_header_auto:'Страхование авто',
-        hero_header_business:'Страхование бизнеса',
-        cta_check:'Проверить варианты',
-        disclaimer_btn:'Дисклеймер',
-        chat_peek_label:'Нужна помощь?',
-        chat_peek_name:'Чат с PolicyPro™',
-        pp_home_title:'Здравствуйте — чем помочь?',
-        pp_home_sub:'Вопросы по страхованию дома/авто в Колорадо (общая информация). Перед любыми действиями проверит лицензированный агент.',
-        pp_start_chat:'Начать чат',
-        tab_home:'Домой',
-        tab_messages:'Сообщения',
-        tab_settings:'Настройки',
-        settings_title:'Настройки',
-        settings_contact:'Контакт',
-        settings_language:'Язык',
-        settings_disclaimer:'Дисклеймер',
-        settings_available:'Доступно',
-        settings_open_disclaimer:'Открыть дисклеймер',
-        chat_placeholder:'Град, пожары, франшизы, пакет…',
-        chat_send:'Отправить',
-        suggest_title:'Популярные вопросы',
-        suggest_home:'СТРАХОВАНИЕ ДОМА',
-        suggest_auto:'СТРАХОВАНИЕ АВТО',
-        s_home_1:'Покрывает ли страховка дома град и крышу?',
-        s_home_2:'Что такое франшиза по ветру/граду (в %)?',
-        s_home_3:'Что проверить по покрытию пожара/дыма?',
-        s_auto_1:'Покрывается ли град автостраховкой?',
-        s_auto_2:'Чем отличается comprehensive от collision?',
-        s_auto_3:'Как снизить платеж без потери покрытия?'
-      }
-    };
-  }
+  return {
+    en:{
+      doc_title:'Colorado Relief Options — Home & Auto Insurance',
+      meta_desc:'Colorado residents: explore flexible home & auto insurance options designed to protect your budget and peace of mind.',
+      hero_h1:'Get flexible home & auto options that fit your budget and protect what matters.',
+      hero_header_home:'Home Insurance',
+      hero_header_auto:'Car Insurance',
+      hero_header_business:'Business Insurance',
+      cta_check:'Check My Options',
+      disclaimer_btn:'Disclaimer',
+      chat_peek_label:'Need help?',
+      chat_peek_name:'Chat with PolicyPro™',
+      pp_home_title:'Hi — how can we help?',
+      pp_home_sub:'Ask a Colorado home or auto insurance question. General info only — a licensed agent reviews before any quote, application, or binding.',
+      pp_start_chat:'Start a chat',
+      tab_home:'Home',
+      tab_messages:'Messages',
+      tab_settings:'Settings',
+      settings_title:'Settings',
+      settings_contact:'Contact',
+      settings_language:'Language',
+      settings_disclaimer:'Disclaimer',
+      settings_available:'Available',
+      settings_open_disclaimer:'Open legal disclaimer',
+      chat_placeholder:'Ask about hail deductibles, wildfire coverage, bundling…',
+      chat_send:'Send',
+      suggest_title:'Popular questions',
+      suggest_home:'HOME INSURANCE',
+      suggest_auto:'CAR INSURANCE',
+      s_home_1:'Does home insurance cover hail and roof damage?',
+      s_home_2:'What is a wind/hail deductible (and why is it different)?',
+      s_home_3:'What should I check for wildfire/smoke coverage?',
+      s_auto_1:'Is hail damage covered on auto insurance?',
+      s_auto_2:'What does comprehensive vs collision cover?',
+      s_auto_3:'How can I lower my auto premium without losing coverage?'
+    },
+    es:{
+      doc_title:'Opciones en Colorado — Seguro de hogar y auto',
+      meta_desc:'Residentes de Colorado: explore opciones flexibles de seguro de hogar y auto para proteger su presupuesto y tranquilidad.',
+      hero_h1:'Obtén opciones flexibles de hogar y auto que se ajusten a tu presupuesto y protejan lo importante.',
+      hero_header_home:'Seguro de hogar',
+      hero_header_auto:'Seguro de auto',
+      hero_header_business:'Seguro para negocios',
+      cta_check:'Ver mis opciones',
+      disclaimer_btn:'Aviso legal',
+      chat_peek_label:'¿Necesitas ayuda?',
+      chat_peek_name:'Chatea con PolicyPro™',
+      pp_home_title:'Hola — ¿en qué podemos ayudar?',
+      pp_home_sub:'Haz una pregunta sobre seguro de hogar o auto en Colorado. Solo info general — un agente con licencia revisa antes de cualquier cotización o contratación.',
+      pp_start_chat:'Iniciar chat',
+      tab_home:'Inicio',
+      tab_messages:'Mensajes',
+      tab_settings:'Ajustes',
+      settings_title:'Ajustes',
+      settings_contact:'Contacto',
+      settings_language:'Idioma',
+      settings_disclaimer:'Aviso',
+      settings_available:'Disponible',
+      settings_open_disclaimer:'Abrir aviso legal',
+      chat_placeholder:'Pregunta sobre deducibles por granizo, cobertura de incendios, paquetes…',
+      chat_send:'Enviar',
+      suggest_title:'Preguntas populares',
+      suggest_home:'SEGURO DE HOGAR',
+      suggest_auto:'SEGURO DE AUTO',
+      s_home_1:'¿El seguro de hogar cubre granizo y daño del techo?',
+      s_home_2:'¿Qué es un deducible por viento/granizo?',
+      s_home_3:'¿Qué debo revisar para cobertura de incendio/humo?',
+      s_auto_1:'¿El granizo está cubierto en el seguro de auto?',
+      s_auto_2:'¿Qué cubre comprensivo vs colisión?',
+      s_auto_3:'¿Cómo bajo mi prima sin perder cobertura?'
+    },
+    ja:{
+      doc_title:'コロラド保険オプション — 住宅・自動車',
+      meta_desc:'コロラド州向け。住宅保険・自動車保険の柔軟な選択肢を確認できます。',
+      hero_h1:'予算に合う住宅・自動車の柔軟な選択肢。大切なものを守る。',
+      hero_header_home:'住宅保険',
+      hero_header_auto:'自動車保険',
+      hero_header_business:'事業保険',
+      cta_check:'オプションを見る',
+      disclaimer_btn:'免責事項',
+      chat_peek_label:'お困りですか？',
+      chat_peek_name:'PolicyPro™ に質問',
+      pp_home_title:'こんにちは — どうしましたか？',
+      pp_home_sub:'コロラドの住宅/自動車保険について質問できます（一般情報）。見積や加入前に有資格者が確認します。',
+      pp_start_chat:'チャットを開始',
+      tab_home:'ホーム',
+      tab_messages:'メッセージ',
+      tab_settings:'設定',
+      settings_title:'設定',
+      settings_contact:'連絡先',
+      settings_language:'言語',
+      settings_disclaimer:'免責事項',
+      settings_available:'利用可能',
+      settings_open_disclaimer:'免責事項を開く',
+      chat_placeholder:'雹の免責、山火事補償、バンドル…',
+      chat_send:'送信',
+      suggest_title:'よくある質問',
+      suggest_home:'住宅保険',
+      suggest_auto:'自動車保険',
+      s_home_1:'雹や屋根の損害は補償される？',
+      s_home_2:'風/雹の免責（％）って何？',
+      s_home_3:'山火事/煙の補償で確認すべき点は？',
+      s_auto_1:'雹被害は自動車保険で補償される？',
+      s_auto_2:'包括（Comprehensive）と衝突（Collision）の違いは？',
+      s_auto_3:'補償を落とさず保険料を下げる方法は？'
+    },
+    zh:{
+      doc_title:'科罗拉多方案 — 房屋与汽车保险',
+      meta_desc:'科罗拉多居民：了解更灵活的房屋与汽车保险方案，保护预算与安心。',
+      hero_h1:'获取适合预算的房屋与汽车保险方案，守护重要资产。',
+      hero_header_home:'房屋保险',
+      hero_header_auto:'汽车保险',
+      hero_header_business:'商业保险',
+      cta_check:'查看我的选项',
+      disclaimer_btn:'免责声明',
+      chat_peek_label:'需要帮助？',
+      chat_peek_name:'咨询 PolicyPro™',
+      pp_home_title:'你好 — 我们能帮什么？',
+      pp_home_sub:'可咨询科罗拉多房屋/汽车保险问题（仅一般信息）。报价/投保前由持牌代理复核。',
+      pp_start_chat:'开始聊天',
+      tab_home:'主页',
+      tab_messages:'消息',
+      tab_settings:'设置',
+      settings_title:'设置',
+      settings_contact:'联系',
+      settings_language:'语言',
+      settings_disclaimer:'免责声明',
+      settings_available:'可用',
+      settings_open_disclaimer:'打开免责声明',
+      chat_placeholder:'询问冰雹免赔、野火保障、打包优惠…',
+      chat_send:'发送',
+      suggest_title:'常见问题',
+      suggest_home:'房屋保险',
+      suggest_auto:'汽车保险',
+      s_home_1:'房屋保险是否涵盖冰雹与屋顶损失？',
+      s_home_2:'什么是风/冰雹免赔额（%）？',
+      s_home_3:'野火/烟雾保障应重点查看什么？',
+      s_auto_1:'汽车保险是否涵盖冰雹损失？',
+      s_auto_2:'综合险 vs 碰撞险分别保什么？',
+      s_auto_3:'不降低保障的情况下如何降保费？'
+    },
+    fr:{
+      doc_title:'Options Colorado — Assurance habitation & auto',
+      meta_desc:'Résidents du Colorado : explorez des options flexibles d’assurance habitation et auto pour protéger votre budget et votre tranquillité.',
+      hero_h1:"Obtenez des options habitation & auto flexibles, adaptées à votre budget et à ce qui compte.",
+      hero_header_home:'Assurance habitation',
+      hero_header_auto:'Assurance auto',
+      hero_header_business:"Assurance entreprise",
+      cta_check:'Voir mes options',
+      disclaimer_btn:'Avertissement',
+      chat_peek_label:'Besoin d’aide ?',
+      chat_peek_name:'Discuter avec PolicyPro™',
+      pp_home_title:'Bonjour — comment pouvons-nous aider ?',
+      pp_home_sub:"Posez une question sur l’assurance habitation/auto au Colorado (info générale). Un agent agréé vérifie avant toute offre ou souscription.",
+      pp_start_chat:'Démarrer le chat',
+      tab_home:'Accueil',
+      tab_messages:'Messages',
+      tab_settings:'Réglages',
+      settings_title:'Réglages',
+      settings_contact:'Contact',
+      settings_language:'Langue',
+      settings_disclaimer:'Avertissement',
+      settings_available:'Disponible',
+      settings_open_disclaimer:"Ouvrir l’avertissement légal",
+      chat_placeholder:'Grêle, incendies, franchises, regroupement…',
+      chat_send:'Envoyer',
+      suggest_title:'Questions fréquentes',
+      suggest_home:'ASSURANCE HABITATION',
+      suggest_auto:'ASSURANCE AUTO',
+      s_home_1:'La grêle et le toit sont-ils couverts ?',
+      s_home_2:'Qu’est-ce qu’une franchise vent/grêle (en %)?',
+      s_home_3:'Que vérifier pour la couverture feu/fumée ?',
+      s_auto_1:'La grêle est-elle couverte en assurance auto ?',
+      s_auto_2:'Que couvre “comprehensive” vs “collision” ?',
+      s_auto_3:'Comment baisser ma prime sans perdre de garanties ?'
+    },
+    ru:{
+      doc_title:'Варианты в Колорадо — Дом и авто',
+      meta_desc:'Жители Колорадо: гибкие варианты страхования дома и авто для защиты бюджета и спокойствия.',
+      hero_h1:'Гибкие варианты страхования дома и авто под ваш бюджет — защитите важное.',
+      hero_header_home:'Страхование дома',
+      hero_header_auto:'Страхование авто',
+      hero_header_business:'Страхование бизнеса',
+      cta_check:'Проверить варианты',
+      disclaimer_btn:'Дисклеймер',
+      chat_peek_label:'Нужна помощь?',
+      chat_peek_name:'Чат с PolicyPro™',
+      pp_home_title:'Здравствуйте — чем помочь?',
+      pp_home_sub:'Вопросы по страхованию дома/авто в Колорадо (общая информация). Перед любыми действиями проверит лицензированный агент.',
+      pp_start_chat:'Начать чат',
+      tab_home:'Домой',
+      tab_messages:'Сообщения',
+      tab_settings:'Настройки',
+      settings_title:'Настройки',
+      settings_contact:'Контакт',
+      settings_language:'Язык',
+      settings_disclaimer:'Дисклеймер',
+      settings_available:'Доступно',
+      settings_open_disclaimer:'Открыть дисклеймер',
+      chat_placeholder:'Град, пожары, франшизы, пакет…',
+      chat_send:'Отправить',
+      suggest_title:'Популярные вопросы',
+      suggest_home:'СТРАХОВАНИЕ ДОМА',
+      suggest_auto:'СТРАХОВАНИЕ АВTO',
+      s_home_1:'Покрывает ли страховка дома град и крышу?',
+      s_home_2:'Что такое франшиза по ветру/граду (в %)?',
+      s_home_3:'Что проверить по покрытию пожара/дыма?',
+      s_auto_1:'Покрывается ли град автостраховкой?',
+      s_auto_2:'Чем отличается comprehensive от collision?',
+      s_auto_3:'Как снизить платеж без потери покрытия?'
+    }
+  };
+}
 
-  function getStrings_(lang){
-    var dict = i18nDict_();
-    return dict[lang] || dict.en;
-  }
-
-  function heroKeys_(){
-    return ['hero_header_home','hero_header_auto','hero_header_business'];
-  }
+  function getStrings_(lang){ var dict = i18nDict_(); return dict[lang] || dict.en; }
+  function heroKeys_(){ return ['hero_header_home','hero_header_auto','hero_header_business']; }
 
   var __heroIndex = 0;
-
   function syncHeroHeader_(){
     var el = document.getElementById('heroHeader');
     if(!el) return;
-
     var reduce = false;
     try{ reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ reduce = false; }
     var idx = reduce ? 0 : (__heroIndex % 3);
 
     var s = getStrings_(getLang_());
     var key = heroKeys_()[idx];
-    var txt = s[key] || (idx === 0 ? 'Home Insurance' : (idx === 1 ? 'Car Insurance' : 'Business Insurance'));
-    el.textContent = txt;
+    el.textContent = s[key] || (idx === 0 ? 'Home Insurance' : (idx === 1 ? 'Car Insurance' : 'Business Insurance'));
   }
 
   function translatePage_(lang){
@@ -1593,10 +1868,7 @@
 
     try{ document.documentElement.lang = lang || 'en'; }catch(e){}
     try{ document.title = s.doc_title; }catch(e){}
-    try{
-      var m = document.querySelector('meta[name="description"]');
-      if(m) m.setAttribute('content', s.meta_desc);
-    }catch(e){}
+    try{ var m = document.querySelector('meta[name="description"]'); if(m) m.setAttribute('content', s.meta_desc); }catch(e){}
 
     try{
       var nodes = document.querySelectorAll('[data-i18n]');
@@ -1628,9 +1900,7 @@
     var lang = getLang_();
     if(ppLangSelect){
       ppLangSelect.value = lang;
-      ppLangSelect.addEventListener('change', function(){
-        applyLanguage_(ppLangSelect.value);
-      });
+      ppLangSelect.addEventListener('change', function(){ applyLanguage_(ppLangSelect.value); });
     }
     applyLanguage_(lang);
   })();
@@ -1648,30 +1918,16 @@
 
   function setActiveHero_(idx){
     var els = heroEls_();
-    for(var i=0;i<els.length;i++){
-      if(els[i]) els[i].classList.toggle('active', i === idx);
-    }
+    for(var i=0;i<els.length;i++) if(els[i]) els[i].classList.toggle('active', i === idx);
   }
 
-  // PNG-only sources
   var HERO_SRCS = ['hero-house.png','hero-auto.png','hero-business.png'];
-
   function setHeroImgs_(srcs){
     var ids = ['heroImg0','heroImg1','heroImg2'];
     for(var i=0;i<ids.length;i++){
       var el = document.getElementById(ids[i]);
       if(el) el.src = srcs[i] || '';
     }
-
-    // Per-slide focal points (helps desktop crop look intentional)
-    try{
-      var h0 = document.getElementById('heroImg0');
-      var h1 = document.getElementById('heroImg1');
-      var h2 = document.getElementById('heroImg2');
-      if(h0) h0.style.objectPosition = '50% 40%';       // house
-      if(h1) h1.style.objectPosition = '50% 55%';       // auto
-      if(h2) h2.style.objectPosition = '50% 35%';       // business
-    }catch(e){}
 
     // Update widget header image to match first hero (home)
     try{
@@ -1687,7 +1943,6 @@
     __heroIndex = 0;
     setActiveHero_(0);
     syncHeroHeader_();
-
     setHeroImgs_(HERO_SRCS);
 
     setInterval(function(){
@@ -1700,11 +1955,6 @@
       syncHeroHeader_();
     }, 3000);
   })();
-
-  function isEmail_(email){
-    email = String(email||'').trim();
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
 
   function esc_(s){
     s = String(s == null ? '' : s);
@@ -1725,7 +1975,6 @@
     wrap.appendChild(b);
     chatMessages.appendChild(wrap);
     chatMessages.scrollTop = chatMessages.scrollHeight;
-
     saveChatState_();
   }
 
@@ -1739,17 +1988,11 @@
     if(!items || !items.length) return;
     items[items.length-1].innerHTML = html;
     chatMessages.scrollTop = chatMessages.scrollHeight;
-
     saveChatState_();
-  }
-
-  function seedChat_(){
-    renderSuggestedQuestions_();
   }
 
   function renderSuggestedQuestions_(){
     if(!chatMessages) return;
-
     if(chatMessages.childElementCount) return;
     if(chatHistory && chatHistory.length) return;
 
@@ -1760,9 +2003,7 @@
     title.className = 'pp-suggest-title';
     title.textContent = getStrings_(getLang_()).suggest_title;
 
-    var lang = getLang_();
-    var s = getStrings_(lang);
-
+    var s = getStrings_(getLang_());
     var suggestionsHome = [s.s_home_1, s.s_home_2, s.s_home_3];
     var suggestionsAuto = [s.s_auto_1, s.s_auto_2, s.s_auto_3];
 
@@ -1795,9 +2036,8 @@
     }
 
     wrap.appendChild(title);
-    var s2 = getStrings_(getLang_());
-    wrap.appendChild(section_(s2.suggest_home, suggestionsHome));
-    wrap.appendChild(section_(s2.suggest_auto, suggestionsAuto));
+    wrap.appendChild(section_(s.suggest_home, suggestionsHome));
+    wrap.appendChild(section_(s.suggest_auto, suggestionsAuto));
 
     chatMessages.appendChild(wrap);
   }
@@ -1825,6 +2065,14 @@
     setTimeout(function(){ renderSuggestedQuestions_(); }, 0);
   });
 
+  // Link inside Settings to open disclaimer
+  if(ppOpenDisclaimerLink){
+    ppOpenDisclaimerLink.addEventListener('click', function(e){
+      e.preventDefault();
+      try{ showDisclaimer(); }catch(err){}
+    });
+  }
+
   // ===== Disclaimer modal (manual only; no auto popups) =====
   var openDisclaimer = document.getElementById('openDisclaimer');
   var discOverlay = document.getElementById('discOverlay');
@@ -1833,18 +2081,9 @@
   var discClose2 = document.getElementById('discClose2');
   var discAccept = document.getElementById('discAccept');
 
-  function showDisclaimer(){
-    if(discOverlay) discOverlay.style.display = 'block';
-    if(discModal) discModal.style.display = 'flex';
-  }
-  function hideDisclaimer(){
-    if(discOverlay) discOverlay.style.display = 'none';
-    if(discModal) discModal.style.display = 'none';
-  }
-  function acceptDisclaimer_(){
-    try{ sessionStorage.setItem('sc_disclaimer_accepted_session','1'); }catch(e){}
-    hideDisclaimer();
-  }
+  function showDisclaimer(){ if(discOverlay) discOverlay.style.display = 'block'; if(discModal) discModal.style.display = 'flex'; }
+  function hideDisclaimer(){ if(discOverlay) discOverlay.style.display = 'none'; if(discModal) discModal.style.display = 'none'; }
+  function acceptDisclaimer_(){ try{ sessionStorage.setItem('sc_disclaimer_accepted_session','1'); }catch(e){} hideDisclaimer(); }
 
   if(openDisclaimer) openDisclaimer.addEventListener('click', showDisclaimer);
   if(discOverlay) discOverlay.addEventListener('click', hideDisclaimer);
@@ -1852,16 +2091,247 @@
   if(discClose2) discClose2.addEventListener('click', hideDisclaimer);
   if(discAccept) discAccept.addEventListener('click', acceptDisclaimer_);
 
-  // ===== Policy Health Check scoring (first-principles) =====
+  // ===== Mobile-friendly Policy Health Check (tap-to-advance) =====
+  function setupChipHighlights_(){
+    try{
+      var chips = document.querySelectorAll('.phc-chip');
+      for(var i=0;i<chips.length;i++){
+        (function(chip){
+          var box = chip.querySelector('input[type="checkbox"]');
+          if(!box) return;
+          function sync(){ chip.classList.toggle('active', !!box.checked); }
+          sync();
+          chip.addEventListener('click', function(){ setTimeout(sync, 0); });
+          box.addEventListener('change', sync);
+        })(chips[i]);
+      }
+    }catch(e){}
+  }
+
+  function isMobilePHC_(){ return window.matchMedia && window.matchMedia('(max-width: 600px)').matches; }
+
+  function clearActiveBtns_(wrap){
+    try{
+      var btns = wrap.querySelectorAll('.phc-answer-btn');
+      for(var i=0;i<btns.length;i++) btns[i].classList.remove('active');
+    }catch(e){}
+  }
+
+  function buildButtonsFromSelect_(selectId, targetId){
+    var sel = document.getElementById(selectId);
+    var target = document.getElementById(targetId);
+    if(!sel || !target) return;
+
+    target.innerHTML = '';
+
+    var opts = sel.querySelectorAll('option');
+    for(var i=0;i<opts.length;i++){
+      var val = (opts[i].value || '').trim();
+      var txt = (opts[i].textContent || '').trim();
+      if(!txt || val === '') continue; // skip placeholder
+
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'phc-answer-btn';
+      b.textContent = txt;
+      b.setAttribute('data-value', txt);
+      b.addEventListener('click', function(){
+        var v = this.getAttribute('data-value') || '';
+        try{ sel.value = v; }catch(e){}
+        clearActiveBtns_(target);
+        this.classList.add('active');
+      });
+      target.appendChild(b);
+    }
+
+    // Preselect if value already set
+    try{
+      if(sel.value){
+        var btns = target.querySelectorAll('.phc-answer-btn');
+        for(var j=0;j<btns.length;j++){
+          if((btns[j].getAttribute('data-value')||'') === sel.value){
+            btns[j].classList.add('active');
+            break;
+          }
+        }
+      }
+    }catch(e){}
+  }
+
+  function buildButtonsFromCheckboxGroup_(containerId, targetId){
+    var c = document.getElementById(containerId);
+    var target = document.getElementById(targetId);
+    if(!c || !target) return;
+
+    target.innerHTML = '';
+    var labels = c.querySelectorAll('label.phc-chip');
+
+    for(var i=0;i<labels.length;i++){
+      (function(lbl){
+        var box = lbl.querySelector('input[type="checkbox"]');
+        if(!box) return;
+        var text = (lbl.textContent || '').trim();
+
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'phc-answer-btn';
+        b.textContent = text;
+
+        function sync(){ b.classList.toggle('active', !!box.checked); }
+        sync();
+
+        b.addEventListener('click', function(){
+          // Special handling for None
+          var v = String(box.value || '').trim();
+          if(v === 'None'){
+            // uncheck all others
+            try{
+              var others = c.querySelectorAll('input[type="checkbox"]');
+              for(var k=0;k<others.length;k++) others[k].checked = false;
+              box.checked = true;
+            }catch(e){}
+          }else{
+            // if any non-None is checked, uncheck None
+            try{
+              var noneBox = c.querySelector('input[type="checkbox"][value="None"]');
+              if(noneBox) noneBox.checked = false;
+            }catch(e){}
+            box.checked = !box.checked;
+          }
+          try{ box.dispatchEvent(new Event('change', { bubbles:true })); }catch(e){}
+          sync();
+        });
+
+        // keep button in sync with underlying checkbox
+        box.addEventListener('change', sync);
+
+        target.appendChild(b);
+      })(labels[i]);
+    }
+  }
+
+  var __phcMobileStep = 0;
+  var __phcMobileTotal = 6; // Q0..Q5
+
+  function phcShow_(idx){
+    __phcMobileStep = Math.max(0, Math.min(__phcMobileTotal, idx|0));
+    for(var i=0;i<=__phcMobileTotal;i++){
+      var el = document.getElementById(i === __phcMobileTotal ? 'phcQDone' : ('phcQ' + i));
+      if(el) el.style.display = (i === __phcMobileStep) ? 'block' : 'none';
+    }
+  }
+
+  function phcEnsureSelected_(selectId){
+    var sel = document.getElementById(selectId);
+    if(!sel) return true;
+    return !!String(sel.value || '').trim();
+  }
+
+  function setupPhcMobileFlow_(){
+    if(!isMobilePHC_()) return;
+
+    // Build mobile answer buttons
+    buildButtonsFromCheckboxGroup_('phcChanges', 'phcMobileChanges');
+    buildButtonsFromSelect_('phcProperty', 'phcMobileProperty');
+    buildButtonsFromSelect_('phcDeductible', 'phcMobileDeductible');
+    buildButtonsFromSelect_('phcLiability', 'phcMobileLiability');
+    buildButtonsFromSelect_('phcReview', 'phcMobileReview');
+    buildButtonsFromCheckboxGroup_('phcRisks', 'phcMobileRisks');
+
+    // Wire nav buttons + auto-advance on single-choice taps
+    function bindAutoAdvance_(wrapId, nextFn){
+      var w = document.getElementById(wrapId);
+      if(!w) return;
+      w.addEventListener('click', function(e){
+        var t = e.target;
+        if(!t || !t.classList || !t.classList.contains('phc-answer-btn')) return;
+        // For single-choice groups, advance shortly after selection
+        if(wrapId !== 'phcMobileChanges' && wrapId !== 'phcMobileRisks'){
+          setTimeout(nextFn, 120);
+        }
+      });
+    }
+
+    var n0 = document.getElementById('phcNext0');
+    var b1 = document.getElementById('phcBack1');
+    var n1 = document.getElementById('phcNext1');
+    var b2 = document.getElementById('phcBack2');
+    var n2 = document.getElementById('phcNext2');
+    var b3 = document.getElementById('phcBack3');
+    var n3 = document.getElementById('phcNext3');
+    var b4 = document.getElementById('phcBack4');
+    var n4 = document.getElementById('phcNext4');
+    var b5 = document.getElementById('phcBack5');
+    var fin = document.getElementById('phcFinish');
+
+    if(n0) n0.addEventListener('click', function(){ phcShow_(1); });
+
+    if(b1) b1.addEventListener('click', function(){ phcShow_(0); });
+    if(n1) n1.addEventListener('click', function(){
+      if(!phcEnsureSelected_('phcProperty')){ try{ document.getElementById('phcProperty').reportValidity(); }catch(e){} return; }
+      phcShow_(2);
+    });
+
+    if(b2) b2.addEventListener('click', function(){ phcShow_(1); });
+    if(n2) n2.addEventListener('click', function(){
+      if(!phcEnsureSelected_('phcDeductible')){ try{ document.getElementById('phcDeductible').reportValidity(); }catch(e){} return; }
+      phcShow_(3);
+    });
+
+    if(b3) b3.addEventListener('click', function(){ phcShow_(2); });
+    if(n3) n3.addEventListener('click', function(){
+      if(!phcEnsureSelected_('phcLiability')){ try{ document.getElementById('phcLiability').reportValidity(); }catch(e){} return; }
+      phcShow_(4);
+    });
+
+    if(b4) b4.addEventListener('click', function(){ phcShow_(3); });
+    if(n4) n4.addEventListener('click', function(){
+      if(!phcEnsureSelected_('phcReview')){ try{ document.getElementById('phcReview').reportValidity(); }catch(e){} return; }
+      phcShow_(5);
+    });
+
+    if(b5) b5.addEventListener('click', function(){ phcShow_(4); });
+    if(fin) fin.addEventListener('click', function(){ phcShow_(__phcMobileTotal); });
+
+    bindAutoAdvance_('phcMobileProperty', function(){ if(n1) n1.click(); });
+    bindAutoAdvance_('phcMobileDeductible', function(){ if(n2) n2.click(); });
+    bindAutoAdvance_('phcMobileLiability', function(){ if(n3) n3.click(); });
+    bindAutoAdvance_('phcMobileReview', function(){ if(n4) n4.click(); });
+
+    phcShow_(0);
+  }
+
+  // Build mobile flow when modal is shown (ensures DOM exists)
+  try{
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', function(){
+        setupChipHighlights_();
+      });
+    }else{
+      setupChipHighlights_();
+    }
+  }catch(e){}
+
+  // Also (re)initialize when opening the funnel/health check
+  function setupPHCOnOpen_(){
+    try{ setupChipHighlights_(); }catch(e){}
+    try{ setupPhcMobileFlow_(); }catch(e){}
+  }
+
+  // Hook into existing modal open paths
+  try{
+    if(openFunnelBtn) openFunnelBtn.addEventListener('click', function(){ setTimeout(setupPHCOnOpen_, 0); });
+    if(openHealthCheckBtn) openHealthCheckBtn.addEventListener('click', function(){ setTimeout(setupPHCOnOpen_, 0); });
+  }catch(e){}
+
+  // ===== Policy Health Check scoring =====
   function collectCheckedValues_(containerId){
     var out = [];
     try{
       var c = document.getElementById(containerId);
       if(!c) return out;
       var boxes = c.querySelectorAll('input[type="checkbox"]');
-      for(var i=0;i<boxes.length;i++){
-        if(boxes[i].checked) out.push(String(boxes[i].value || '').trim());
-      }
+      for(var i=0;i<boxes.length;i++) if(boxes[i].checked) out.push(String(boxes[i].value || '').trim());
     }catch(e){}
     if(out.indexOf('None') >= 0) return ['None'];
     return out;
@@ -1889,20 +2359,12 @@
     if(has_(changes,'None') === false && changes.length === 0) unsureCount++;
     if(has_(risks,'Not sure')) unsureCount++;
 
-    if(unsureCount >= 2){
-      score -= 18;
-      triggers.push('Multiple unknowns');
-    }
+    if(unsureCount >= 2){ score -= 18; triggers.push('Multiple unknowns'); }
 
     var majorChange = false;
     var majorSet = ['Moved/bought home','New driver/teen driver','New vehicle/financed/leased','Marriage/divorce/new baby','Work from home/home business','Major remodel/new roof/solar'];
-    for(var i=0;i<majorSet.length;i++){
-      if(has_(changes, majorSet[i])){ majorChange = true; break; }
-    }
-    if(majorChange){
-      score -= 14;
-      triggers.push('Recent life change');
-    }
+    for(var i=0;i<majorSet.length;i++) if(has_(changes, majorSet[i])){ majorChange = true; break; }
+    if(majorChange){ score -= 14; triggers.push('Recent life change'); }
 
     if(review === '1–3 years ago') score -= 8;
     if(review === '3+ years ago / never'){ score -= 18; triggers.push('No recent policy review'); }
@@ -1911,7 +2373,7 @@
     if(liability === 'Somewhat protected'){ score -= 8; triggers.push('Liability may be low'); }
     if(liability === 'Not protected / Not sure'){ score -= 18; triggers.push('Liability likely insufficient'); }
 
-    if(deductible === '$500–$1,000'){ score -= 6; }
+    if(deductible === '$500–$1,000') score -= 6;
     if(deductible === 'Not sure'){ score -= 10; triggers.push('Deductible unknown'); }
 
     if(has_(risks,'Wildfire/brush nearby')){ score -= 6; triggers.push('Wildfire exposure'); }
@@ -1951,9 +2413,7 @@
     else if(health && health.label === 'Yellow') score += 18;
     else score += 10;
 
-    try{
-      if(health && Array.isArray(health.triggers) && health.triggers.indexOf('Recent life change') >= 0) score += 6;
-    }catch(e){}
+    try{ if(health && Array.isArray(health.triggers) && health.triggers.indexOf('Recent life change') >= 0) score += 6; }catch(e){}
 
     if(score > 100) score = 100;
 
@@ -1968,10 +2428,7 @@
   if(leadForm){
     leadForm.addEventListener('submit', function(e){
       e.preventDefault();
-      if(formStatus){
-        formStatus.style.display='block';
-        formStatus.className='status';
-      }
+      if(formStatus){ formStatus.style.display='block'; formStatus.className='status'; }
 
       if(!GAS || GAS.indexOf('http') !== 0){
         if(formStatus){
@@ -1986,23 +2443,22 @@
         source: 'GitHub Landing Page',
         channel: 'CTA Funnel',
         timestamp: new Date().toISOString(),
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
-        zip: document.getElementById('zip').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        homeowner: document.getElementById('homeowner').value,
-        roofAge: document.getElementById('roofAge').value,
-        vehicles: document.getElementById('vehicles').value,
-        timeframe: document.getElementById('timeframe').value,
-        notes: document.getElementById('notes').value.trim(),
+        firstName: (document.getElementById('firstName').value || '').trim(),
+        lastName: (document.getElementById('lastName').value || '').trim(),
+        zip: (document.getElementById('zip').value || '').trim(),
+        email: (document.getElementById('email').value || '').trim(),
+        phone: (document.getElementById('phone').value || '').trim(),
+        homeowner: (document.getElementById('homeowner').value || ''),
+        roofAge: (document.getElementById('roofAge').value || ''),
+        vehicles: (document.getElementById('vehicles').value || ''),
+        timeframe: (document.getElementById('timeframe').value || ''),
+        notes: (document.getElementById('notes').value || '').trim(),
         consent: true,
         aiConsent: true,
         deliverKit: true,
         kitType: 'FIRE_HAIL_ENDORSEMENTS'
       };
 
-      // Collect Policy Health Check answers
       var phc = {
         changes: collectCheckedValues_('phcChanges'),
         property: (document.getElementById('phcProperty') ? document.getElementById('phcProperty').value : ''),
@@ -2031,6 +2487,7 @@
         }
         leadForm.reset();
         setTimeout(hideModal, 900);
+        try{ resetStepper_(); }catch(e){}
       }).catch(function(err){
         if(formStatus){
           formStatus.className='status err';
@@ -2039,6 +2496,86 @@
       });
     });
   }
+
+  // ===== Basic chat send (LOCAL mode gives safe canned response; REMOTE can use your endpoint later) =====
+  var POLICYPRO_MODE = ((window.POLICYPRO_MODE || '') + '').trim().toLowerCase() || 'local';
+  var CHAT_ENDPOINT = (POLICYPRO_MODE === 'remote')
+    ? (((window.POLICYPRO_LLM_ENDPOINT || '').trim() || (window.GAS_WEBAPP_URL || '').trim()))
+    : '';
+
+  function localAnswer_(q){
+    var t = String(q||'').toLowerCase();
+    if(t.indexOf('hail')>=0 || t.indexOf('roof')>=0) return 'Generally, hail damage can be covered depending on your policy type, deductibles (often a wind/hail deductible), and roof condition. An agent should review your declarations page and endorsements to confirm.';
+    if(t.indexOf('wildfire')>=0 || t.indexOf('smoke')>=0) return 'Wildfire/smoke impacts are very policy-specific. Common items to review: dwelling limit, additional living expense (ALE), debris removal, smoke damage, and any wildfire-specific exclusions/endorsements. An agent review is recommended.';
+    if(t.indexOf('auto')>=0 || t.indexOf('comprehensive')>=0) return 'Auto hail is typically under comprehensive coverage (not collision). Deductibles and repair method can affect outcomes. An agent can confirm what your policy includes.';
+    return 'I can share general insurance info, but a licensed agent must confirm anything policy-specific. If you want, tap “Check My Options” so an agent can follow up with personalized options.';
+  }
+
+  function sendChat_(text){
+    text = String(text||'').trim();
+    if(!text) return;
+
+    addMsg_('user', esc_(text));
+    addTyping_();
+
+    if(POLICYPRO_MODE !== 'remote'){
+      setTimeout(function(){
+        replaceLastBot_(esc_(localAnswer_(text)));
+      }, 550);
+      return;
+    }
+
+    // Remote mode (optional): post question to your endpoint
+    fetch(CHAT_ENDPOINT, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'chat', message:text, lang:getLang_(), history:chatHistory.slice(-20) })
+    }).then(function(){
+      // Opaque in no-cors; show a friendly fallback
+      setTimeout(function(){
+        replaceLastBot_(esc_('Thanks — an agent will follow up shortly. If you want faster help, tap “Check My Options”.'));
+      }, 600);
+    }).catch(function(){
+      replaceLastBot_(esc_(localAnswer_(text)));
+    });
+  }
+
+  if(chatForm){
+    chatForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      var v = (chatInput && chatInput.value) ? chatInput.value : '';
+      if(chatInput) chatInput.value = '';
+      sendChat_(v);
+    });
+  }
+
+  // =========================
+  // Minimal self-tests (run only when ?test=1 is present)
+  // =========================
+  function __assert_(cond, msg){ if(!cond) throw new Error('Test failed: ' + (msg || '')); }
+  function runTests_(){
+  __assert_(typeof setTab_ === 'function', 'setTab_ exists');
+
+  // i18n sanity
+  var dict = i18nDict_();
+  __assert_(dict && dict.en && dict.es, 'i18n has en + es');
+  __assert_(typeof getStrings_('en').cta_check === 'string', 'en strings resolve');
+  __assert_(typeof getStrings_('es').cta_check === 'string', 'es strings resolve');
+
+  // tab switching
+  setTab_('home');
+  __assert_(ppScreenHome ? ppScreenHome.classList.contains('active') : true, 'home screen active');
+  setTab_('messages');
+  __assert_(ppScreenMessages ? ppScreenMessages.classList.contains('active') : true, 'messages screen active');
+  setTab_('settings');
+  __assert_(ppScreenSettings ? ppScreenSettings.classList.contains('active') : true, 'settings screen active');
+
+  // Invalid values should not throw
+  setTab_('nope');
+}
+
+  try{ if((location.search || '').indexOf('test=1') >= 0) runTests_(); }catch(e){ console.error(e); }
 </script>
 
 </body>
