@@ -439,6 +439,12 @@
     .pp-suggest-chip:hover{filter:brightness(1.01);transform:translateY(-1px)}
     .pp-suggest-chip:active{transform:translateY(0)}
 
+    /* Policy Health Check chips */
+    .phc-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+    .phc-chip{display:inline-flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;background:#f8fafc;color:#0b1120;font-weight:900;font-size:12.5px;cursor:pointer;box-shadow:0 12px 26px rgba(2,6,23,.06);}
+    .phc-chip input{transform:scale(1.05);}
+    @media (max-width: 420px){.phc-chip{width:100%;justify-content:flex-start;}}
+
     @media (max-width: 420px){
       .pp-suggest-grid{gap:8px;}
       .pp-suggest-chip{width:100%;text-align:left;}
@@ -721,6 +727,7 @@
             <span class="dotx active" data-dot="0"></span>
             <span class="dotx" data-dot="1"></span>
             <span class="dotx" data-dot="2"></span>
+            <span class="dotx" data-dot="3"></span>
           </div>
           <div class="stepper-bar" aria-hidden="true"><span class="stepper-bar-fill" id="stepperBarFill"></span></div>
         </div>
@@ -786,8 +793,91 @@
             </div>
           </section>
 
-          <!-- STEP 3 -->
+          <!-- STEP 3: Policy Health Check (3–5 quick questions) -->
           <section class="step" data-step="2" aria-label="Step 3">
+            <div class="grid">
+              <div class="field" style="grid-column:1 / -1;">
+                <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                  <span>Policy Health Check</span>
+                  <span class="hint" style="margin:0;">Takes ~30 seconds</span>
+                </label>
+                <div class="hint">Answer a few simple questions so we can spot common coverage gaps (general info; agent review required).</div>
+              </div>
+
+              <div class="field" style="grid-column:1 / -1;">
+                <label>1) Any life changes in the last 12 months? (select all)</label>
+                <div class="hint">Changes are the #1 reason policies stop matching real life.</div>
+                <div class="phc-grid" id="phcChanges">
+                  <label class="phc-chip"><input type="checkbox" value="Moved/bought home">Moved/bought home</label>
+                  <label class="phc-chip"><input type="checkbox" value="New driver/teen driver">New driver/teen driver</label>
+                  <label class="phc-chip"><input type="checkbox" value="New vehicle/financed/leased">New vehicle/financed/leased</label>
+                  <label class="phc-chip"><input type="checkbox" value="Marriage/divorce/new baby">Marriage/divorce/new baby</label>
+                  <label class="phc-chip"><input type="checkbox" value="Work from home/home business">Work from home/home business</label>
+                  <label class="phc-chip"><input type="checkbox" value="Major remodel/new roof/solar">Major remodel/new roof/solar</label>
+                  <label class="phc-chip"><input type="checkbox" value="None">None</label>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="phcProperty">2) Property situation *</label>
+                <select id="phcProperty" name="phcProperty" required>
+                  <option value="">Select…</option>
+                  <option>Own a home</option>
+                  <option>Rent</option>
+                  <option>Condo/Townhome</option>
+                  <option>Landlord/Rental property</option>
+                  <option>Not sure</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="phcDeductible">3) Comfortable out-of-pocket if a claim happened tomorrow? *</label>
+                <select id="phcDeductible" name="phcDeductible" required>
+                  <option value="">Select…</option>
+                  <option>$500–$1,000</option>
+                  <option>$1,000–$2,500</option>
+                  <option>$2,500–$5,000+</option>
+                  <option>Not sure</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="phcLiability">4) If you were sued after an accident/injury, how protected do you feel? *</label>
+                <select id="phcLiability" name="phcLiability" required>
+                  <option value="">Select…</option>
+                  <option>Very protected (high liability / umbrella)</option>
+                  <option>Somewhat protected</option>
+                  <option>Not protected / Not sure</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="phcReview">5) Last full policy review with a licensed agent? *</label>
+                <select id="phcReview" name="phcReview" required>
+                  <option value="">Select…</option>
+                  <option>Within 12 months</option>
+                  <option>1–3 years ago</option>
+                  <option>3+ years ago / never</option>
+                  <option>Not sure</option>
+                </select>
+              </div>
+
+              <div class="field" style="grid-column:1 / -1;">
+                <label>Optional: Any property risk flags? (select all)</label>
+                <div class="phc-grid" id="phcRisks">
+                  <label class="phc-chip"><input type="checkbox" value="Wildfire/brush nearby">Wildfire/brush nearby</label>
+                  <label class="phc-chip"><input type="checkbox" value="Hail-prone / roof 10+ yrs">Hail-prone / roof 10+ yrs</label>
+                  <label class="phc-chip"><input type="checkbox" value="Basement/sump pump">Basement/sump pump</label>
+                  <label class="phc-chip"><input type="checkbox" value="Pool/trampoline/dog">Pool/trampoline/dog</label>
+                  <label class="phc-chip"><input type="checkbox" value="Not sure">Not sure</label>
+                  <label class="phc-chip"><input type="checkbox" value="None">None</label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 4 -->
+          <section class="step" data-step="3" aria-label="Step 4">
             <div class="grid">
               <div class="field" style="grid-column:1 / -1;">
                 <label for="roofAge">Roof age</label>
@@ -1050,7 +1140,7 @@
   var stepSubmit = document.getElementById('stepSubmit');
 
   var __stepIndex = 0;
-  var __stepTotal = 3;
+  var __stepTotal = 4;
 
   function isMobile_(){ return window.matchMedia && window.matchMedia('(max-width: 600px)').matches; }
 
@@ -1762,6 +1852,118 @@
   if(discClose2) discClose2.addEventListener('click', hideDisclaimer);
   if(discAccept) discAccept.addEventListener('click', acceptDisclaimer_);
 
+  // ===== Policy Health Check scoring (first-principles) =====
+  function collectCheckedValues_(containerId){
+    var out = [];
+    try{
+      var c = document.getElementById(containerId);
+      if(!c) return out;
+      var boxes = c.querySelectorAll('input[type="checkbox"]');
+      for(var i=0;i<boxes.length;i++){
+        if(boxes[i].checked) out.push(String(boxes[i].value || '').trim());
+      }
+    }catch(e){}
+    if(out.indexOf('None') >= 0) return ['None'];
+    return out;
+  }
+
+  function policyHealthScore_(answers){
+    answers = answers || {};
+    var triggers = [];
+    var score = 100;
+
+    function has_(arr, v){ return Array.isArray(arr) && arr.indexOf(v) >= 0; }
+
+    var changes = answers.changes || [];
+    var risks = answers.risks || [];
+    var property = String(answers.property || '');
+    var deductible = String(answers.deductible || '');
+    var liability = String(answers.liability || '');
+    var review = String(answers.review || '');
+
+    var unsureCount = 0;
+    if(property === 'Not sure') unsureCount++;
+    if(deductible === 'Not sure') unsureCount++;
+    if(review === 'Not sure') unsureCount++;
+    if(liability === 'Not protected / Not sure') unsureCount++;
+    if(has_(changes,'None') === false && changes.length === 0) unsureCount++;
+    if(has_(risks,'Not sure')) unsureCount++;
+
+    if(unsureCount >= 2){
+      score -= 18;
+      triggers.push('Multiple unknowns');
+    }
+
+    var majorChange = false;
+    var majorSet = ['Moved/bought home','New driver/teen driver','New vehicle/financed/leased','Marriage/divorce/new baby','Work from home/home business','Major remodel/new roof/solar'];
+    for(var i=0;i<majorSet.length;i++){
+      if(has_(changes, majorSet[i])){ majorChange = true; break; }
+    }
+    if(majorChange){
+      score -= 14;
+      triggers.push('Recent life change');
+    }
+
+    if(review === '1–3 years ago') score -= 8;
+    if(review === '3+ years ago / never'){ score -= 18; triggers.push('No recent policy review'); }
+    if(review === 'Not sure'){ score -= 10; triggers.push('Review date unknown'); }
+
+    if(liability === 'Somewhat protected'){ score -= 8; triggers.push('Liability may be low'); }
+    if(liability === 'Not protected / Not sure'){ score -= 18; triggers.push('Liability likely insufficient'); }
+
+    if(deductible === '$500–$1,000'){ score -= 6; }
+    if(deductible === 'Not sure'){ score -= 10; triggers.push('Deductible unknown'); }
+
+    if(has_(risks,'Wildfire/brush nearby')){ score -= 6; triggers.push('Wildfire exposure'); }
+    if(has_(risks,'Hail-prone / roof 10+ yrs')){ score -= 6; triggers.push('Hail/roof exposure'); }
+    if(has_(risks,'Basement/sump pump')){ score -= 4; triggers.push('Water backup risk'); }
+    if(has_(risks,'Pool/trampoline/dog')){ score -= 4; triggers.push('Higher liability exposure'); }
+
+    if(score < 0) score = 0;
+    if(score > 100) score = 100;
+
+    var label = 'Green';
+    if(score < 55) label = 'Red';
+    else if(score < 80) label = 'Yellow';
+
+    if((majorChange && (review === '3+ years ago / never' || review === 'Not sure')) || unsureCount >= 3){
+      if(triggers.indexOf('High mismatch risk') < 0) triggers.push('High mismatch risk');
+      label = 'Red';
+    }
+
+    return { score0to100: score, label: label, triggers: triggers };
+  }
+
+  function leadPriorityScore_(payloadLead, health){
+    var score = 0;
+
+    var tf = String(payloadLead.timeframe || '');
+    if(tf === 'ASAP') score += 35;
+    else if(tf === 'Within 7 days') score += 28;
+    else if(tf === 'Within 30 days') score += 18;
+    else if(tf === 'Just exploring') score += 8;
+
+    if(payloadLead.zip) score += 6;
+    if(payloadLead.phone) score += 6;
+    if(payloadLead.email) score += 6;
+
+    if(health && health.label === 'Red') score += 30;
+    else if(health && health.label === 'Yellow') score += 18;
+    else score += 10;
+
+    try{
+      if(health && Array.isArray(health.triggers) && health.triggers.indexOf('Recent life change') >= 0) score += 6;
+    }catch(e){}
+
+    if(score > 100) score = 100;
+
+    var label = 'COOL';
+    if(score >= 70) label = 'HOT';
+    else if(score >= 45) label = 'WARM';
+
+    return { score: score, label: label };
+  }
+
   // ===== Lead form submit =====
   if(leadForm){
     leadForm.addEventListener('submit', function(e){
@@ -1800,9 +2002,25 @@
         kitType: 'FIRE_HAIL_ENDORSEMENTS'
       };
 
-      var scored = leadScore(payloadLead.zip, payloadLead.timeframe);
-      payloadLead.leadScore = scored.score;
-      payloadLead.leadLabel = scored.label;
+      // Collect Policy Health Check answers
+      var phc = {
+        changes: collectCheckedValues_('phcChanges'),
+        property: (document.getElementById('phcProperty') ? document.getElementById('phcProperty').value : ''),
+        deductible: (document.getElementById('phcDeductible') ? document.getElementById('phcDeductible').value : ''),
+        liability: (document.getElementById('phcLiability') ? document.getElementById('phcLiability').value : ''),
+        review: (document.getElementById('phcReview') ? document.getElementById('phcReview').value : ''),
+        risks: collectCheckedValues_('phcRisks')
+      };
+
+      var health = policyHealthScore_(phc);
+      payloadLead.policyHealthScore = health.score0to100;
+      payloadLead.policyHealthLabel = health.label;
+      payloadLead.policyHealthTriggers = (health.triggers || []).join(' | ');
+      payloadLead.policyHealthAnswers = phc;
+
+      var priority = leadPriorityScore_(payloadLead, health);
+      payloadLead.leadScore = priority.score;
+      payloadLead.leadLabel = priority.label;
 
       if(formStatus) formStatus.textContent='Submitting…';
 
