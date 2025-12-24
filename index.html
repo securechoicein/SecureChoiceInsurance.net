@@ -9,9 +9,9 @@
   <!-- ================= QUICK SETUP =================
   REQUIRED FILES IN SAME FOLDER:
   - index.html
-  - hero-house.png        (modern Colorado mountain home with pine trees + fire pit)
-  - hero-auto.png         (SUV + truck in mountain setting)
-  - hero-business.png     (business / commercial scene)
+  - hero-house.jpg        (modern Colorado mountain home with pine trees + fire pit)
+  - hero-auto.jpg         (SUV + truck in mountain setting)
+  - hero-business.jpg     (business / commercial scene)
   ================================================== -->
 
   <script>
@@ -37,9 +37,9 @@
   </script>
 
   <!-- Preload hero images for smoother first paint -->
-  <link rel="preload" as="image" href="hero-house.png">
-  <link rel="preload" as="image" href="hero-auto.png">
-  <link rel="preload" as="image" href="hero-business.png">
+  <link rel="preload" as="image" href="hero-house.jpg">
+  <link rel="preload" as="image" href="hero-auto.jpg">
+  <link rel="preload" as="image" href="hero-business.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -138,7 +138,27 @@
     }
 
     /* (Hero paragraph removed per request) */
-    .cta{margin-top:24px;padding:14px 28px;font-size:16px;font-weight:800;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(180deg,#38bdf8,#0ea5e9);color:#020617}
+    /* Primary CTA – ChannelTalk-style (white, PP font) */
+    .cta{
+      margin-top:24px;
+      padding:14px 28px;
+      font-size:16px;
+      font-weight:700;
+      border-radius:999px;
+      border:1px solid #e5e7eb;
+      cursor:pointer;
+      background:#ffffff;
+      color:#0b1120;
+      font-family:'Playfair Display','Didot','Bodoni MT',serif;
+      box-shadow:0 18px 55px rgba(0,0,0,.25);
+      transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    }
+    .cta:hover{
+      transform:translateY(-1px);
+      box-shadow:0 22px 70px rgba(0,0,0,.28);
+      filter:brightness(1.01);
+    }
+    .cta:active{transform:translateY(0);box-shadow:0 14px 40px rgba(0,0,0,.22);}
 
     /* Alert */
     .alert-box{position:absolute;right:10%;bottom:35%;width:240px;background:rgba(15,23,42,.92);border-radius:14px;padding:14px;border:1px solid rgba(148,196,255,.55);box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:2}
@@ -589,9 +609,9 @@
 <section class="hero">
   <!-- Rotating background images -->
   <div class="hero-rotator" aria-hidden="true">
-    <div class="hero-slide" style="background-image:url('hero-house.png')"></div>
-    <div class="hero-slide" style="background-image:url('hero-auto.png')"></div>
-    <div class="hero-slide" style="background-image:url('hero-business.png')"></div>
+    <div class="hero-slide" style="background-image:url('hero-house.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('hero-auto.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('hero-business.jpg')"></div>
   </div>
 
   <div class="hero-content">
@@ -1559,5 +1579,3 @@
 
 </body>
 </html>
-
-
