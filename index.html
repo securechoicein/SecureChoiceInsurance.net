@@ -16,7 +16,7 @@
 
   <script>
     // === REQUIRED: paste your deployed Google Apps Script Web App URL here ===
-    window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyWoyQwiNZGLj7Bh-8Hap2rceF-3XWTP5mqpkjRpN5MwWmKLY1eQcDSmrw_IjS5avJ_XA/exec";
+    window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyUOfuj1EWfjV5jAyHIc9ej5jRYDCLupW9IrgydWkcG1HhkSdpr2Fqh1sc7Utj30uveBQ/exec";
 
     // Optional separate LLM endpoint (usually leave blank to reuse GAS)
     window.POLICYPRO_LLM_ENDPOINT = "";
@@ -1117,11 +1117,14 @@
 
   function postToGAS(url, payload){
     // Most reliable from GitHub Pages → Google Apps Script:
-    // submit a classic HTML form into a hidden iframe (no CORS / no preflight).
+    // Submit a classic HTML <form> into a hidden <iframe> (no CORS / no preflight).
+    // ✅ We ALSO send each field as its own form input so your Apps Script can read:
+    //    - e.parameter.payload (JSON string)
+    //    - AND/OR individual fields like e.parameter.email, e.parameter.firstName, etc.
     url = String(url||'').trim();
     payload = payload || {};
 
-    try{ console.log('[Lead] Posting to GAS (form/iframe):', url, payload); }catch(e){}
+    try{ console.log('[Lead] Posting to GAS (form/iframe):', url); }catch(e){}
 
     return new Promise(function(resolve, reject){
       try{
@@ -1141,23 +1144,40 @@
         form.method = 'POST';
         form.action = url;
         form.target = 'gas_iframe';
+        form.enctype = 'application/x-www-form-urlencoded';
         form.style.display = 'none';
 
-        // Keep your original parameter name so existing Apps Script continues to work
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'payload';
-        input.value = JSON.stringify(payload);
-        form.appendChild(input);
+        // 1) Keep your original single "payload" param (JSON)
+        var inputPayload = document.createElement('input');
+        inputPayload.type = 'hidden';
+        inputPayload.name = 'payload';
+        inputPayload.value = JSON.stringify(payload);
+        form.appendChild(inputPayload);
+
+        // 2) Also send each key as a normal field for maximum compatibility
+        try{
+          Object.keys(payload).forEach(function(k){
+            var v = payload[k];
+            // Avoid huge objects; the JSON payload already contains everything
+            if(v && typeof v === 'object') return;
+            var inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = k;
+            inp.value = String(v == null ? '' : v);
+            form.appendChild(inp);
+          });
+        }catch(e){}
 
         document.body.appendChild(form);
 
-        // Resolve after submit—GAS will receive the request even though we can’t read the response.
+        // Submit — GAS will receive the request even though we can’t read the response.
         form.submit();
+
+        // Cleanup + resolve shortly after submit
         setTimeout(function(){
           try{ form.remove(); }catch(e){}
           resolve({ ok:true });
-        }, 350);
+        }, 450);
       }catch(err){
         reject(err);
       }
