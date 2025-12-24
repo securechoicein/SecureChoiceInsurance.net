@@ -329,7 +329,38 @@
       .alert-box{display:none;}
     }
 
-    /* ================== POLICY HEALTH CHECK ================== */
+    /* ================== POLICY HEALTH CHECK ==================
+   Desktop shrink + density tuning */
+
+/* Constrain PHC width on desktop so it feels like a diagnostic, not a form */
+@media (min-width: 1024px){
+  .phc-container{
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .phc-card{
+    padding: 16px 18px;
+  }
+
+  .phc-question{
+    margin-bottom: 12px;
+  }
+
+  .phc-answers{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+/* Keep result section full-width for impact */
+.phc-result{
+  max-width: 100%;
+}
+
+/* ========================================================= */
 
     /* Option A (Desktop): collapsed by default to reduce form height */
     .phc-collapse{border:1px solid #e5e7eb;border-radius:18px;background:#ffffff;box-shadow:0 14px 40px rgba(2,6,23,.06);overflow:hidden;}
