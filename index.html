@@ -111,7 +111,17 @@
 
     .hero-slide.active{ opacity:1; }
 
-    /* Reduce motion for accessibility */
+    /* Desktop: show the full PNG hero (less cropping than object-fit:cover) */
+    @media (min-width: 901px){
+      .hero-rotator{ background:#0b1323; }
+      .hero-slide{
+        object-fit:contain;
+        object-position:center;
+        transform:none;
+      }
+    }
+
+/* Reduce motion for accessibility */
     @media (prefers-reduced-motion: reduce){
       .hero-slide{ transition:none; }
     }
