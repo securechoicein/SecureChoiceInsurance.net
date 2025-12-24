@@ -16,7 +16,7 @@
 
   <script>
     // === REQUIRED: paste your deployed Google Apps Script Web App URL here ===
-    window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxOABgbT0lL3a3sLNdt-IVkE-Tf6j7WdIdlrdEoZuxfUbCgKc0aZbXOrpXJbnQGtwqtWQ/exec";
+    window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw5WUyuqjP6HODx88cSVY2ga2jhl7g29fRaqJb7OXneFH96lM0TyEGZxZdQtnD0dbOf4A/exec";
 
     // Optional separate LLM endpoint (usually leave blank to reuse GAS)
     window.POLICYPRO_LLM_ENDPOINT = "";
@@ -34,7 +34,34 @@
 
     // === ClickFunnels (recommended for "Check My Options") ===
     window.CLICKFUNNEL_URL = "";
-  </script>
+    
+  // ===== Conditional reveal: Check My Options appears after interaction =====
+  (function(){
+    var cta = document.getElementById('openFunnel');
+    if(!cta) return;
+
+    function revealCTA(){
+      cta.classList.add('visible');
+      cta.removeAttribute('aria-hidden');
+      window.removeEventListener('scroll', onScroll);
+    }
+
+    function onScroll(){
+      if(window.scrollY > window.innerHeight * 0.25){
+        revealCTA();
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive:true });
+
+    // Also reveal if Policy Health Check is started
+    var phcBtn = document.getElementById('startPHC');
+    if(phcBtn){
+      phcBtn.addEventListener('click', revealCTA);
+    }
+  })();
+
+</script>
 
   <!-- Preload hero images for smoother first paint (PNG only) -->
   <link rel="preload" as="image" href="hero-house.png">
@@ -88,11 +115,13 @@
     .hero-content{position:relative;max-width:680px;z-index:2;width:100%;}
 
     /* Dark overlay so text stays readable on photos */
+    /* Dark overlay so text stays readable on photos — tuned for brightness */
     .hero::before{
       content:"";
       position:absolute;
       inset:0;
-      background:linear-gradient(rgba(5,10,25,.74),rgba(5,10,25,.74));
+      /* Lighter, contrast-preserving overlay instead of heavy dark wash */
+      background:linear-gradient(rgba(5,10,25,.55), rgba(5,10,25,.55));
       z-index:1;
       pointer-events:none;
     }
@@ -107,7 +136,7 @@
       background:transparent;
     }
 
-    .hero-slide{
+        .hero-slide{
       position:absolute;
       inset:0;
       width:100%;
@@ -115,7 +144,9 @@
       object-fit:cover;
       object-position:50% 50%;
       opacity:0;
-      filter:saturate(1.05) contrast(1.05);
+      /* Increase perceived sharpness + brightness */
+      filter: brightness(1.08) contrast(1.12) saturate(1.12);
+      image-rendering:auto;
       transition:opacity 900ms ease;
       will-change:opacity;
     }
@@ -123,9 +154,19 @@
     .hero-slide.active{ opacity:1; }
 
     /* Desktop: prefer showing full PNG without awkward cropping */
+        /* Desktop: prefer showing full PNG without awkward cropping */
     @media (min-width: 901px){
-  /* Desktop: show full PNG (no awkward cropping) */
-  .hero{ min-height:100vh; padding:72px 72px; }
+      .hero{ min-height:100vh; padding:72px 72px; }
+      .hero-content{ max-width:760px; }
+      .hero-rotator{ background: var(--hero-bg-desktop); }
+      .hero-slide{
+        object-fit: var(--hero-fit-desktop);
+        object-position: 50% 45%;
+        transform:none;
+        /* Extra desktop clarity (large screens can handle it) */
+        filter: brightness(1.12) contrast(1.15) saturate(1.15);
+      }
+    }
   .hero-content{ max-width:760px; }
   .hero-rotator{ background: var(--hero-bg-desktop); }
   .hero-slide{
@@ -162,7 +203,12 @@
     .cta{
       margin-top:24px;
       padding:14px 28px;
-      font-size:16px;
+      font-size: 16px;
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: phcFadeIn 0.6s ease-out forwards;
+  animation-delay: 0.4s;
       font-weight:700;
       border-radius:999px;
       border:1px solid #e5e7eb;
@@ -181,19 +227,75 @@
     .cta:active{transform:translateY(0);box-shadow:0 14px 40px rgba(0,0,0,.22);}
 
     /* Secondary CTA */
-    .cta.cta-secondary{ margin-top:0; background:rgba(255,255,255,.92); }
+    /* Secondary CTA (Health Check) — add subtle gradient border so it doesn’t blend */
+    .cta.cta-secondary{
+      margin-top:0;
+      background:rgba(255,255,255,.94);
+      position:relative;
+    }
+    .cta.cta-secondary::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:999px;
+      background:linear-gradient(90deg, rgba(56,189,248,.75), rgba(34,197,94,.55), rgba(56,189,248,.75));
+      z-index:-1;
+      filter:blur(.0px);
+      opacity:.85;
+    }
+    .cta.cta-secondary:hover{ filter:brightness(1.03); }
 
     /* Policy Health Check hook (A/B + subtle attention draw) */
-    .phc-hook{
-      margin:0 0 6px;
-      font-size:15px;
-      font-weight:800;
+    /* Policy Health Check hook (HERO) — make it pop */
+    /* Policy Health Check hook — match Channelview / ChannelTalk font */
+    .phc-hook-hero{
+      margin:0 0 10px;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size:16px;
+      font-weight:600; /* ChannelTalk-style medium weight */
       line-height:1.45;
-      color:#e5e7eb;
+      letter-spacing:-0.01em;
+      color:#ffffff;
       text-shadow:0 12px 36px rgba(0,0,0,.45);
-      opacity:.96;
+      opacity:.98;
+      padding:12px 14px 12px 14px;
+      border-radius:16px;
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border:1px solid rgba(148,196,255,.35);
+      box-shadow:0 18px 60px rgba(0,0,0,.26);
+      position:relative;
+      overflow:hidden;
     }
-    .phc-hook.attn{ animation:phcGlow 2.4s ease-in-out 1; }
+    .phc-hook-hero::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:radial-gradient(600px 180px at 18% 0%, rgba(56,189,248,.28), transparent 55%),
+                 radial-gradient(420px 180px at 92% 10%, rgba(34,197,94,.14), transparent 60%);
+      opacity:.95;
+    }
+    .phc-hook-hero::after{
+      content:"30-Second Check";
+      position:absolute;
+      top:10px; right:12px;
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:rgba(226,232,240,.92);
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,196,255,.35);
+      background:rgba(15,23,42,.35);
+    }
+    .phc-hook-hero.attn{ animation:phcGlow 2.4s ease-in-out 1; }
+    @keyframes phcGlow{
+      0%{transform:translateY(0); filter:saturate(1);}
+      45%{transform:translateY(-1px); filter:saturate(1.15);}
+      70%{box-shadow:0 22px 80px rgba(56,189,248,.12), 0 18px 60px rgba(0,0,0,.26);}
+      100%{transform:translateY(0);}
+    }
     @keyframes phcGlow{
       0%{opacity:.85;}
       40%{opacity:1; text-shadow:0 0 0 rgba(56,189,248,0);}
@@ -352,6 +454,51 @@
       font-weight:900;
       font-size:13px;
       cursor:pointer;
+    }
+
+    /* ================== PHC RESULT (Green/Yellow/Red) ================== */
+    .phc-result{
+      display:none;
+      margin-top:14px;
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      padding:14px 14px 12px;
+      background:#ffffff;
+      box-shadow:0 14px 40px rgba(2,6,23,.06);
+    }
+    .phc-result.show{display:block;}
+
+    .phc-result-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .phc-result-left{display:flex;align-items:center;gap:10px;}
+    .phc-dot{width:12px;height:12px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.12);} /* green */
+    .phc-dot.yellow{background:#facc15;box-shadow:0 0 0 6px rgba(250,204,21,.16);} /* yellow */
+    .phc-dot.red{background:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.14);} /* red */
+    .phc-result-label{font-weight:1000;color:#0b1120;font-size:12px;letter-spacing:.08em;text-transform:uppercase;}
+
+    .phc-result-copy{margin:10px 0 8px;color:#0b1120;font-weight:900;font-size:13px;line-height:1.35;}
+    .phc-result-why{margin:0;padding-left:18px;display:grid;gap:6px;}
+    .phc-result-why li{color:#475569;font-weight:800;font-size:12px;line-height:1.35;}
+
+    /* Micro-summary (above CTA) */
+    .phc-summary{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px dashed rgba(15,23,42,.18);
+      background:rgba(248,250,252,.9);
+      color:#0b1120;
+      font-weight:900;
+      font-size:12.5px;
+      line-height:1.35;
+    }
+
+    .phc-result-actions{margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+    .phc-run{border:1px solid #cbd5e1;background:#fff;color:#0b1120;font-weight:1000;}
+    .phc-continue{border:1px solid #0b1120;background:#0b1120;color:#fff;font-weight:1000;}
+
+    @media (max-width: 600px){
+      .phc-result{border-radius:16px;}
+      .phc-result-actions .btn{width:100%;}
     }
 
     /* Desktop tightening */
@@ -861,7 +1008,23 @@
     .disc-actions .btn{min-width:140px}
     .btn-accept{border:1px solid rgba(34,197,94,.35);background:linear-gradient(180deg, rgba(34,197,94,.18), rgba(34,197,94,.08));color:#0b1120;}
     .btn-accept:hover{filter:brightness(1.03)}
-  </style>
+  @keyframes phcFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cta-secondary{
+  transition: opacity .35s ease, transform .35s ease;
+}
+.cta-secondary.visible{
+  opacity:1 !important;
+  pointer-events:auto !important;
+  transform:translateY(0);
+}
+
+</style>
 </head>
 
 <body>
@@ -878,9 +1041,9 @@
     <h1 class="hero-headline" id="heroHeader" data-i18n="hero_header_home">Home Insurance</h1>
 
     <div class="hero-cta-wrap">
-      <p class="phc-hook attn" id="phcHook" data-i18n="phc_hook_v1">If your life looks different than when you started your policy, your coverage may not match anymore.</p>
+      <p class="phc-hook-hero attn" id="phcHook" data-i18n="phc_hook_v1">If your life looks different than when you started your policy, your coverage may not match anymore.</p>
       <button class="cta cta-secondary" id="openHealthCheck" type="button">30-Second Policy Health Check</button>
-      <button class="cta" id="openFunnel" type="button" data-i18n="cta_check">Check My Options</button>
+      <button class="cta cta-secondary" id="openFunnel" type="button" data-i18n="cta_check" aria-hidden="true" style="opacity:0;pointer-events:none;">Check My Options</button>
       <div class="cta-micro" id="ctaMicro">2 minutes • Not a quote • Agent follow-up</div>
     </div>
   </div>
@@ -1056,6 +1219,25 @@
               </div>
             </div>
 
+            <!-- Desktop: result + CTA (stays inside modal; proceeds to Options step) -->
+            <div class="phc-result" id="phcResult" aria-live="polite">
+              <div class="phc-result-top">
+                <div class="phc-result-left">
+                  <span class="phc-dot" id="phcDot" aria-hidden="true"></span>
+                  <div>
+                    <div class="phc-result-label" id="phcLabel">Green</div>
+                  </div>
+                </div>
+                <button class="btn phc-run" id="phcRun" type="button">Show my result</button>
+              </div>
+              <div class="phc-result-copy" id="phcCopy"></div>
+              <ul class="phc-result-why" id="phcWhy"></ul>
+              <div class="phc-summary" id="phcSummary" style="display:none;"></div>
+              <div class="phc-result-actions">
+                <button class="btn btn-primary phc-continue" id="phcCta" type="button" style="display:none;">Continue to Options</button>
+              </div>
+            </div>
+
             <!-- Mobile: tap-to-advance flow (keeps the same underlying fields for submission) -->
             <div class="phc-mobile-flow" id="phcMobileFlow" aria-label="Policy Health Check mobile flow">
               <div class="phc-q" id="phcQ0">
@@ -1120,7 +1302,24 @@
 
               <div class="phc-q" id="phcQDone" style="display:none;">
                 <p class="phc-q-title">✅ Policy Health Check complete</p>
-                <p class="phc-q-hint">You can tap “Next” below to continue the form.</p>
+                <p class="phc-q-hint">Based on your answers:</p>
+
+                <div class="phc-result show" id="phcResultMobile" aria-live="polite">
+                  <div class="phc-result-top">
+                    <div class="phc-result-left">
+                      <span class="phc-dot" id="phcDotMobile" aria-hidden="true"></span>
+                      <div>
+                        <div class="phc-result-label" id="phcLabelMobile">Green</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="phc-result-copy" id="phcCopyMobile"></div>
+                  <ul class="phc-result-why" id="phcWhyMobile"></ul>
+                  <div class="phc-summary" id="phcSummaryMobile" style="display:none;"></div>
+                  <div class="phc-result-actions">
+                    <button class="btn btn-primary phc-continue" id="phcCtaMobile" type="button" style="display:none;">Continue to Options</button>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -1667,7 +1866,13 @@
       s_home_3:'What should I check for wildfire/smoke coverage?',
       s_auto_1:'Is hail damage covered on auto insurance?',
       s_auto_2:'What does comprehensive vs collision cover?',
-      s_auto_3:'How can I lower my auto premium without losing coverage?'
+      s_auto_3:'How can I lower my auto premium without losing coverage?',
+
+      /* PHC result-based CTA */
+      phc_based_on:'Based on what you shared…',
+      phc_cta_green:'Confirm My Coverage',
+      phc_cta_yellow:'Fix Potential Gaps',
+      phc_cta_red:'Review My Policy Now'
     },
     es:{
       doc_title:'Opciones en Colorado — Seguro de hogar y auto',
@@ -1702,7 +1907,13 @@
       s_home_3:'¿Qué debo revisar para cobertura de incendio/humo?',
       s_auto_1:'¿El granizo está cubierto en el seguro de auto?',
       s_auto_2:'¿Qué cubre comprensivo vs colisión?',
-      s_auto_3:'¿Cómo bajo mi prima sin perder cobertura?'
+      s_auto_3:'¿Cómo bajo mi prima sin perder cobertura?',
+
+      /* PHC result-based CTA */
+      phc_based_on:'Según lo que compartiste…',
+      phc_cta_green:'Confirmar mi cobertura',
+      phc_cta_yellow:'Corregir posibles vacíos',
+      phc_cta_red:'Revisar mi póliza ahora'
     },
     ja:{
       doc_title:'コロラド保険オプション — 住宅・自動車',
@@ -2091,6 +2302,100 @@
   if(discClose2) discClose2.addEventListener('click', hideDisclaimer);
   if(discAccept) discAccept.addEventListener('click', acceptDisclaimer_);
 
+  // ===== Policy Health Check persistence (prefill across sessions) =====
+  var PHC_STATE_KEY = 'sc_phc_state_v1';
+
+  function readPHCState_(){
+    try{ var raw = localStorage.getItem(PHC_STATE_KEY); return raw ? JSON.parse(raw) : null; }
+    catch(e){ return null; }
+  }
+
+  function writePHCState_(state){
+    try{ localStorage.setItem(PHC_STATE_KEY, JSON.stringify(state || {})); }catch(e){}
+  }
+
+  function getPHCStateFromDOM_(){
+    return {
+      changes: collectCheckedValues_('phcChanges'),
+      property: (document.getElementById('phcProperty') ? document.getElementById('phcProperty').value : ''),
+      deductible: (document.getElementById('phcDeductible') ? document.getElementById('phcDeductible').value : ''),
+      liability: (document.getElementById('phcLiability') ? document.getElementById('phcLiability').value : ''),
+      review: (document.getElementById('phcReview') ? document.getElementById('phcReview').value : ''),
+      risks: collectCheckedValues_('phcRisks'),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  function savePHCState_(){ writePHCState_(getPHCStateFromDOM_()); }
+
+  function setCheckboxGroupFromValues_(containerId, values){
+    try{
+      var c = document.getElementById(containerId);
+      if(!c) return;
+      var v = Array.isArray(values) ? values : [];
+      var boxes = c.querySelectorAll('input[type="checkbox"]');
+      var noneOnly = v.indexOf('None') >= 0;
+      for(var i=0;i<boxes.length;i++){
+        var val = String(boxes[i].value || '').trim();
+        boxes[i].checked = noneOnly ? (val === 'None') : (v.indexOf(val) >= 0);
+        try{ boxes[i].dispatchEvent(new Event('change', { bubbles:true })); }catch(e){}
+      }
+    }catch(e){}
+  }
+
+  function setSelectValueIfExists_(selectId, value){
+    try{
+      var sel = document.getElementById(selectId);
+      if(!sel) return;
+      var v = String(value || '');
+      if(!v) return;
+      var opts = sel.querySelectorAll('option');
+      var ok = false;
+      for(var i=0;i<opts.length;i++){
+        var ov = String(opts[i].value || '').trim();
+        var ot = String(opts[i].textContent || '').trim();
+        if(ov === v || ot === v){ ok = true; break; }
+      }
+      if(ok){ sel.value = v; try{ sel.dispatchEvent(new Event('change', { bubbles:true })); }catch(e){} }
+    }catch(e){}
+  }
+
+  function hydratePHCFromSaved_(){
+    var st = readPHCState_();
+    if(!st) return;
+    setCheckboxGroupFromValues_('phcChanges', st.changes);
+    setSelectValueIfExists_('phcProperty', st.property);
+    setSelectValueIfExists_('phcDeductible', st.deductible);
+    setSelectValueIfExists_('phcLiability', st.liability);
+    setSelectValueIfExists_('phcReview', st.review);
+    setCheckboxGroupFromValues_('phcRisks', st.risks);
+  }
+
+  function bindPHCPersistListeners_(){
+    function onAnyChange(){ try{ savePHCState_(); }catch(e){} }
+    try{
+      var ids = ['phcProperty','phcDeductible','phcLiability','phcReview'];
+      for(var i=0;i<ids.length;i++){
+        var el = document.getElementById(ids[i]);
+        if(el) el.addEventListener('change', onAnyChange);
+      }
+      var groups = ['phcChanges','phcRisks'];
+      for(var g=0;g<groups.length;g++){
+        var c = document.getElementById(groups[g]);
+        if(c) c.addEventListener('change', onAnyChange);
+      }
+    }catch(e){}
+  }
+
+  try{
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', function(){ bindPHCPersistListeners_(); hydratePHCFromSaved_(); });
+    }else{
+      bindPHCPersistListeners_();
+      hydratePHCFromSaved_();
+    }
+  }catch(e){}
+
   // ===== Mobile-friendly Policy Health Check (tap-to-advance) =====
   function setupChipHighlights_(){
     try{
@@ -2291,7 +2596,16 @@
     });
 
     if(b5) b5.addEventListener('click', function(){ phcShow_(4); });
-    if(fin) fin.addEventListener('click', function(){ phcShow_(__phcMobileTotal); });
+    if(fin) fin.addEventListener('click', function(){
+      phcShow_(__phcMobileTotal);
+      // Render result immediately on mobile finish
+      try{
+        if(phcRequiredComplete_()){
+          var res = computePHC_();
+          renderPHCResult_(res.health, 'mobile');
+        }
+      }catch(e){}
+    });
 
     bindAutoAdvance_('phcMobileProperty', function(){ if(n1) n1.click(); });
     bindAutoAdvance_('phcMobileDeductible', function(){ if(n2) n2.click(); });
@@ -2314,8 +2628,24 @@
 
   // Also (re)initialize when opening the funnel/health check
   function setupPHCOnOpen_(){
+    // Prefill from saved state first
+    try{ hydratePHCFromSaved_(); }catch(e){}
+
+    // Then sync UI affordances
     try{ setupChipHighlights_(); }catch(e){}
     try{ setupPhcMobileFlow_(); }catch(e){}
+
+    // Ensure mobile answer buttons reflect hydrated values
+    try{
+      if(isMobilePHC_()){
+        buildButtonsFromCheckboxGroup_('phcChanges', 'phcMobileChanges');
+        buildButtonsFromSelect_('phcProperty', 'phcMobileProperty');
+        buildButtonsFromSelect_('phcDeductible', 'phcMobileDeductible');
+        buildButtonsFromSelect_('phcLiability', 'phcMobileLiability');
+        buildButtonsFromSelect_('phcReview', 'phcMobileReview');
+        buildButtonsFromCheckboxGroup_('phcRisks', 'phcMobileRisks');
+      }
+    }catch(e){}
   }
 
   // Hook into existing modal open paths
@@ -2424,6 +2754,147 @@
     return { score: score, label: label };
   }
 
+  // ===== PHC Result UI (Green / Yellow / Red) =====
+  function triggerExplain_(t){
+    var map = {
+      'Multiple unknowns':'Several items are unknown — a quick review can prevent surprises.',
+      'Recent life change':'Recent life changes often require updates (drivers, vehicles, address, usage, etc.).',
+      'No recent policy review':'It’s been a while since a full review — coverage and discounts may be out of date.',
+      'Review date unknown':'If you’re not sure when it was reviewed, it’s worth a quick check.',
+      'Liability may be low':'Liability is often the most cost-effective protection to increase.',
+      'Liability likely insufficient':'If liability is low/unknown, your risk exposure may be higher than expected.',
+      'Deductible unknown':'Knowing your deductible helps avoid “surprise” out-of-pocket costs.',
+      'Wildfire exposure':'Wildfire exposure can affect availability, deductibles, and endorsements.',
+      'Hail/roof exposure':'Hail/roof items can affect deductibles and roof settlement/eligibility.',
+      'Water backup risk':'Water backup is commonly excluded unless specifically added.',
+      'Higher liability exposure':'Pools/trampolines/dogs can increase liability exposure.',
+      'High mismatch risk':'Multiple signals suggest your policy may not match your current life/property.'
+    };
+    return map[t] || t;
+  }
+
+  function resultCopy_(label){
+    if(label === 'Green') return 'Likely on-track. Still, a quick review can confirm deductibles, liability, and endorsements match your current life.';
+    if(label === 'Yellow') return 'A few things may be worth tightening. A 5-minute agent review can spot gaps and find better-fit options.';
+    return 'High mismatch risk. Based on your answers, your coverage may not reflect your current life/property — an agent review is recommended.';
+  }
+
+  function phcCtaText_(label, lang){
+    var s = getStrings_(lang || getLang_());
+    if(label === 'Yellow') return s.phc_cta_yellow || 'Fix Potential Gaps';
+    if(label === 'Red') return s.phc_cta_red || 'Review My Policy Now';
+    return s.phc_cta_green || 'Confirm My Coverage';
+  }
+
+  function renderPHCResult_(health, where){
+    where = where || 'desktop';
+
+    var root = document.getElementById(where === 'mobile' ? 'phcResultMobile' : 'phcResult');
+    var dot = document.getElementById(where === 'mobile' ? 'phcDotMobile' : 'phcDot');
+    var lab = document.getElementById(where === 'mobile' ? 'phcLabelMobile' : 'phcLabel');
+    var copy = document.getElementById(where === 'mobile' ? 'phcCopyMobile' : 'phcCopy');
+    var why = document.getElementById(where === 'mobile' ? 'phcWhyMobile' : 'phcWhy');
+    var cta = document.getElementById(where === 'mobile' ? 'phcCtaMobile' : 'phcCta');
+    var summary = document.getElementById(where === 'mobile' ? 'phcSummaryMobile' : 'phcSummary');
+
+    if(!root || !dot || !lab || !copy || !why) return;
+
+    dot.className = 'phc-dot' + (health.label === 'Yellow' ? ' yellow' : (health.label === 'Red' ? ' red' : ''));
+    lab.textContent = health.label;
+    copy.textContent = resultCopy_(health.label);
+
+    why.innerHTML = '';
+    var triggers = Array.isArray(health.triggers) ? health.triggers.slice(0, 3) : [];
+    if(!triggers.length) triggers = ['General review recommended'];
+
+    for(var i=0;i<triggers.length;i++){
+      var li = document.createElement('li');
+      li.textContent = triggerExplain_(triggers[i]);
+      why.appendChild(li);
+    }
+
+    // Micro-summary above CTA
+    try{
+      if(summary){
+        var s2 = getStrings_(getLang_());
+        summary.textContent = (s2 && s2.phc_based_on) ? s2.phc_based_on : 'Based on what you shared…';
+        summary.style.display = 'block';
+      }
+    }catch(e){}
+
+    // Result-based CTA copy
+    if(cta){
+      cta.textContent = phcCtaText_(health.label, getLang_());
+      cta.style.display = 'inline-flex';
+    }
+
+    root.classList.add('show');
+  }
+
+  function computePHC_(){
+
+    var phc = {
+      changes: collectCheckedValues_('phcChanges'),
+      property: (document.getElementById('phcProperty') ? document.getElementById('phcProperty').value : ''),
+      deductible: (document.getElementById('phcDeductible') ? document.getElementById('phcDeductible').value : ''),
+      liability: (document.getElementById('phcLiability') ? document.getElementById('phcLiability').value : ''),
+      review: (document.getElementById('phcReview') ? document.getElementById('phcReview').value : ''),
+      risks: collectCheckedValues_('phcRisks')
+    };
+    return { phc: phc, health: policyHealthScore_(phc) };
+  }
+
+  function phcRequiredComplete_(){
+    try{
+      var p = document.getElementById('phcProperty');
+      var d = document.getElementById('phcDeductible');
+      var l = document.getElementById('phcLiability');
+      var r = document.getElementById('phcReview');
+      return !!(p && p.value && d && d.value && l && l.value && r && r.value);
+    }catch(e){ return false; }
+  }
+
+  function bindPHCResultUI_(){
+    var runBtn = document.getElementById('phcRun');
+    var ctaDesk = document.getElementById('phcCta');
+    var ctaMob = document.getElementById('phcCtaMobile');
+
+    function runDesk(){
+      if(!phcRequiredComplete_()){
+        try{
+          var p = document.getElementById('phcProperty');
+          var d = document.getElementById('phcDeductible');
+          var l = document.getElementById('phcLiability');
+          var r = document.getElementById('phcReview');
+          if(p && !p.value) p.reportValidity();
+          else if(d && !d.value) d.reportValidity();
+          else if(l && !l.value) l.reportValidity();
+          else if(r && !r.value) r.reportValidity();
+        }catch(e){}
+        return;
+      }
+      var res = computePHC_();
+      renderPHCResult_(res.health, 'desktop');
+    }
+
+    if(runBtn) runBtn.addEventListener('click', runDesk);
+
+    function goOptions_(){
+      try{
+        if(isMobile_()) setStep_(3);
+        else{
+          var consent = document.getElementById('consent');
+          if(consent) consent.scrollIntoView({ behavior:'smooth', block:'start' });
+        }
+      }catch(e){}
+    }
+
+    if(ctaDesk) ctaDesk.addEventListener('click', goOptions_);
+    if(ctaMob) ctaMob.addEventListener('click', goOptions_);
+  }
+
+  try{ bindPHCResultUI_(); }catch(e){}
+
   // ===== Lead form submit =====
   if(leadForm){
     leadForm.addEventListener('submit', function(e){
@@ -2473,6 +2944,8 @@
       payloadLead.policyHealthLabel = health.label;
       payloadLead.policyHealthTriggers = (health.triggers || []).join(' | ');
       payloadLead.policyHealthAnswers = phc;
+      // Store the exact result-based CTA copy shown to the user (useful for analytics + Sheets)
+      payloadLead.policyHealthCtaText = phcCtaText_(health.label, getLang_());
 
       var priority = leadPriorityScore_(payloadLead, health);
       payloadLead.leadScore = priority.score;
