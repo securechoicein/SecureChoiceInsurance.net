@@ -9,9 +9,9 @@
   <!-- ================= QUICK SETUP =================
   REQUIRED FILES IN SAME FOLDER:
   - index.html
-  - hero-house.jpg        (modern Colorado mountain home with pine trees + fire pit)
-  - hero-auto.jpg         (SUV + truck in mountain setting)
-  - hero-business.jpg     (business / commercial scene)
+  - hero-house.png
+  - hero-auto.png
+  - hero-business.png
   ================================================== -->
 
   <script>
@@ -36,10 +36,10 @@
     window.CLICKFUNNEL_URL = "";
   </script>
 
-  <!-- Preload hero images for smoother first paint -->
-  <link rel="preload" as="image" href="hero-house.jpg">
-  <link rel="preload" as="image" href="hero-auto.jpg">
-  <link rel="preload" as="image" href="hero-business.jpg">
+  <!-- Preload hero images for smoother first paint (PNG only) -->
+  <link rel="preload" as="image" href="hero-house.png">
+  <link rel="preload" as="image" href="hero-auto.png">
+  <link rel="preload" as="image" href="hero-business.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -86,39 +86,34 @@
       pointer-events:none;
     }
 
-    /* Rotating background slides (Option A: pure CSS) */
+    /* Rotating background slides (mobile-safe): JS-driven crossfade */
     .hero-rotator{
       position:absolute;
       inset:0;
+      height:100%; /* mobile paint safety */
       z-index:0;
       pointer-events:none;
     }
+
     .hero-slide{
       position:absolute;
       inset:0;
-      background-size:cover;
-      background-position:center;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center;
       opacity:0;
       transform:scale(1.03);
       filter:saturate(1.05) contrast(1.05);
-      animation:heroFade 9s infinite linear;
+      transition:opacity 900ms ease;
+      will-change:opacity;
     }
-    .hero-slide:nth-child(1){ animation-delay:0s; }
-    .hero-slide:nth-child(2){ animation-delay:3s; }
-    .hero-slide:nth-child(3){ animation-delay:6s; }
 
-    @keyframes heroFade{
-      0%{ opacity:0; }
-      10%{ opacity:1; }
-      30%{ opacity:1; }
-      40%{ opacity:0; }
-      100%{ opacity:0; }
-    }
+    .hero-slide.active{ opacity:1; }
 
     /* Reduce motion for accessibility */
     @media (prefers-reduced-motion: reduce){
-      .hero-slide{ animation:none; opacity:0; }
-      .hero-slide:nth-child(1){ opacity:1; }
+      .hero-slide{ transition:none; }
     }
 
     .hero-content{position:relative;max-width:680px;z-index:2}
@@ -137,7 +132,6 @@
       text-shadow:0 18px 70px rgba(0,0,0,.55);
     }
 
-    /* (Hero paragraph removed per request) */
     /* Primary CTA – ChannelTalk-style (white, PP font) */
     .cta{
       margin-top:24px;
@@ -273,7 +267,7 @@
       height:150px;
       background:
         linear-gradient(180deg, rgba(2,6,23,0) 40%, rgba(2,6,23,.45) 100%),
-        url('hero-house.jpg') center/cover no-repeat;
+        url('hero-house.png') center/cover no-repeat;
     }
 
     .pp-topbar{
@@ -544,6 +538,64 @@
     .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:20000;}
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:21000;}
     .card{width:min(760px,96vw);background:#ffffff;color:#0b1323;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden;border:1px solid #e5e7eb;}
+
+/* Mobile-friendly CTA modal (bottom-sheet style) */
+@media (max-width: 600px){
+  .modal{align-items:flex-end;}
+  .card{
+    width:100%;
+    max-width:100%;
+    max-height:85vh;
+    border-radius:18px 18px 0 0;
+  }
+  .card-head{position:sticky;top:0;z-index:2;}
+  .card-body{overflow:auto;-webkit-overflow-scrolling:touch;}
+}
+
+/* Stepper (used mainly on mobile) */
+.stepper{
+  display:none;
+  padding:12px 2px 10px;
+  margin:0 0 8px;
+}
+.stepper-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+.stepper-kicker{font-size:11px;font-weight:900;color:#64748b;letter-spacing:.02em;}
+.stepper-title{font-size:12px;font-weight:1000;color:#0b1120;}
+.stepper-dots{display:flex;gap:8px;margin-top:10px;}
+.dotx{width:10px;height:10px;border-radius:999px;background:#e2e8f0;}
+.dotx.active{background:#0b1120;}
+.stepper-bar{height:6px;border-radius:999px;background:#eef2f7;margin-top:10px;overflow:hidden;}
+.stepper-bar-fill{display:block;height:100%;width:33.33%;background:#0b1120;transition:width .2s ease;}
+
+.steps{margin-top:6px;}
+.step{display:none;}
+.step.active{display:block;}
+
+/* Desktop keeps the original two-column feel */
+@media (min-width: 601px){
+  .stepper{display:none;}
+  .step{display:block;}
+  .row-mobile{display:none !important;}
+}
+
+/* Mobile: one step at a time + sticky step controls */
+@media (max-width: 600px){
+  .stepper{display:block;}
+  .grid{grid-template-columns:1fr !important;}
+  .row-desktop{display:none !important;}
+  .row-mobile{
+    position:sticky;
+    bottom:0;
+    left:0;right:0;
+    padding:12px 0 0;
+    background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 28%);
+    gap:10px;
+    justify-content:space-between;
+  }
+  .row-mobile .btn{flex:1;}
+}
+
+
     .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;}
     .card-head h2{margin:0;font-size:16px;font-weight:900;}
     .card-head p{margin:2px 0 0;font-size:12px;color:#475569;max-width:none;}
@@ -607,11 +659,11 @@
 <body>
 
 <section class="hero">
-  <!-- Rotating background images -->
+  <!-- Rotating background images (PNG) -->
   <div class="hero-rotator" aria-hidden="true">
-    <div class="hero-slide" style="background-image:url('hero-house.jpg')"></div>
-    <div class="hero-slide" style="background-image:url('hero-auto.jpg')"></div>
-    <div class="hero-slide" style="background-image:url('hero-business.jpg')"></div>
+    <img class="hero-slide active" id="heroImg0" alt="" loading="eager" decoding="async" src="hero-house.png">
+    <img class="hero-slide" id="heroImg1" alt="" loading="eager" decoding="async" src="hero-auto.png">
+    <img class="hero-slide" id="heroImg2" alt="" loading="eager" decoding="async" src="hero-business.png">
   </div>
 
   <div class="hero-content">
@@ -633,77 +685,118 @@
     </div>
     <div class="card-body">
       <form id="leadForm">
-        <div class="grid">
-          <div class="field">
-            <label for="firstName">First name *</label>
-            <input id="firstName" name="firstName" autocomplete="given-name" required />
+        <!-- Stepper (mobile-first) -->
+        <div class="stepper" id="stepper" aria-label="Form progress">
+          <div class="stepper-top">
+            <div class="stepper-kicker" id="stepperKicker">Step 1 of 3</div>
+            <div class="stepper-title">A quick pre-check</div>
           </div>
-          <div class="field">
-            <label for="lastName">Last name *</label>
-            <input id="lastName" name="lastName" autocomplete="family-name" required />
+          <div class="stepper-dots" role="presentation">
+            <span class="dotx active" data-dot="0"></span>
+            <span class="dotx" data-dot="1"></span>
+            <span class="dotx" data-dot="2"></span>
           </div>
-          <div class="field">
-            <label for="zip">ZIP *</label>
-            <input id="zip" name="zip" inputmode="numeric" pattern="[0-9]{5}" placeholder="81501" required />
-            <div class="hint">Example reference ZIP: 81501</div>
-          </div>
-          <div class="field">
-            <label for="email">Email *</label>
-            <input id="email" name="email" type="email" autocomplete="email" required />
-          </div>
-          <div class="field">
-            <label for="phone">Mobile phone *</label>
-            <input id="phone" name="phone" type="tel" autocomplete="tel" required />
-          </div>
-          <div class="field">
-            <label for="homeowner">Home status *</label>
-            <select id="homeowner" name="homeowner" required>
-              <option value="">Select…</option>
-              <option>Own</option>
-              <option>Rent</option>
-              <option>Buying soon</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="roofAge">Roof age</label>
-            <select id="roofAge" name="roofAge">
-              <option value="">Select…</option>
-              <option>0-5</option><option>6-10</option><option>11-15</option><option>16-20</option><option>21+</option><option>Not sure</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="vehicles">Vehicles insured *</label>
-            <select id="vehicles" name="vehicles" required>
-              <option value="">Select…</option>
-              <option>1</option><option>2</option><option>3</option><option>4+</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="timeframe">When do you need this? *</label>
-            <select id="timeframe" name="timeframe" required>
-              <option value="">Select…</option>
-              <option>ASAP</option>
-              <option>Within 7 days</option>
-              <option>Within 30 days</option>
-              <option>Just exploring</option>
-            </select>
-          </div>
-          <div class="field" style="grid-column:1 / -1;">
-            <label for="notes">Notes (optional)</label>
-            <textarea id="notes" name="notes" placeholder="Any details that help (hail claim history, wildfire concerns, bundling, etc.)"></textarea>
-          </div>
-          <div class="field" style="grid-column:1 / -1;">
-            <label style="display:flex;gap:10px;align-items:flex-start;font-weight:800;color:#0f172a;">
-              <input id="consent" type="checkbox" required style="margin-top:2px;" />
-              I agree to be contacted by phone, SMS, and email about insurance options. Msg &amp; data rates may apply.
-            </label>
-          </div>
+          <div class="stepper-bar" aria-hidden="true"><span class="stepper-bar-fill" id="stepperBarFill"></span></div>
         </div>
 
-        <div class="row">
+        <!-- Steps: keep the SAME field IDs so GAS submit still works -->
+        <div class="steps" id="steps">
+          <!-- STEP 1 -->
+          <section class="step active" data-step="0" aria-label="Step 1">
+            <div class="grid">
+              <div class="field">
+                <label for="firstName">First name *</label>
+                <input id="firstName" name="firstName" autocomplete="given-name" required />
+              </div>
+              <div class="field">
+                <label for="lastName">Last name *</label>
+                <input id="lastName" name="lastName" autocomplete="family-name" required />
+              </div>
+              <div class="field" style="grid-column:1 / -1;">
+                <label for="zip">ZIP *</label>
+                <input id="zip" name="zip" inputmode="numeric" pattern="[0-9]{5}" placeholder="81501" required />
+                <div class="hint">Example reference ZIP: 81501</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 2 -->
+          <section class="step" data-step="1" aria-label="Step 2">
+            <div class="grid">
+              <div class="field">
+                <label for="email">Email *</label>
+                <input id="email" name="email" type="email" autocomplete="email" required />
+              </div>
+              <div class="field">
+                <label for="phone">Mobile phone *</label>
+                <input id="phone" name="phone" type="tel" autocomplete="tel" required />
+              </div>
+              <div class="field">
+                <label for="homeowner">Home status *</label>
+                <select id="homeowner" name="homeowner" required>
+                  <option value="">Select…</option>
+                  <option>Own</option>
+                  <option>Rent</option>
+                  <option>Buying soon</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="vehicles">Vehicles insured *</label>
+                <select id="vehicles" name="vehicles" required>
+                  <option value="">Select…</option>
+                  <option>1</option><option>2</option><option>3</option><option>4+</option>
+                </select>
+              </div>
+              <div class="field" style="grid-column:1 / -1;">
+                <label for="timeframe">When do you need this? *</label>
+                <select id="timeframe" name="timeframe" required>
+                  <option value="">Select…</option>
+                  <option>ASAP</option>
+                  <option>Within 7 days</option>
+                  <option>Within 30 days</option>
+                  <option>Just exploring</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 3 -->
+          <section class="step" data-step="2" aria-label="Step 3">
+            <div class="grid">
+              <div class="field" style="grid-column:1 / -1;">
+                <label for="roofAge">Roof age</label>
+                <select id="roofAge" name="roofAge">
+                  <option value="">Select…</option>
+                  <option>0-5</option><option>6-10</option><option>11-15</option><option>16-20</option><option>21+</option><option>Not sure</option>
+                </select>
+              </div>
+              <div class="field" style="grid-column:1 / -1;">
+                <label for="notes">Notes (optional)</label>
+                <textarea id="notes" name="notes" placeholder="Any details that help (hail claim history, wildfire concerns, bundling, etc.)"></textarea>
+              </div>
+              <div class="field" style="grid-column:1 / -1;">
+                <label style="display:flex;gap:10px;align-items:flex-start;font-weight:800;color:#0f172a;">
+                  <input id="consent" type="checkbox" required style="margin-top:2px;" />
+                  I agree to be contacted by phone, SMS, and email about insurance options. Msg &amp; data rates may apply.
+                </label>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Desktop buttons (unchanged) -->
+        <div class="row row-desktop" id="rowDesktop">
           <button class="btn" id="cancelBtn" type="button">Cancel</button>
           <button class="btn btn-primary" id="submitBtn" type="submit">Submit</button>
         </div>
+
+        <!-- Mobile step buttons -->
+        <div class="row row-mobile" id="rowMobile" aria-label="Step controls">
+          <button class="btn" id="stepBack" type="button">Back</button>
+          <button class="btn btn-primary" id="stepNext" type="button">Next</button>
+          <button class="btn btn-primary" id="stepSubmit" type="submit" style="display:none;">Submit</button>
+        </div>
+
         <div class="status" id="formStatus"></div>
       </form>
     </div>
@@ -913,12 +1006,97 @@
   var leadForm = document.getElementById('leadForm');
   var formStatus = document.getElementById('formStatus');
 
-  function showModal(){ if(modalOverlay) modalOverlay.style.display='block'; if(modal) modal.style.display='flex'; }
-  function hideModal(){ if(modalOverlay) modalOverlay.style.display='none'; if(modal) modal.style.display='none'; }
+  function showModal(){ if(modalOverlay) modalOverlay.style.display='block'; if(modal) modal.style.display='flex'; try{ resetStepper_(); }catch(e){} }
+  function hideModal(){ if(modalOverlay) modalOverlay.style.display='none'; if(modal) modal.style.display='none'; try{ resetStepper_(); }catch(e){} }
 
   if(closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
   if(cancelBtn) cancelBtn.addEventListener('click', hideModal);
   if(modalOverlay) modalOverlay.addEventListener('click', hideModal);
+
+  // ===== Step-based mobile funnel (3 steps) =====
+  var stepper = document.getElementById('stepper');
+  var stepsWrap = document.getElementById('steps');
+  var stepKicker = document.getElementById('stepperKicker');
+  var stepBarFill = document.getElementById('stepperBarFill');
+  var stepDots = document.querySelectorAll('.dotx');
+  var stepBack = document.getElementById('stepBack');
+  var stepNext = document.getElementById('stepNext');
+  var stepSubmit = document.getElementById('stepSubmit');
+
+  var __stepIndex = 0;
+  var __stepTotal = 3;
+
+  function isMobile_(){ return window.matchMedia && window.matchMedia('(max-width: 600px)').matches; }
+
+  function setStep_(idx){
+    __stepIndex = Math.max(0, Math.min(__stepTotal-1, idx|0));
+
+    if(stepsWrap){
+      var stepEls = stepsWrap.querySelectorAll('.step');
+      for(var i=0;i<stepEls.length;i++){
+        stepEls[i].classList.toggle('active', i === __stepIndex);
+      }
+    }
+
+    if(stepDots && stepDots.length){
+      for(var d=0;d<stepDots.length;d++) stepDots[d].classList.toggle('active', d === __stepIndex);
+    }
+
+    if(stepKicker) stepKicker.textContent = 'Step ' + (__stepIndex+1) + ' of ' + __stepTotal;
+    if(stepBarFill) stepBarFill.style.width = (( (__stepIndex+1) / __stepTotal) * 100) + '%';
+
+    if(stepBack) stepBack.style.display = (__stepIndex === 0) ? 'none' : 'inline-flex';
+    if(stepNext) stepNext.style.display = (__stepIndex === __stepTotal-1) ? 'none' : 'inline-flex';
+    if(stepSubmit) stepSubmit.style.display = (__stepIndex === __stepTotal-1) ? 'inline-flex' : 'none';
+
+    // Focus first input in step (mobile UX)
+    try{
+      if(isMobile_() && stepsWrap){
+        var cur = stepsWrap.querySelector('.step.active');
+        if(cur){
+          var focusEl = cur.querySelector('input,select,textarea');
+          if(focusEl) setTimeout(function(){ focusEl.focus(); }, 50);
+        }
+      }
+    }catch(e){}
+  }
+
+  function validateStep_(idx){
+    if(!stepsWrap) return true;
+    var stepEls = stepsWrap.querySelectorAll('.step');
+    var cur = stepEls && stepEls[idx];
+    if(!cur) return true;
+
+    // Validate only visible/required fields in this step
+    var fields = cur.querySelectorAll('input,select,textarea');
+    for(var i=0;i<fields.length;i++){
+      var el = fields[i];
+      if(el && typeof el.reportValidity === 'function'){
+        if(!el.checkValidity()){
+          el.reportValidity();
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  function resetStepper_(){
+    // Only enforce step UI on mobile; desktop shows all sections
+    if(!isMobile_()) return;
+    setStep_(0);
+  }
+
+  if(stepBack) stepBack.addEventListener('click', function(){ setStep_(__stepIndex - 1); });
+  if(stepNext) stepNext.addEventListener('click', function(){
+    if(validateStep_(__stepIndex)) setStep_(__stepIndex + 1);
+  });
+
+  // Ensure step state correct on resize/orientation
+  window.addEventListener('resize', function(){
+    try{ if(isMobile_()) resetStepper_(); }catch(e){}
+  });
+
 
   function postToGAS(url, payload){
     var params = new URLSearchParams();
@@ -1009,8 +1187,66 @@
 
   var chatHistory = [];
 
+  // Persist chat
+  var PP_CHAT_KEY = 'pp_chat_state_v1';
+
+  function loadChatState_(){
+    try{
+      var raw = localStorage.getItem(PP_CHAT_KEY);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){ return null; }
+  }
+
+  function saveChatState_(){
+    try{
+      var state = {
+        history: chatHistory.slice(-60),
+        rendered: []
+      };
+      if(chatMessages){
+        var msgEls = chatMessages.querySelectorAll('.msg');
+        for(var i=0;i<msgEls.length;i++){
+          var isUser = msgEls[i].classList.contains('user');
+          var bub = msgEls[i].querySelector('.bubble');
+          state.rendered.push({ role: isUser ? 'user' : 'bot', html: bub ? bub.innerHTML : '' });
+        }
+        var suggest = chatMessages.querySelector('.pp-suggest-wrap');
+        if(suggest && !state.rendered.length){
+          state.suggest = true;
+        }
+      }
+      localStorage.setItem(PP_CHAT_KEY, JSON.stringify(state));
+    }catch(e){}
+  }
+
+  function restoreChatUI_(){
+    var state = loadChatState_();
+    if(!state || !chatMessages) return;
+
+    try{
+      chatMessages.innerHTML = '';
+      if(Array.isArray(state.rendered) && state.rendered.length){
+        state.rendered.forEach(function(m){
+          var wrap = document.createElement('div');
+          wrap.className = 'msg ' + (m.role === 'user' ? 'user' : 'bot');
+          var b = document.createElement('div');
+          b.className = 'bubble ' + (m.role === 'user' ? 'user' : 'bot');
+          b.innerHTML = m.html || '';
+          wrap.appendChild(b);
+          chatMessages.appendChild(wrap);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      if(Array.isArray(state.history)) chatHistory = state.history;
+    }catch(e){}
+  }
+
+  restoreChatUI_();
+
   // =========================
-  // i18n: Language selection + translate landing page + widget
+  // i18n
   // =========================
   var PP_LANG_KEY = 'pp_lang_v1';
 
@@ -1023,49 +1259,211 @@
 
   function i18nDict_(){
     return {
-      en:{$1hero_header_home:'Home Insurance',
+      en:{
+        doc_title:'Colorado Relief Options — Home & Auto Insurance',
+        meta_desc:'Colorado residents: explore flexible home & auto insurance options designed to protect your budget and peace of mind.',
+        hero_h1:'Get flexible home & auto options that fit your budget and protect what matters.',
+        hero_header_home:'Home Insurance',
         hero_header_auto:'Car Insurance',
         hero_header_business:'Business Insurance',
+        cta_check:'Check My Options',
+        disclaimer_btn:'Disclaimer',
+        chat_peek_label:'Need help?',
+        chat_peek_name:'Chat with PolicyPro™',
+        pp_home_title:'Hi — how can we help?',
+        pp_home_sub:'Ask a Colorado home or auto insurance question. General info only — a licensed agent reviews before any quote, application, or binding.',
+        pp_start_chat:'Start a chat',
+        tab_home:'Home',
+        tab_messages:'Messages',
+        tab_settings:'Settings',
+        settings_title:'Settings',
+        settings_contact:'Contact',
+        settings_language:'Language',
+        settings_disclaimer:'Disclaimer',
+        settings_available:'Available',
+        settings_open_disclaimer:'Open legal disclaimer',
+        chat_placeholder:'Ask about hail deductibles, wildfire coverage, bundling…',
+        chat_send:'Send',
+        suggest_title:'Popular questions',
+        suggest_home:'HOME INSURANCE',
+        suggest_auto:'CAR INSURANCE',
+        s_home_1:'Does home insurance cover hail and roof damage?',
+        s_home_2:'What is a wind/hail deductible (and why is it different)?',
         s_home_3:'What should I check for wildfire/smoke coverage?',
         s_auto_1:'Is hail damage covered on auto insurance?',
         s_auto_2:'What does comprehensive vs collision cover?',
         s_auto_3:'How can I lower my auto premium without losing coverage?'
       },
-      es:{$1hero_header_home:'Seguro de hogar',
+      es:{
+        doc_title:'Opciones en Colorado — Seguro de hogar y auto',
+        meta_desc:'Residentes de Colorado: explore opciones flexibles de seguro de hogar y auto para proteger su presupuesto y tranquilidad.',
+        hero_h1:'Obtén opciones flexibles de hogar y auto que se ajusten a tu presupuesto y protejan lo importante.',
+        hero_header_home:'Seguro de hogar',
         hero_header_auto:'Seguro de auto',
         hero_header_business:'Seguro para negocios',
+        cta_check:'Ver mis opciones',
+        disclaimer_btn:'Aviso legal',
+        chat_peek_label:'¿Necesitas ayuda?',
+        chat_peek_name:'Chatea con PolicyPro™',
+        pp_home_title:'Hola — ¿en qué podemos ayudar?',
+        pp_home_sub:'Haz una pregunta sobre seguro de hogar o auto en Colorado. Solo info general — un agente con licencia revisa antes de cualquier cotización o contratación.',
+        pp_start_chat:'Iniciar chat',
+        tab_home:'Inicio',
+        tab_messages:'Mensajes',
+        tab_settings:'Ajustes',
+        settings_title:'Ajustes',
+        settings_contact:'Contacto',
+        settings_language:'Idioma',
+        settings_disclaimer:'Aviso',
+        settings_available:'Disponible',
+        settings_open_disclaimer:'Abrir aviso legal',
+        chat_placeholder:'Pregunta sobre deducibles por granizo, cobertura de incendios, paquetes…',
+        chat_send:'Enviar',
+        suggest_title:'Preguntas populares',
+        suggest_home:'SEGURO DE HOGAR',
+        suggest_auto:'SEGURO DE AUTO',
+        s_home_1:'¿El seguro de hogar cubre granizo y daño del techo?',
+        s_home_2:'¿Qué es un deducible por viento/granizo?',
         s_home_3:'¿Qué debo revisar para cobertura de incendio/humo?',
         s_auto_1:'¿El granizo está cubierto en el seguro de auto?',
         s_auto_2:'¿Qué cubre comprensivo vs colisión?',
         s_auto_3:'¿Cómo bajo mi prima sin perder cobertura?'
       },
-      ja:{$1hero_header_home:'住宅保険',
+      ja:{
+        doc_title:'コロラド保険オプション — 住宅・自動車',
+        meta_desc:'コロラド州向け。住宅保険・自動車保険の柔軟な選択肢を確認できます。',
+        hero_h1:'予算に合う住宅・自動車の柔軟な選択肢。大切なものを守る。',
+        hero_header_home:'住宅保険',
         hero_header_auto:'自動車保険',
         hero_header_business:'事業保険',
+        cta_check:'オプションを見る',
+        disclaimer_btn:'免責事項',
+        chat_peek_label:'お困りですか？',
+        chat_peek_name:'PolicyPro™ に質問',
+        pp_home_title:'こんにちは — どうしましたか？',
+        pp_home_sub:'コロラドの住宅/自動車保険について質問できます（一般情報）。見積や加入前に有資格者が確認します。',
+        pp_start_chat:'チャットを開始',
+        tab_home:'ホーム',
+        tab_messages:'メッセージ',
+        tab_settings:'設定',
+        settings_title:'設定',
+        settings_contact:'連絡先',
+        settings_language:'言語',
+        settings_disclaimer:'免責事項',
+        settings_available:'利用可能',
+        settings_open_disclaimer:'免責事項を開く',
+        chat_placeholder:'雹の免責、山火事補償、バンドル…',
+        chat_send:'送信',
+        suggest_title:'よくある質問',
+        suggest_home:'住宅保険',
+        suggest_auto:'自動車保険',
+        s_home_1:'雹や屋根の損害は補償される？',
+        s_home_2:'風/雹の免責（％）って何？',
         s_home_3:'山火事/煙の補償で確認すべき点は？',
         s_auto_1:'雹被害は自動車保険で補償される？',
         s_auto_2:'包括（Comprehensive）と衝突（Collision）の違いは？',
         s_auto_3:'補償を落とさず保険料を下げる方法は？'
       },
-      zh:{$1hero_header_home:'房屋保险',
+      zh:{
+        doc_title:'科罗拉多方案 — 房屋与汽车保险',
+        meta_desc:'科罗拉多居民：了解更灵活的房屋与汽车保险方案，保护预算与安心。',
+        hero_h1:'获取适合预算的房屋与汽车保险方案，守护重要资产。',
+        hero_header_home:'房屋保险',
         hero_header_auto:'汽车保险',
         hero_header_business:'商业保险',
+        cta_check:'查看我的选项',
+        disclaimer_btn:'免责声明',
+        chat_peek_label:'需要帮助？',
+        chat_peek_name:'咨询 PolicyPro™',
+        pp_home_title:'你好 — 我们能帮什么？',
+        pp_home_sub:'可咨询科罗拉多房屋/汽车保险问题（仅一般信息）。报价/投保前由持牌代理复核。',
+        pp_start_chat:'开始聊天',
+        tab_home:'主页',
+        tab_messages:'消息',
+        tab_settings:'设置',
+        settings_title:'设置',
+        settings_contact:'联系',
+        settings_language:'语言',
+        settings_disclaimer:'免责声明',
+        settings_available:'可用',
+        settings_open_disclaimer:'打开免责声明',
+        chat_placeholder:'询问冰雹免赔、野火保障、打包优惠…',
+        chat_send:'发送',
+        suggest_title:'常见问题',
+        suggest_home:'房屋保险',
+        suggest_auto:'汽车保险',
+        s_home_1:'房屋保险是否涵盖冰雹与屋顶损失？',
+        s_home_2:'什么是风/冰雹免赔额（%）？',
         s_home_3:'野火/烟雾保障应重点查看什么？',
         s_auto_1:'汽车保险是否涵盖冰雹损失？',
         s_auto_2:'综合险 vs 碰撞险分别保什么？',
         s_auto_3:'不降低保障的情况下如何降保费？'
       },
-      fr:{$1hero_header_home:'Assurance habitation',
+      fr:{
+        doc_title:'Options Colorado — Assurance habitation & auto',
+        meta_desc:'Résidents du Colorado : explorez des options flexibles d’assurance habitation et auto pour protéger votre budget et votre tranquillité.',
+        hero_h1:"Obtenez des options habitation & auto flexibles, adaptées à votre budget et à ce qui compte.",
+        hero_header_home:'Assurance habitation',
         hero_header_auto:'Assurance auto',
-        hero_header_business:'Assurance entreprise',
+        hero_header_business:"Assurance entreprise",
+        cta_check:'Voir mes options',
+        disclaimer_btn:'Avertissement',
+        chat_peek_label:'Besoin d’aide ?',
+        chat_peek_name:'Discuter avec PolicyPro™',
+        pp_home_title:'Bonjour — comment pouvons-nous aider ?',
+        pp_home_sub:"Posez une question sur l’assurance habitation/auto au Colorado (info générale). Un agent agréé vérifie avant toute offre ou souscription.",
+        pp_start_chat:'Démarrer le chat',
+        tab_home:'Accueil',
+        tab_messages:'Messages',
+        tab_settings:'Réglages',
+        settings_title:'Réglages',
+        settings_contact:'Contact',
+        settings_language:'Langue',
+        settings_disclaimer:'Avertissement',
+        settings_available:'Disponible',
+        settings_open_disclaimer:"Ouvrir l’avertissement légal",
+        chat_placeholder:'Grêle, incendies, franchises, regroupement…',
+        chat_send:'Envoyer',
+        suggest_title:'Questions fréquentes',
+        suggest_home:'ASSURANCE HABITATION',
+        suggest_auto:'ASSURANCE AUTO',
+        s_home_1:'La grêle et le toit sont-ils couverts ?',
+        s_home_2:'Qu’est-ce qu’une franchise vent/grêle (en %)?',
         s_home_3:'Que vérifier pour la couverture feu/fumée ?',
         s_auto_1:'La grêle est-elle couverte en assurance auto ?',
         s_auto_2:'Que couvre “comprehensive” vs “collision” ?',
         s_auto_3:'Comment baisser ma prime sans perdre de garanties ?'
       },
-      ru:{$1hero_header_home:'Страхование дома',
+      ru:{
+        doc_title:'Варианты в Колорадо — Дом и авто',
+        meta_desc:'Жители Колорадо: гибкие варианты страхования дома и авто для защиты бюджета и спокойствия.',
+        hero_h1:'Гибкие варианты страхования дома и авто под ваш бюджет — защитите важное.',
+        hero_header_home:'Страхование дома',
         hero_header_auto:'Страхование авто',
         hero_header_business:'Страхование бизнеса',
+        cta_check:'Проверить варианты',
+        disclaimer_btn:'Дисклеймер',
+        chat_peek_label:'Нужна помощь?',
+        chat_peek_name:'Чат с PolicyPro™',
+        pp_home_title:'Здравствуйте — чем помочь?',
+        pp_home_sub:'Вопросы по страхованию дома/авто в Колорадо (общая информация). Перед любыми действиями проверит лицензированный агент.',
+        pp_start_chat:'Начать чат',
+        tab_home:'Домой',
+        tab_messages:'Сообщения',
+        tab_settings:'Настройки',
+        settings_title:'Настройки',
+        settings_contact:'Контакт',
+        settings_language:'Язык',
+        settings_disclaimer:'Дисклеймер',
+        settings_available:'Доступно',
+        settings_open_disclaimer:'Открыть дисклеймер',
+        chat_placeholder:'Град, пожары, франшизы, пакет…',
+        chat_send:'Отправить',
+        suggest_title:'Популярные вопросы',
+        suggest_home:'СТРАХОВАНИЕ ДОМА',
+        suggest_auto:'СТРАХОВАНИЕ АВТО',
+        s_home_1:'Покрывает ли страховка дома град и крышу?',
+        s_home_2:'Что такое франшиза по ветру/граду (в %)?',
         s_home_3:'Что проверить по покрытию пожара/дыма?',
         s_auto_1:'Покрывается ли град автостраховкой?',
         s_auto_2:'Чем отличается comprehensive от collision?',
@@ -1079,10 +1477,29 @@
     return dict[lang] || dict.en;
   }
 
+  function heroKeys_(){
+    return ['hero_header_home','hero_header_auto','hero_header_business'];
+  }
+
+  var __heroIndex = 0;
+
+  function syncHeroHeader_(){
+    var el = document.getElementById('heroHeader');
+    if(!el) return;
+
+    var reduce = false;
+    try{ reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ reduce = false; }
+    var idx = reduce ? 0 : (__heroIndex % 3);
+
+    var s = getStrings_(getLang_());
+    var key = heroKeys_()[idx];
+    var txt = s[key] || (idx === 0 ? 'Home Insurance' : (idx === 1 ? 'Car Insurance' : 'Business Insurance'));
+    el.textContent = txt;
+  }
+
   function translatePage_(lang){
     var s = getStrings_(lang);
 
-    // Document metadata
     try{ document.documentElement.lang = lang || 'en'; }catch(e){}
     try{ document.title = s.doc_title; }catch(e){}
     try{
@@ -1090,7 +1507,6 @@
       if(m) m.setAttribute('content', s.meta_desc);
     }catch(e){}
 
-    // Text nodes
     try{
       var nodes = document.querySelectorAll('[data-i18n]');
       for(var i=0;i<nodes.length;i++){
@@ -1099,7 +1515,6 @@
       }
     }catch(e){}
 
-    // Placeholders
     try{
       var ph = document.querySelectorAll('[data-i18n-placeholder]');
       for(var j=0;j<ph.length;j++){
@@ -1108,20 +1523,6 @@
       }
     }catch(e){}
 
-    // Re-render suggested questions title/labels if suggestions are currently showing
-    try{
-      if(chatMessages){
-        var t = chatMessages.querySelector('.pp-suggest-title');
-        if(t) t.textContent = s.suggest_title;
-        var labs = chatMessages.querySelectorAll('.pp-suggest-label');
-        if(labs && labs.length >= 2){
-          labs[0].textContent = s.suggest_home;
-          labs[1].textContent = s.suggest_auto;
-        }
-      }
-    }catch(e){}
-
-    // Keep hero header synced to language + current slide
     try{ syncHeroHeader_(); }catch(e){}
   }
 
@@ -1132,7 +1533,6 @@
     translatePage_(lang);
   }
 
-  // Initialize language dropdown + apply language to whole page
   (function(){
     var lang = getLang_();
     if(ppLangSelect){
@@ -1145,36 +1545,57 @@
   })();
 
   // =========================
-  // Hero header sync with rotating images (every 3s)
+  // Hero rotation (every 3s)
   // =========================
-  var __heroIndex = 0;
-  function heroKeys_(){
-    return ['hero_header_home','hero_header_auto','hero_header_business'];
-  }
-  function syncHeroHeader_(){
-    var el = document.getElementById('heroHeader');
-    if(!el) return;
-
-    // If reduced motion, pin to first slide.
-    var reduce = false;
-    try{ reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ reduce = false; }
-    var idx = reduce ? 0 : (__heroIndex % 3);
-
-    var s = getStrings_(getLang_());
-    var key = heroKeys_()[idx];
-    var txt = s[key] || (idx === 0 ? 'Home Insurance' : (idx === 1 ? 'Car Insurance' : 'Business Insurance'));
-    el.textContent = txt;
+  function heroEls_(){
+    return [
+      document.getElementById('heroImg0'),
+      document.getElementById('heroImg1'),
+      document.getElementById('heroImg2')
+    ];
   }
 
-  // Start ticking the header exactly on the 3s cadence used by the CSS rotator.
+  function setActiveHero_(idx){
+    var els = heroEls_();
+    for(var i=0;i<els.length;i++){
+      if(els[i]) els[i].classList.toggle('active', i === idx);
+    }
+  }
+
+  // PNG-only sources
+  var HERO_SRCS = ['hero-house.png','hero-auto.png','hero-business.png'];
+
+  function setHeroImgs_(srcs){
+    var ids = ['heroImg0','heroImg1','heroImg2'];
+    for(var i=0;i<ids.length;i++){
+      var el = document.getElementById(ids[i]);
+      if(el) el.src = srcs[i] || '';
+    }
+
+    // Update widget header image to match first hero (home)
+    try{
+      var top = document.querySelector('.pp-top');
+      if(top && srcs[0]){
+        top.style.background =
+          "linear-gradient(180deg, rgba(2,6,23,0) 40%, rgba(2,6,23,.45) 100%), url('" + srcs[0] + "') center/cover no-repeat";
+      }
+    }catch(e){}
+  }
+
   (function(){
-    // Initialize immediately
     __heroIndex = 0;
+    setActiveHero_(0);
     syncHeroHeader_();
 
-    // Advance every 3 seconds
+    setHeroImgs_(HERO_SRCS);
+
     setInterval(function(){
+      var reduce = false;
+      try{ reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ reduce = false; }
+      if(reduce) return;
+
       __heroIndex = (__heroIndex + 1) % 3;
+      setActiveHero_(__heroIndex);
       syncHeroHeader_();
     }, 3000);
   })();
@@ -1203,6 +1624,8 @@
     wrap.appendChild(b);
     chatMessages.appendChild(wrap);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    saveChatState_();
   }
 
   function addTyping_(){
@@ -1215,18 +1638,19 @@
     if(!items || !items.length) return;
     items[items.length-1].innerHTML = html;
     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    saveChatState_();
   }
 
   function seedChat_(){
-    // Messages screen: all-white, with starter question chips.
     renderSuggestedQuestions_();
   }
 
   function renderSuggestedQuestions_(){
     if(!chatMessages) return;
 
-    // If user already has messages, don't overwrite.
     if(chatMessages.childElementCount) return;
+    if(chatHistory && chatHistory.length) return;
 
     var wrap = document.createElement('div');
     wrap.className = 'pp-suggest-wrap';
@@ -1238,17 +1662,8 @@
     var lang = getLang_();
     var s = getStrings_(lang);
 
-    var suggestionsHome = [
-      s.s_home_1,
-      s.s_home_2,
-      s.s_home_3
-    ];
-
-    var suggestionsAuto = [
-      s.s_auto_1,
-      s.s_auto_2,
-      s.s_auto_3
-    ];
+    var suggestionsHome = [s.s_home_1, s.s_home_2, s.s_home_3];
+    var suggestionsAuto = [s.s_auto_1, s.s_auto_2, s.s_auto_3];
 
     function section_(label, items){
       var sec = document.createElement('div');
@@ -1300,155 +1715,14 @@
   if(chatBtn) chatBtn.addEventListener('click', openChat_);
   if(closeChat) closeChat.addEventListener('click', closeChat_);
 
-  // Tabs + actions
   if(ppTabHome) ppTabHome.addEventListener('click', function(){ setTab_('home'); });
   if(ppTabMessages) ppTabMessages.addEventListener('click', function(){ setTab_('messages'); });
   if(ppTabSettings) ppTabSettings.addEventListener('click', function(){ setTab_('settings'); });
 
-  // Expected behavior:
-  // When clicking Start a chat -> open Messages tab + show the suggestion chips on an all-white screen.
-  // If you want it to ALSO clear any prior messages each time Start a chat is clicked, tell me.
   if(ppStartChat) ppStartChat.addEventListener('click', function(){
     setTab_('messages');
     setTimeout(function(){ renderSuggestedQuestions_(); }, 0);
   });
-
-  if(ppOpenDisclaimerLink) ppOpenDisclaimerLink.addEventListener('click', function(e){
-    if(e) e.preventDefault();
-    setTab_('settings');
-    if(typeof showDisclaimer === 'function') showDisclaimer();
-  });
-
-  function classifyIntent_(q){
-    var s = String(q||'').toLowerCase();
-    var has = function(){
-      for(var i=0;i<arguments.length;i++){
-        if(s.indexOf(String(arguments[i]).toLowerCase()) !== -1) return true;
-      }
-      return false;
-    };
-
-    if(has('hail')) return 'hail';
-    if(has('wildfire','fire','smoke','embers')) return 'wildfire';
-    if(has('claim','claims','file a claim','denied')) return 'claims';
-    if(has('bundle','multi-policy')) return 'bundle';
-    if(has('deductible')) return 'deductible';
-    if(has('cheapest','save','lower','rate','premium','expensive')) return 'price';
-    if(has('comprehensive','collision')) return 'auto_terms';
-    return 'general';
-  }
-
-  function fallbackAnswer_(q){
-    var intent = classifyIntent_(q);
-
-    if(intent === 'hail'){
-      return (
-        '<b>Hail coverage—what to check first:</b><br>' +
-        '• <b>Home:</b> many CO policies use a separate <b>wind/hail deductible</b> (often a % of Coverage A). Also check roof settlement: <b>Replacement Cost</b> vs <b>ACV/roof schedule</b>.<br>' +
-        '• <b>Auto:</b> hail is typically under <b>Comprehensive</b>, subject to your comp deductible.<br><br>' +
-        '<b>1 question:</b> Is your home wind/hail deductible a flat $ amount or a %?'
-      );
-    }
-
-    if(intent === 'wildfire'){
-      return (
-        '<b>Wildfire/smoke—focus on these coverage parts:</b><br>' +
-        '• <b>Dwelling (Coverage A)</b> adequacy + any <b>extended replacement</b><br>' +
-        '• <b>Loss of use / ALE</b> for temporary housing<br>' +
-        '• <b>Ordinance or Law</b> (code upgrades)<br><br>' +
-        '<b>1 question:</b> Homeowner, condo, or renter?'
-      );
-    }
-
-    if(intent === 'auto_terms'){
-      return (
-        '<b>Comprehensive vs Collision (simple):</b><br>' +
-        '• <b>Comprehensive</b>: theft, vandalism, hail, animal hits, weather (not a crash).<br>' +
-        '• <b>Collision</b>: damage from a crash (your vehicle hitting something / being hit).<br><br>' +
-        '<b>1 question:</b> Are you asking about hail specifically, or a crash/accident?'
-      );
-    }
-
-    if(intent === 'price'){
-      return (
-        '<b>Ways people usually lower premium (without wrecking coverage):</b><br>' +
-        '• Right-size deductibles (especially wind/hail vs all-other-perils)<br>' +
-        '• Bundle home + auto where it doesn’t weaken roof terms<br>' +
-        '• Verify discounts (claim-free, paid-in-full, telematics if comfortable)<br><br>' +
-        '<b>1 question:</b> Is your goal lower monthly payment or better hail/roof terms?'
-      );
-    }
-
-    return (
-      '<b>I can help with general home &amp; auto insurance questions.</b><br><br>' +
-      '<b>Common Colorado topics:</b> wind/hail deductibles, wildfire, bundling, and switching without a lapse.<br><br>' +
-      '<b>1 question:</b> Are you asking about home, auto, renters, or umbrella?'
-    );
-  }
-
-  function sendChat_(text){
-    var q = (text||'').trim();
-    if(!q) return;
-
-    addMsg_('user', esc_(q));
-    chatHistory.push({ role:'user', content:q });
-
-    addTyping_();
-
-    if(CHAT_ENDPOINT && CHAT_ENDPOINT.indexOf('http') === 0){
-      var payloadChat = {
-        action: 'chat',
-        message: q,
-        history: chatHistory.slice(-12),
-        channel: 'PolicyPro Chat',
-        policy: 'GENERAL_INFO_ONLY'
-      };
-
-      fetch(CHAT_ENDPOINT, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payloadChat)
-      }).then(function(res){
-        return res.text().then(function(t){
-          var obj;
-          try{ obj = JSON.parse(t); }catch(e){ obj = null; }
-          if(!res.ok) throw new Error('HTTP ' + res.status);
-
-          var reply = '';
-          if(obj){
-            if(typeof obj.reply === 'string') reply = obj.reply;
-            else if(typeof obj.message === 'string') reply = obj.message;
-            else if(typeof obj.output_text === 'string') reply = obj.output_text;
-            else if(obj.choices && obj.choices[0] && obj.choices[0].message && typeof obj.choices[0].message.content === 'string') reply = obj.choices[0].message.content;
-          }
-          if(!reply) reply = fallbackAnswer_(q);
-
-          chatHistory.push({ role:'assistant', content: String(reply) });
-          replaceLastBot_(esc_(reply).replace(/\r?\n/g, '<br>') + '<div class="meta">General info • Not a quote • Human review required</div>');
-        });
-      }).catch(function(){
-        var ansRemoteFail = fallbackAnswer_(q);
-        chatHistory.push({ role:'assistant', content: ansRemoteFail.replace(/<[^>]*>/g,'') });
-        replaceLastBot_(ansRemoteFail + '<div class="meta">General info • Not a quote • Human review required</div>');
-      });
-      return;
-    }
-
-    var ans = fallbackAnswer_(q);
-    chatHistory.push({ role:'assistant', content: ans.replace(/<[^>]*>/g,'') });
-    replaceLastBot_(ans + '<div class="meta">General info • Not a quote • Human review required</div>');
-  }
-
-  if(chatForm){
-    chatForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      if(chatSend) chatSend.disabled = true;
-      var q = chatInput ? chatInput.value : '';
-      if(chatInput) chatInput.value = '';
-      sendChat_(q);
-      setTimeout(function(){ if(chatSend) chatSend.disabled = false; if(chatInput) chatInput.focus(); }, 50);
-    });
-  }
 
   // ===== Disclaimer modal (manual only; no auto popups) =====
   var openDisclaimer = document.getElementById('openDisclaimer');
@@ -1536,45 +1810,6 @@
       });
     });
   }
-
-  // ===== Tiny self-tests (safe in production; only logs to console) =====
-  (function(){
-    try{
-      console.assert(isEmail_('a@b.co') === true, 'isEmail_ basic should pass');
-      console.assert(isEmail_('nope') === false, 'isEmail_ basic should fail');
-
-      console.assert(typeof openOptionsFlow_ === 'function', 'openOptionsFlow_ should exist');
-      console.assert(!!openFunnelBtn, 'openFunnelBtn should exist');
-
-      console.assert(typeof showDisclaimer === 'function', 'showDisclaimer should exist');
-      console.assert(typeof hideDisclaimer === 'function', 'hideDisclaimer should exist');
-
-      console.assert(!!chatBtn, 'chatBtn should exist');
-      console.assert(!!chatWindow, 'chatWindow should exist');
-      console.assert(typeof renderSuggestedQuestions_ === 'function', 'renderSuggestedQuestions_ should exist');
-      console.assert(typeof seedChat_ === 'function', 'seedChat_ should exist');
-      console.assert(!ppLangSelect || ppLangSelect.tagName === 'SELECT', 'ppLangSelect should be a select when present');
-      console.assert(typeof applyLanguage_ === 'function', 'applyLanguage_ should exist');
-      console.assert(typeof translatePage_ === 'function', 'translatePage_ should exist');
-      console.assert(typeof getStrings_ === 'function', 'getStrings_ should exist');
-      console.assert(!!getStrings_('en').hero_h1, 'English strings should include hero_h1');
-      console.assert(!!getStrings_('es').hero_h1, 'Spanish strings should include hero_h1');
-      if(ppLangSelect){
-        console.assert(ppLangSelect.options.length >= 6, 'Language dropdown should have 6 options');
-      }
-
-      // Suggestions: should render when empty
-      if(chatMessages){
-        var before = chatMessages.childElementCount;
-        renderSuggestedQuestions_();
-        var after = chatMessages.childElementCount;
-        console.assert(after >= before, 'renderSuggestedQuestions_ should not reduce children');
-      }
-
-      console.assert(typeof leadScore === 'function', 'leadScore should exist');
-      console.assert(leadScore('81501','ASAP').score >= 0, 'leadScore should return a score');
-    }catch(e){ /* no-op */ }
-  })();
 </script>
 
 </body>
