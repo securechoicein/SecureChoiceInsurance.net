@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="docHtml">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,18 +9,19 @@
   <!-- ================= QUICK SETUP =================
   REQUIRED FILES IN SAME FOLDER:
   - index.html
-  - hero-securechoice-wildfire-hail-phone.png
+  - hero-house.jpg        (modern Colorado mountain home with pine trees + fire pit)
+  - hero-auto.jpg         (SUV + truck in mountain setting)
+  - hero-business.jpg     (business / commercial scene)
   ================================================== -->
 
   <script>
     // === REQUIRED: paste your deployed Google Apps Script Web App URL here ===
-    window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyWoyQwiNZGLj7Bh-8Hap2rceF-3XWTP5mqpkjRpN5MwWmKLY1eQcDSmrw_IjS5avJ_XA/exec"; // e.g. https://script.google.com/macros/s/XXXX/exec
+    window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyWoyQwiNZGLj7Bh-8Hap2rceF-3XWTP5mqpkjRpN5MwWmKLY1eQcDSmrw_IjS5avJ_XA/exec";
 
     // Optional separate LLM endpoint (usually leave blank to reuse GAS)
     window.POLICYPRO_LLM_ENDPOINT = "";
 
     // ✅ Default: run PolicyPro in LOCAL mode (no API keys required)
-    // To use a secure server later, set: window.POLICYPRO_MODE = "remote" and window.POLICYPRO_LLM_ENDPOINT = "https://..."
     window.POLICYPRO_MODE = "local";
 
     // Tracking (optional)
@@ -32,17 +33,17 @@
     window.AGENT_EMAIL = "securechoicein@gmail.com";
 
     // === ClickFunnels (recommended for "Check My Options") ===
-    // Paste your ClickFunnels page URL here. If set, the CTA will open ClickFunnels instead of the on-page modal.
-    window.CLICKFUNNEL_URL = ""; // e.g. https://yourfunnel.clickfunnels.com/step1
+    window.CLICKFUNNEL_URL = "";
   </script>
 
-  <!-- Preload hero image to reduce flashes / failed paints -->
-  <!-- NOTE: If your file accidentally became .jpg.png (common on Windows), the JS below will auto-detect it. -->
-  <link rel="preload" as="image" href="hero-securechoice-wildfire-hail-phone.png">
+  <!-- Preload hero images for smoother first paint -->
+  <link rel="preload" as="image" href="hero-house.jpg">
+  <link rel="preload" as="image" href="hero-auto.jpg">
+  <link rel="preload" as="image" href="hero-business.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
@@ -52,7 +53,6 @@
       --brand2:#0ea5e9;
       --ok:#22c55e;
       --warn:#facc15;
-      --hero-image:url('hero-securechoice-wildfire-hail-phone.png');
     }
 
     *{box-sizing:border-box}
@@ -73,125 +73,452 @@
       align-items:center;
       padding:48px;
       overflow:hidden;
+      isolation:isolate;
     }
+
+    /* Dark overlay so text stays readable on photos */
     .hero::before{
       content:"";
       position:absolute;
       inset:0;
-      background:linear-gradient(rgba(5,10,25,.75),rgba(5,10,25,.75)),var(--hero-image) center/cover no-repeat;
+      background:linear-gradient(rgba(5,10,25,.74),rgba(5,10,25,.74));
+      z-index:1;
+      pointer-events:none;
+    }
+
+    /* Rotating background slides (Option A: pure CSS) */
+    .hero-rotator{
+      position:absolute;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+    }
+    .hero-slide{
+      position:absolute;
+      inset:0;
+      background-size:cover;
+      background-position:center;
+      opacity:0;
+      transform:scale(1.03);
+      filter:saturate(1.05) contrast(1.05);
+      animation:heroFade 9s infinite linear;
+    }
+    .hero-slide:nth-child(1){ animation-delay:0s; }
+    .hero-slide:nth-child(2){ animation-delay:3s; }
+    .hero-slide:nth-child(3){ animation-delay:6s; }
+
+    @keyframes heroFade{
+      0%{ opacity:0; }
+      10%{ opacity:1; }
+      30%{ opacity:1; }
+      40%{ opacity:0; }
+      100%{ opacity:0; }
+    }
+
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce){
+      .hero-slide{ animation:none; opacity:0; }
+      .hero-slide:nth-child(1){ opacity:1; }
     }
 
     .hero-content{position:relative;max-width:680px;z-index:2}
     .badge{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);font-size:12px;font-weight:700;color:#c7e9ff}
     h1{font-size:clamp(32px,5vw,52px);margin:18px 0;line-height:1.1}
-    p{font-size:18px;color:#cbd5e1;max-width:56ch}
+
+    /* Hero header (uses the same font as the PP mark) */
+    .hero-headline{
+      margin:0 0 18px;
+      font-size:clamp(40px,6vw,72px);
+      line-height:1.02;
+      letter-spacing:.01em;
+      color:#ffffff;
+      font-family:'Playfair Display','Didot','Bodoni MT',serif;
+      font-weight:700;
+      text-shadow:0 18px 70px rgba(0,0,0,.55);
+    }
+
+    /* (Hero paragraph removed per request) */
     .cta{margin-top:24px;padding:14px 28px;font-size:16px;font-weight:800;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(180deg,#38bdf8,#0ea5e9);color:#020617}
 
     /* Alert */
-    .alert-box{position:absolute;right:10%;bottom:35%;width:240px;background:rgba(15,23,42,.95);border-radius:14px;padding:14px;border:1px solid rgba(148,196,255,.6);box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:3}
+    .alert-box{position:absolute;right:10%;bottom:35%;width:240px;background:rgba(15,23,42,.92);border-radius:14px;padding:14px;border:1px solid rgba(148,196,255,.55);box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:2}
     .alert-title{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#facc15;margin-bottom:6px}
     .alert-text{font-size:13px;color:#e5e7eb;line-height:1.35}
 
-    /* Chat launcher — make it the visual highlight */
+    /* ================== CHAT: Channel.io-like launcher ==================
+       Bottom-right floating bubble + subtle label.
+    */
+
     .chat-launcher{
-      position:absolute;
-      right:10%;
-      bottom:22%;
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-      border:1px solid rgba(148,196,255,.55);
-      padding:16px 18px;
-      border-radius:999px;
+      position:fixed;
+      right:20px;
+      bottom:22px;
+      z-index:26000;
       display:flex;
       align-items:center;
-      gap:12px;
+      gap:10px;
       cursor:pointer;
-      z-index:4;
-      box-shadow:0 28px 90px rgba(0,0,0,.78);
-      backdrop-filter:blur(10px);
-      transition:transform .18s ease, filter .18s ease, box-shadow .18s ease;
-      isolation:isolate;
       user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .chat-launcher::before{
-      content:"";
-      position:absolute;
-      inset:-2px;
+
+    .chat-peek{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:#ffffff; /* match chatbox */
+      border:1px solid #e5e7eb;
+      backdrop-filter:blur(10px);
+      box-shadow:0 18px 55px rgba(0,0,0,.25);
+    }
+    .chat-peek .chat-label{
+      font-size:11px;
+      opacity:.85;
+      font-weight:700;
+      color:#0b1120; /* black lettering */
+      letter-spacing:.01em;
+      font-family:'Playfair Display','Didot','Bodoni MT',serif;
+    }
+    .chat-peek .chat-name{
+      font-weight:700;
+      font-size:13px;
+      letter-spacing:.01em;
+      color:#0b1120; /* black lettering */
+      font-family:'Playfair Display','Didot','Bodoni MT',serif;
+    }
+
+    .chat-bubble{
+      width:56px;height:56px;
       border-radius:999px;
-      background:
-        radial-gradient(120px 60px at 20% 10%, rgba(56,189,248,.55), transparent 60%),
-        radial-gradient(120px 60px at 85% 80%, rgba(34,197,94,.35), transparent 60%),
-        linear-gradient(90deg, rgba(56,189,248,.45), rgba(34,197,94,.28));
-      filter:blur(10px);
-      opacity:.75;
-      z-index:-1;
-      animation:ppGlow 2.6s ease-in-out infinite;
+      display:flex;align-items:center;justify-content:center;
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      box-shadow:0 22px 70px rgba(0,0,0,.25);
+      position:relative;
+      transition:transform .18s ease, filter .18s ease;
+      animation: chatPulse 2.6s ease-in-out infinite;
     }
-    .chat-launcher::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      border-radius:999px;
-      border:1px solid rgba(56,189,248,.45);
-      pointer-events:none;
-      opacity:.55;
-    }
-    .chat-launcher:hover{transform:translateY(-2px) scale(1.035);filter:brightness(1.06);box-shadow:0 34px 120px rgba(0,0,0,.82)}
-    .chat-launcher:active{transform:translateY(0) scale(0.99)}
+    .chat-bubble:hover{transform:translateY(-2px) scale(1.03);filter:brightness(1.06)}
+    .chat-bubble:active{transform:translateY(0) scale(0.99)}
 
     .chat-avatar{
-      width:44px;height:44px;border-radius:999px;
+      width:44px;height:44px;
+      border-radius:999px;
       display:flex;align-items:center;justify-content:center;
-      font-weight:1000;color:#020617;letter-spacing:.02em;
+      font-family:'Playfair Display', 'Didot', 'Bodoni MT', serif;
+      font-weight:600;
+      font-size:22px;
+      color:#020617;
+      background:#ffffff;
+    }
+
+    @keyframes chatPulse{
+      0%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,.15); }
+      50%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 12px rgba(2,6,23,0); }
+      100%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,0); }
+    }
+
+    /* ================== CHAT WIDGET (ChannelTalk-like) ==================
+       Compact widget with:
+       - Photo header
+       - White rounded body
+       - Bottom tabs: Home / Messages / Settings
+       - Separate round close button bottom-right
+    */
+
+    .chat-window{
+      display:none;
+      position:fixed;
+      right:20px;
+      bottom:96px;
+      width:360px;
+      max-height:78vh;
+      z-index:25000;
+    }
+
+    .pp-widget{
+      width:100%;
+      background:#fff;
+      color:#0b1120;
+      border-radius:22px;
+      overflow:hidden;
+      border:1px solid rgba(15,23,42,.10);
+      box-shadow:0 40px 120px rgba(0,0,0,.42);
+    }
+
+    .pp-top{
       position:relative;
+      height:150px;
       background:
-        radial-gradient(circle at 30% 20%, rgba(255,255,255,.8), rgba(255,255,255,0) 45%),
-        linear-gradient(180deg,#22c55e,#0ea5e9);
-      box-shadow:0 18px 44px rgba(0,0,0,.35);
+        linear-gradient(180deg, rgba(2,6,23,0) 40%, rgba(2,6,23,.45) 100%),
+        url('hero-house.jpg') center/cover no-repeat;
     }
-    .chat-avatar::before{
-      content:"";
+
+    .pp-topbar{
       position:absolute;
-      inset:-6px;
-      border-radius:999px;
-      background:conic-gradient(from 180deg, rgba(56,189,248,.0), rgba(56,189,248,.85), rgba(34,197,94,.65), rgba(56,189,248,.0));
-      filter:blur(.2px);
-      opacity:.9;
-      mask:radial-gradient(circle at center, transparent 62%, #000 64%);
-      animation:ringSpin 2.8s linear infinite;
+      left:0; right:0; bottom:0;
+      padding:14px 14px 12px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
     }
-    .chat-avatar::after{
-      content:"";
+
+    .pp-brand{
+      color:#fff;
+      font-weight:900;
+      letter-spacing:.01em;
+      font-size:18px;
+      text-shadow:0 8px 30px rgba(0,0,0,.55);
+    }
+
+    .pp-body{padding:12px 14px 10px;background:#fff;}
+
+    .pp-screen{ display:none; }
+    .pp-screen.active{ display:block; }
+
+    .pp-home-card{
+      border:1px solid #eef2f7;
+      border-radius:18px;
+      padding:12px 12px;
+      background:#fff;
+      box-shadow:0 14px 40px rgba(2,6,23,.06);
+    }
+
+    .pp-home-row{display:flex;gap:10px;align-items:flex-start}
+    .pp-avatar{
+      width:38px;height:38px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid #e5e7eb;
+      background:#fff;
+      font-family:'Playfair Display','Didot','Bodoni MT',serif;
+      font-weight:700;
+      color:#0b1120;
+      flex:0 0 auto;
+    }
+
+    .pp-home-title{margin:0;font-weight:900;font-size:13.5px;line-height:1.25}
+    .pp-home-sub{margin:6px 0 0;color:#475569;font-weight:700;font-size:12px;line-height:1.35}
+
+    .pp-primary{
+      width:100%;
+      margin-top:12px;
+      padding:12px 12px;
+      border-radius:999px;
+      border:1px solid #eef2f7;
+      background:#f3f4f6;
+      color:#0b1120;
+      font-weight:900;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+    }
+    .pp-primary:hover{filter:brightness(1.01)}
+
+    .pp-footer-note{
+      margin-top:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      color:#94a3b8;
+      font-weight:800;
+      font-size:11px;
+    }
+
+    .pp-messages-wrap{
+      border:1px solid #eef2f7;
+      border-radius:18px;
+      overflow:hidden;
+      background:#fff;
+    }
+
+    .chat-main{
+      display:flex;
+      flex-direction:column;
+      height:360px;
+      min-height:320px;
+    }
+
+    .chat-messages{
+      padding:12px;
+      overflow:auto;
+      flex:1;
+      background:#ffffff;
+    }
+
+    .msg{display:flex;margin:10px 0}
+    .msg.user{justify-content:flex-end}
+    .msg.bot{justify-content:flex-start}
+    .bubble{max-width:86%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;box-shadow:0 10px 26px rgba(0,0,0,.06)}
+    .bubble.user{background:#0b1120;color:#e5e7eb;border-top-right-radius:6px}
+    .bubble.bot{background:#ffffff;color:#0f172a;border:1px solid #e5e7eb;border-top-left-radius:6px}
+    .meta{font-size:10px;color:#64748b;font-weight:900;margin-top:6px}
+
+    .chat-inputbar{padding:10px;border-top:1px solid #eef2f7;background:#fff;display:flex;gap:10px;align-items:center}
+    .chat-input{flex:1;padding:12px 12px;border-radius:14px;border:1px solid #cbd5e1;font-size:14px;outline:none}
+    .chat-input:focus{border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
+    .send-btn{padding:12px 14px;border-radius:14px;border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;font-weight:1000;cursor:pointer}
+    .send-btn:disabled{opacity:.55;cursor:not-allowed}
+
+    /* Suggested question chips (ChannelTalk-like) */
+    .pp-suggest-wrap{padding:14px 14px 10px;}
+    .pp-suggest-title{
+      font-weight:1000;
+      font-size:12px;
+      color:#0b1120;
+      margin:0 0 12px;
+      letter-spacing:.01em;
+      text-align:left;
+    }
+
+    .pp-suggest-section{display:grid;gap:10px;margin-bottom:14px;}
+    .pp-suggest-label{
+      font-weight:1000;
+      font-size:11px;
+      color:#94a3b8;
+      letter-spacing:.08em;
+    }
+
+    .pp-suggest-grid{display:flex;flex-wrap:wrap;gap:10px;}
+
+    .pp-suggest-chip{
+      border:1px solid #e2e8f0;
+      background:#f8fafc;
+      color:#0b1120;
+      border-radius:16px;
+      padding:12px 14px;
+      font-weight:900;
+      font-size:12.5px;
+      cursor:pointer;
+      line-height:1.25;
+      box-shadow:0 12px 26px rgba(2,6,23,.06);
+      transition:transform .12s ease, filter .12s ease, box-shadow .12s ease;
+    }
+    .pp-suggest-chip:hover{filter:brightness(1.01);transform:translateY(-1px)}
+    .pp-suggest-chip:active{transform:translateY(0)}
+
+    @media (max-width: 420px){
+      .pp-suggest-grid{gap:8px;}
+      .pp-suggest-chip{width:100%;text-align:left;}
+    }
+
+    .pp-tabs{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      border-top:1px solid #eef2f7;
+      background:#fff;
+      padding:8px 6px;
+    }
+
+    .pp-tab{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      padding:8px 6px;
+      border-radius:14px;
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      color:#64748b;
+      font-weight:900;
+      font-size:11px;
+    }
+
+    .pp-tab svg{width:18px;height:18px;opacity:.75;transition:transform .15s ease, opacity .15s ease}
+
+    /* Nicer Settings gear */
+    .pp-tab#ppTabSettings svg{
+      width:19px;
+      height:19px;
+      stroke-width:1.8;
+    }
+    .pp-tab#ppTabSettings:hover svg{opacity:.95;transform:rotate(20deg)}
+    .pp-tab#ppTabSettings.active svg{opacity:1;transform:rotate(0deg)}
+
+    .pp-tab.active{color:#0b1120;background:#f8fafc;}
+    .pp-tab:hover{color:#0b1120;background:#f8fafc}
+
+    .pp-close-fab{
       position:absolute;
-      inset:-12px;
+      right:10px;
+      bottom:-62px;
+      width:48px;height:48px;
       border-radius:999px;
-      border:1px solid rgba(56,189,248,.25);
-      opacity:.55;
-      animation:pulse 2.2s ease-in-out infinite;
+      border:1px solid #e5e7eb;
+      background:#fff;
+      color:#0b1120;
+      box-shadow:0 18px 60px rgba(0,0,0,.25);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+      font-weight:900;
     }
+    .pp-close-fab:hover{filter:brightness(1.02)}
 
-    .chat-label{font-size:12px;opacity:.85;font-weight:800;color:#e2e8f0}
-    .chat-name{font-weight:1000;font-size:14px;letter-spacing:.02em;color:#ffffff}
-
-    .pp-spark{
-      margin-left:auto;
-      display:flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:999px;
-      background:rgba(15,23,42,.55);
-      border:1px solid rgba(148,196,255,.35);
-      font-weight:1000;font-size:12px;color:#e5e7eb;
-      box-shadow:0 14px 34px rgba(0,0,0,.35);
+    .pp-settings{
+      border:1px solid #eef2f7;
+      border-radius:18px;
+      padding:12px 12px;
+      background:#fff;
     }
-    .pp-dot{
-      width:10px;height:10px;border-radius:999px;
-      background:rgba(56,189,248,.95);
-      box-shadow:0 0 0 0 rgba(56,189,248,.45);
-      animation:notify 1.6s ease-in-out infinite;
+    .pp-settings h3{margin:0 0 10px;font-size:13.5px;font-weight:1000;color:#0b1120}
+    .pp-setting-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 10px;border:1px solid #eef2f7;border-radius:14px;background:#fff;margin-bottom:10px}
+    .pp-select{
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      border:1px solid #e2e8f0;
+      background:#f8fafc;
+      color:#0b1120;
+      font-weight:900;
+      font-size:12px;
+      border-radius:12px;
+      padding:10px 34px 10px 12px;
+      cursor:pointer;
+      line-height:1;
+      box-shadow:0 10px 22px rgba(2,6,23,.05);
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23647569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:right 10px center;
+      background-size:18px 18px;
     }
+    .pp-select:focus{outline:none;border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
+    .pp-select:hover{filter:brightness(1.01)}
+    .pp-setting-item .k{font-weight:900;color:#0b1120;font-size:12px}
+    .pp-setting-item .v{font-weight:900;color:#64748b;font-size:12px}
+    .pp-setting-link{display:block;text-align:center;margin-top:6px;color:#0ea5e9;font-weight:1000;text-decoration:none}
 
-    @keyframes ringSpin{to{transform:rotate(360deg)}}
-    @keyframes pulse{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.06);opacity:.25}}
-    @keyframes notify{0%,100%{box-shadow:0 0 0 0 rgba(56,189,248,.45);transform:scale(1)}50%{box-shadow:0 0 0 12px rgba(56,189,248,0);transform:scale(1.05)}}
-    @keyframes ppGlow{0%,100%{opacity:.65}50%{opacity:.95}}
+    .typing{display:inline-flex;gap:4px;align-items:center}
+    .dot{width:6px;height:6px;border-radius:999px;background:#94a3b8;animation:bounce 1.1s infinite}
+    .dot:nth-child(2){animation-delay:.15s}
+    .dot:nth-child(3){animation-delay:.3s}
+    @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-4px);opacity:1}}
+
+    @media (max-width: 900px){
+      .hero{padding:18px;min-height:100vh;align-items:flex-start;padding-top:72px;}
+      .hero-content{max-width:100%;padding-bottom:90px;}
+      h1{font-size:clamp(28px,8vw,42px);margin:14px 0 12px;}
+      p{font-size:16px;line-height:1.55;margin-bottom:18px;}
+
+      .cta{width:100%;max-width:520px;margin-top:10px;margin-bottom:18px;}
+      .alert-box{position:relative;right:auto;bottom:auto;width:100%;max-width:520px;margin-top:18px;}
+
+      .chat-launcher{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));}
+      .chat-peek{display:none;}
+
+      .chat-window{left:12px;right:12px;width:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:78vh;}
+
+      .disc-btn{left:14px;right:auto;bottom:calc(14px + env(safe-area-inset-bottom));padding:8px 12px;font-size:11px;z-index:26000;opacity:.92;}
+    }
 
     /* Funnel modal */
     .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:20000;}
@@ -254,142 +581,33 @@
     .disc-actions .btn{min-width:140px}
     .btn-accept{border:1px solid rgba(34,197,94,.35);background:linear-gradient(180deg, rgba(34,197,94,.18), rgba(34,197,94,.08));color:#0b1120;}
     .btn-accept:hover{filter:brightness(1.03)}
-
-    /* Chat window */
-    .chat-window{display:none;position:fixed;right:20px;bottom:100px;width:410px;max-height:72vh;background:#fff;color:#020617;border-radius:18px;box-shadow:0 40px 90px rgba(0,0,0,.8);overflow:hidden;z-index:10000;border:1px solid #e5e7eb}
-    .chat-header{padding:12px 14px;background:linear-gradient(180deg,#0b1120,#0f172a);border-bottom:1px solid rgba(148,196,255,.25);display:flex;justify-content:space-between;align-items:center;color:#e5e7eb;}
-    .chat-header strong{font-weight:1000;letter-spacing:.02em}
-    .chat-sub{font-size:11px;color:rgba(226,232,240,.85);font-weight:900;margin-top:2px}
-    .close{background:rgba(248,250,252,.06);border:1px solid rgba(148,196,255,.35);color:#e5e7eb;border-radius:12px;padding:8px 10px;font-weight:1000;cursor:pointer}
-    .close:hover{filter:brightness(1.08)}
-
-    .chat-main{display:flex;flex-direction:column;height:calc(72vh - 52px);min-height:380px}
-    .chat-messages{padding:12px;overflow:auto;flex:1;background:radial-gradient(900px 420px at 15% 0%, rgba(56,189,248,.08), transparent 55%), linear-gradient(180deg,#ffffff,#f8fafc)}
-    .msg{display:flex;margin:10px 0}
-    .msg.user{justify-content:flex-end}
-    .msg.bot{justify-content:flex-start}
-    .bubble{max-width:82%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;box-shadow:0 10px 26px rgba(0,0,0,.08)}
-    .bubble.user{background:#0b1120;color:#e5e7eb;border-top-right-radius:6px}
-    .bubble.bot{background:#ffffff;color:#0f172a;border:1px solid #e5e7eb;border-top-left-radius:6px}
-    .meta{font-size:10px;color:#64748b;font-weight:900;margin-top:6px}
-    .chat-inputbar{padding:10px;border-top:1px solid #e5e7eb;background:#fff;display:flex;gap:10px;align-items:center}
-    .chat-input{flex:1;padding:12px 12px;border-radius:14px;border:1px solid #cbd5e1;font-size:14px;outline:none}
-    .chat-input:focus{border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.15)}
-    .send-btn{padding:12px 14px;border-radius:14px;border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;font-weight:1000;cursor:pointer}
-    .send-btn:disabled{opacity:.55;cursor:not-allowed}
-
-    /* Chat lead capture */
-    .lead-nudge{margin:10px 0 0;}
-    .lead-card{border:1px solid #e5e7eb;background:#ffffff;border-radius:14px;padding:10px 10px;box-shadow:0 10px 26px rgba(0,0,0,.06)}
-    .lead-title{font-weight:900;font-size:12.5px;color:#0b1120;margin:0 0 6px}
-    .lead-sub{font-weight:800;font-size:11px;color:#64748b;margin:0 0 8px;line-height:1.35}
-    .lead-row{display:flex;gap:8px;align-items:center}
-    .lead-email{flex:1;padding:10px 10px;border-radius:12px;border:1px solid #cbd5e1;font-size:13px;outline:none}
-    .lead-email:focus{border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
-    .lead-btn{padding:10px 12px;border-radius:12px;border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;font-weight:900;cursor:pointer;white-space:nowrap}
-    .lead-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e7eb;background:#f8fafc;color:#0b1120;border-radius:999px;padding:8px 10px;font-weight:900;font-size:12px;cursor:pointer}
-    .chip:hover{filter:brightness(1.02)}
-    .lead-ok{font-weight:900;font-size:11px;color:#166534;margin-top:8px;display:none}
-    .lead-err{font-weight:900;font-size:11px;color:#b91c1c;margin-top:8px;display:none}
-
-    .typing{display:inline-flex;gap:4px;align-items:center}
-    .dot{width:6px;height:6px;border-radius:999px;background:#94a3b8;animation:bounce 1.1s infinite}
-    .dot:nth-child(2){animation-delay:.15s}
-    .dot:nth-child(3){animation-delay:.3s}
-    @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-4px);opacity:1}}
-
-    .close{background:none;border:none;font-size:18px;cursor:pointer}
-
-    /* ================= MOBILE LAYOUT FIXES ================= */
-    @media (max-width: 900px){
-      .hero{
-        padding:18px;
-        min-height:100vh;
-        align-items:flex-start;
-        padding-top:72px;
-      }
-
-      /* breathing room so sticky UI doesn't cover content */
-      .hero-content{max-width:100%;padding-bottom:190px;}
-      h1{font-size:clamp(28px,8vw,42px);margin:14px 0 12px;}
-      p{font-size:16px;line-height:1.55;margin-bottom:18px;}
-
-      .cta{width:100%;max-width:520px;margin-top:10px;margin-bottom:18px;}
-
-      /* Put alert in normal flow */
-      .alert-box{position:relative;right:auto;bottom:auto;width:100%;max-width:520px;margin-top:18px;}
-
-      /* PolicyPro pill stays visible while scrolling */
-      .chat-launcher{
-        position:fixed;
-        right:14px;
-        left:14px;
-        bottom:calc(64px + env(safe-area-inset-bottom));
-        width:auto;
-        max-width:520px;
-        margin:0 auto;
-        z-index:25000;
-      }
-      .chat-launcher:hover,.chat-launcher:active{transform:none;}
-
-      /* Chat window: near full-width */
-      .chat-window{
-        left:12px;
-        right:12px;
-        width:auto;
-        bottom:calc(136px + env(safe-area-inset-bottom));
-        max-height:78vh;
-      }
-
-      /* Disclaimer fixed bottom-right on mobile (smaller, less intrusive) */
-      .disc-btn{
-        left:auto;
-        right:14px;
-        bottom:calc(14px + env(safe-area-inset-bottom));
-        padding:8px 12px;
-        font-size:11px;
-        z-index:26000;
-        opacity:.92;
-      }
-    }
   </style>
 </head>
 
 <body>
 
 <section class="hero">
+  <!-- Rotating background images -->
+  <div class="hero-rotator" aria-hidden="true">
+    <div class="hero-slide" style="background-image:url('hero-house.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('hero-auto.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('hero-business.jpg')"></div>
+  </div>
+
   <div class="hero-content">
-    <span class="badge">Colorado home &amp; auto insurance</span>
-    <h1>Get flexible home &amp; auto options that fit your budget and protect what matters.</h1>
-    <p>Wildfires, hail, and severe weather are driving more claims across Colorado. We help you understand coverage options and smarter ways to stay protected.</p>
-    <button class="cta" id="openFunnel" type="button">Check My Options</button>
-  </div>
-
-  <div class="alert-box">
-    <div class="alert-title">Wildfires &amp; Hail Damage</div>
-    <div class="alert-text">Colorado homes and cars are seeing more wildfire, hail, and severe-weather damage claims. Make sure you're covered for both to stay ahead of rising risks.</div>
-  </div>
-
-  <!-- PolicyPro positioned beneath alert (desktop) / sticky pill (mobile) -->
-  <div class="chat-launcher" id="chatBtn" aria-label="Open PolicyPro chat" title="Ask PolicyPro™ a question">
-    <div class="chat-avatar">PP</div>
-    <div>
-      <div class="chat-label">Ask our</div>
-      <div class="chat-name">PolicyPro™</div>
-    </div>
-    <div class="pp-spark" aria-hidden="true"><span class="pp-dot"></span>Live help</div>
+    <h1 class="hero-headline" id="heroHeader" data-i18n="hero_header_home">Home Insurance</h1>
+    <button class="cta" id="openFunnel" type="button" data-i18n="cta_check">Check My Options</button>
   </div>
 </section>
 
-<!-- Lead Funnel Modal (kept as fallback if CLICKFUNNEL_URL is blank) -->
+<!-- Lead Funnel Modal (fallback if CLICKFUNNEL_URL is blank) -->
 <div class="modal-overlay" id="modalOverlay"></div>
 <div class="modal" id="modal">
   <div class="card" role="dialog" aria-label="Options pre-check form">
     <div class="card-head">
       <div>
-        <h2>Quick Options Pre‑Check</h2>
-        <p>2 minutes. Not a quote. A licensed agent reviews and follows up with carrier‑agnostic options.</p>
+        <h2>Quick Options Pre-Check</h2>
+        <p>2 minutes. Not a quote. A licensed agent reviews and follows up with carrier-agnostic options.</p>
       </div>
       <button class="icon-btn" id="closeModal" type="button">✕</button>
     </div>
@@ -473,7 +691,7 @@
 </div>
 
 <!-- Disclaimer launcher -->
-<button class="disc-btn" id="openDisclaimer" type="button">Disclaimer</button>
+<button class="disc-btn" id="openDisclaimer" type="button" data-i18n="disclaimer_btn">Disclaimer</button>
 
 <!-- Disclaimer modal -->
 <div class="disc-overlay" id="discOverlay"></div>
@@ -518,7 +736,7 @@
           </div>
           <div class="disc-sec-body">
             <ul>
-              <li><strong>PolicyPro™</strong> includes automated and artificial‑intelligence–generated responses for general informational purposes.</li>
+              <li><strong>PolicyPro™</strong> includes automated and artificial-intelligence–generated responses for general informational purposes.</li>
               <li>AI output may be incomplete, inaccurate, or outdated and must not be relied upon as a definitive statement of coverage, pricing, underwriting eligibility, or claim outcome.</li>
               <li>AI responses do <strong>not</strong> replace advice from a licensed insurance producer.</li>
             </ul>
@@ -559,7 +777,7 @@
       </div>
 
       <div class="disc-footer-note">
-        <strong>Consent &amp; privacy:</strong> By submitting your information, you authorize contact by phone, SMS, and email about insurance options (msg &amp; data rates may apply). Information may be stored in a secure Google Sheet and emailed to the business inbox for follow‑up. Do not submit sensitive information you do not want transmitted electronically.
+        <strong>Consent &amp; privacy:</strong> By submitting your information, you authorize contact by phone, SMS, and email about insurance options (msg &amp; data rates may apply). Information may be stored in a secure Google Sheet and emailed to the business inbox for follow-up. Do not submit sensitive information you do not want transmitted electronically.
       </div>
     </div>
 
@@ -570,70 +788,99 @@
   </div>
 </div>
 
-<div class="chat-window" id="chatWindow">
-  <div class="chat-header">
-    <div>
-      <strong>PolicyPro™</strong>
-      <div class="chat-sub">Ask a home or auto insurance question</div>
-    </div>
-    <button class="close" id="closeChat" aria-label="Close chat" type="button">✕</button>
+<!-- Channel.io-style launcher -->
+<div class="chat-launcher" id="chatBtn" aria-label="Open PolicyPro chat" title="Ask PolicyPro™ a question">
+  <div class="chat-peek" aria-hidden="true">
+    <div class="chat-label" data-i18n="chat_peek_label">Need help?</div>
+    <div class="chat-name" data-i18n="chat_peek_name">Chat with PolicyPro™</div>
   </div>
-
-  <div class="chat-main">
-    <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
-
-    <!-- Lead capture inside chat (shown until email captured) -->
-    <div class="lead-nudge" id="chatLeadNudge" style="display:none; padding: 0 12px 12px;">
-      <div class="lead-card">
-        <p class="lead-title">Want a personalized coverage checklist?</p>
-        <p class="lead-sub">Drop your email and we’ll send your hail + wildfire endorsements guide. Or click <b>Check My Options</b> for a fast pre‑check.</p>
-        <div class="lead-row">
-          <input class="lead-email" id="chatLeadEmail" type="email" placeholder="you@email.com" autocomplete="email" />
-          <button class="lead-btn" id="chatLeadSave" type="button">Send guide</button>
-        </div>
-        <div class="lead-actions">
-          <button class="chip" id="chatLeadOpenFunnel" type="button">✅ Check My Options</button>
-          <button class="chip" id="chatLeadNotNow" type="button">Not now</button>
-        </div>
-        <div class="lead-ok" id="chatLeadOk">✅ Got it — check your inbox shortly.</div>
-        <div class="lead-err" id="chatLeadErr">⚠ Please enter a valid email.</div>
-      </div>
-    </div>
-
-    <form class="chat-inputbar" id="chatForm" autocomplete="off">
-      <input class="chat-input" id="chatInput" type="text" placeholder="Ask about hail deductibles, wildfire coverage, bundling…" />
-      <button class="send-btn" id="chatSend" type="submit">Send</button>
-    </form>
+  <div class="chat-bubble" role="button" aria-label="Chat bubble">
+    <div class="chat-avatar">PP</div>
   </div>
 </div>
 
+<div class="chat-window" id="chatWindow" aria-label="PolicyPro widget" role="dialog">
+  <div class="pp-widget">
+    <div class="pp-top" aria-hidden="true">
+      <div class="pp-topbar">
+        <div class="pp-brand">PolicyPro™</div>
+      </div>
+    </div>
+
+    <div class="pp-body">
+      <!-- HOME -->
+      <div class="pp-screen active" id="ppScreenHome">
+        <div class="pp-home-card">
+          <div class="pp-home-row">
+            <div class="pp-avatar">PP</div>
+            <div>
+              <p class="pp-home-title" data-i18n="pp_home_title">Hi — how can we help?</p>
+              <p class="pp-home-sub" data-i18n="pp_home_sub">Ask a Colorado home or auto insurance question. General info only — a licensed agent reviews before any quote, application, or binding.</p>
+            </div>
+          </div>
+          <button class="pp-primary" id="ppStartChat" type="button"><span data-i18n="pp_start_chat">Start a chat</span> <span aria-hidden="true">➤</span></button>
+        </div>
+        <div class="pp-footer-note" data-i18n="pp_powered">Powered by PolicyPro</div>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="pp-screen" id="ppScreenMessages">
+        <div class="pp-messages-wrap">
+          <div class="chat-main">
+            <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
+
+            <form class="chat-inputbar" id="chatForm" autocomplete="off">
+              <input class="chat-input" id="chatInput" type="text" placeholder="Ask about hail deductibles, wildfire coverage, bundling…" data-i18n-placeholder="chat_placeholder" />
+              <button class="send-btn" id="chatSend" type="submit" data-i18n="chat_send">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="pp-screen" id="ppScreenSettings">
+        <div class="pp-settings">
+          <h3 data-i18n="settings_title">Settings</h3>
+          <div class="pp-setting-item"><div class="k" data-i18n="settings_contact">Contact</div><div class="v" id="ppAgentEmail">securechoicein@gmail.com</div></div>
+          <div class="pp-setting-item">
+            <div class="k" data-i18n="settings_language">Language</div>
+            <div class="v">
+              <select id="ppLangSelect" class="pp-select" aria-label="Select language">
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="ja">Japanese</option>
+                <option value="zh">Chinese</option>
+                <option value="fr">French</option>
+                <option value="ru">Russian</option>
+              </select>
+            </div>
+          </div>
+          <div class="pp-setting-item"><div class="k" data-i18n="settings_disclaimer">Disclaimer</div><div class="v" data-i18n="settings_available">Available</div></div>
+          <a class="pp-setting-link" href="#" id="ppOpenDisclaimerLink" data-i18n="settings_open_disclaimer">Open legal disclaimer</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="pp-tabs" role="tablist" aria-label="Widget tabs">
+      <button class="pp-tab active" id="ppTabHome" type="button" role="tab" aria-selected="true" aria-controls="ppScreenHome">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+        <span data-i18n="tab_home">Home</span>
+      </button>
+      <button class="pp-tab" id="ppTabMessages" type="button" role="tab" aria-selected="false" aria-controls="ppScreenMessages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+        <span data-i18n="tab_messages">Messages</span>
+      </button>
+      <button class="pp-tab" id="ppTabSettings" type="button" role="tab" aria-selected="false" aria-controls="ppScreenSettings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7z"/></svg>
+        <span data-i18n="tab_settings">Settings</span>
+      </button>
+    </div>
+  </div>
+
+  <button class="pp-close-fab" id="closeChat" aria-label="Close chat" type="button">✕</button>
+</div>
+
 <script>
-  // ===== Hero image auto-detect (fixes accidental double extensions like .jpg.png) =====
-  (function(){
-    var candidates = [
-      'hero-securechoice-wildfire-hail-phone.png',
-      'hero-securechoice-wildfire-hail-phone.jpg',
-      'hero-securechoice-wildfire-hail-phone.jpeg',
-      'hero-securechoice-wildfire-hail-phone.webp',
-      // Common mistake when Windows hides extensions:
-      'hero-securechoice-wildfire-hail-phone.jpg.png'
-    ];
-
-    function setHero(url){
-      try{ document.documentElement.style.setProperty('--hero-image', "url('" + url + "')"); }catch(e){}
-    }
-
-    function tryNext(i){
-      if(i >= candidates.length) return;
-      var img = new Image();
-      img.onload = function(){ setHero(candidates[i]); };
-      img.onerror = function(){ tryNext(i+1); };
-      img.src = candidates[i] + '?v=' + Date.now();
-    }
-
-    tryNext(0);
-  })();
-
   // ===== Lead funnel + Google Apps Script backend =====
   var GAS = window.GAS_WEBAPP_URL || "";
   var CLICKFUNNEL_URL = (window.CLICKFUNNEL_URL || '').trim();
@@ -646,17 +893,14 @@
   var leadForm = document.getElementById('leadForm');
   var formStatus = document.getElementById('formStatus');
 
-  function showModal(){ modalOverlay.style.display='block'; modal.style.display='flex'; }
-  function hideModal(){ modalOverlay.style.display='none'; modal.style.display='none'; }
+  function showModal(){ if(modalOverlay) modalOverlay.style.display='block'; if(modal) modal.style.display='flex'; }
+  function hideModal(){ if(modalOverlay) modalOverlay.style.display='none'; if(modal) modal.style.display='none'; }
 
   if(closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
   if(cancelBtn) cancelBtn.addEventListener('click', hideModal);
   if(modalOverlay) modalOverlay.addEventListener('click', hideModal);
 
   function postToGAS(url, payload){
-    // IMPORTANT: GitHub Pages -> Apps Script JSON fetch triggers CORS preflight.
-    // This sends a "simple" form-encoded POST with mode:no-cors so the browser will allow the request.
-    // We can't read the response in no-cors mode, so treat a successful fetch() as "submitted".
     var params = new URLSearchParams();
     params.set('payload', JSON.stringify(payload || {}));
 
@@ -682,6 +926,21 @@
     return { score: score, label: label };
   }
 
+  function openOptionsFlow_(){
+    if(CLICKFUNNEL_URL && CLICKFUNNEL_URL.indexOf('http') === 0){
+      window.location.href = CLICKFUNNEL_URL;
+      return;
+    }
+    showModal();
+  }
+
+  // ✅ CTA behavior: NEVER show disclaimer/toast on click
+  if(openFunnelBtn){
+    openFunnelBtn.addEventListener('click', function(){
+      openOptionsFlow_();
+    });
+  }
+
   // ===== PolicyPro chat (UI + optional backend) =====
   var chatBtn = document.getElementById('chatBtn');
   var chatWindow = document.getElementById('chatWindow');
@@ -691,107 +950,219 @@
   var chatInput = document.getElementById('chatInput');
   var chatSend = document.getElementById('chatSend');
 
+  // Widget tabs + screens
+  var ppScreenHome = document.getElementById('ppScreenHome');
+  var ppScreenMessages = document.getElementById('ppScreenMessages');
+  var ppScreenSettings = document.getElementById('ppScreenSettings');
+  var ppTabHome = document.getElementById('ppTabHome');
+  var ppTabMessages = document.getElementById('ppTabMessages');
+  var ppTabSettings = document.getElementById('ppTabSettings');
+  var ppStartChat = document.getElementById('ppStartChat');
+  var ppOpenDisclaimerLink = document.getElementById('ppOpenDisclaimerLink');
+  var ppLangSelect = document.getElementById('ppLangSelect');
+
+  var ppSeeded = false;
+
+  function setTab_(which){
+    var homeOn = which === 'home';
+    var msgOn = which === 'messages';
+    var setOn = which === 'settings';
+
+    if(ppScreenHome) ppScreenHome.classList.toggle('active', homeOn);
+    if(ppScreenMessages) ppScreenMessages.classList.toggle('active', msgOn);
+    if(ppScreenSettings) ppScreenSettings.classList.toggle('active', setOn);
+
+    if(ppTabHome){ ppTabHome.classList.toggle('active', homeOn); ppTabHome.setAttribute('aria-selected', homeOn ? 'true' : 'false'); }
+    if(ppTabMessages){ ppTabMessages.classList.toggle('active', msgOn); ppTabMessages.setAttribute('aria-selected', msgOn ? 'true' : 'false'); }
+    if(ppTabSettings){ ppTabSettings.classList.toggle('active', setOn); ppTabSettings.setAttribute('aria-selected', setOn ? 'true' : 'false'); }
+
+    if(msgOn){
+      if(!ppSeeded){ seedChat_(); ppSeeded = true; }
+      setTimeout(function(){ if(chatInput) chatInput.focus(); }, 30);
+    }
+  }
+
   var POLICYPRO_MODE = ((window.POLICYPRO_MODE || '') + '').trim().toLowerCase() || 'local';
   var CHAT_ENDPOINT = (POLICYPRO_MODE === 'remote')
     ? (((window.POLICYPRO_LLM_ENDPOINT || '').trim() || (window.GAS_WEBAPP_URL || '').trim()))
     : '';
 
-  var chatHistory = []; // minimal local memory
+  var chatHistory = [];
 
-  // Lead capture state for chat
-  var chatLeadNudge = document.getElementById('chatLeadNudge');
-  var chatLeadEmail = document.getElementById('chatLeadEmail');
-  var chatLeadSave = document.getElementById('chatLeadSave');
-  var chatLeadOpenFunnel = document.getElementById('chatLeadOpenFunnel');
-  var chatLeadNotNow = document.getElementById('chatLeadNotNow');
-  var chatLeadOk = document.getElementById('chatLeadOk');
-  var chatLeadErr = document.getElementById('chatLeadErr');
+  // =========================
+  // i18n: Language selection + translate landing page + widget
+  // =========================
+  var PP_LANG_KEY = 'pp_lang_v1';
 
-  function getStoredEmail_(){
-    try{ return (localStorage.getItem('sc_chat_email') || '').trim(); }catch(e){ return ''; }
+  function getLang_(){
+    try{ return (localStorage.getItem(PP_LANG_KEY) || 'en'); }catch(e){ return 'en'; }
   }
-  function setStoredEmail_(email){
-    try{ localStorage.setItem('sc_chat_email', String(email||'')); }catch(e){}
+  function setLang_(v){
+    try{ localStorage.setItem(PP_LANG_KEY, String(v||'en')); }catch(e){}
   }
+
+  function i18nDict_(){
+    return {
+      en:{$1hero_header_home:'Home Insurance',
+        hero_header_auto:'Car Insurance',
+        hero_header_business:'Business Insurance',
+        s_home_3:'What should I check for wildfire/smoke coverage?',
+        s_auto_1:'Is hail damage covered on auto insurance?',
+        s_auto_2:'What does comprehensive vs collision cover?',
+        s_auto_3:'How can I lower my auto premium without losing coverage?'
+      },
+      es:{$1hero_header_home:'Seguro de hogar',
+        hero_header_auto:'Seguro de auto',
+        hero_header_business:'Seguro para negocios',
+        s_home_3:'¿Qué debo revisar para cobertura de incendio/humo?',
+        s_auto_1:'¿El granizo está cubierto en el seguro de auto?',
+        s_auto_2:'¿Qué cubre comprensivo vs colisión?',
+        s_auto_3:'¿Cómo bajo mi prima sin perder cobertura?'
+      },
+      ja:{$1hero_header_home:'住宅保険',
+        hero_header_auto:'自動車保険',
+        hero_header_business:'事業保険',
+        s_home_3:'山火事/煙の補償で確認すべき点は？',
+        s_auto_1:'雹被害は自動車保険で補償される？',
+        s_auto_2:'包括（Comprehensive）と衝突（Collision）の違いは？',
+        s_auto_3:'補償を落とさず保険料を下げる方法は？'
+      },
+      zh:{$1hero_header_home:'房屋保险',
+        hero_header_auto:'汽车保险',
+        hero_header_business:'商业保险',
+        s_home_3:'野火/烟雾保障应重点查看什么？',
+        s_auto_1:'汽车保险是否涵盖冰雹损失？',
+        s_auto_2:'综合险 vs 碰撞险分别保什么？',
+        s_auto_3:'不降低保障的情况下如何降保费？'
+      },
+      fr:{$1hero_header_home:'Assurance habitation',
+        hero_header_auto:'Assurance auto',
+        hero_header_business:'Assurance entreprise',
+        s_home_3:'Que vérifier pour la couverture feu/fumée ?',
+        s_auto_1:'La grêle est-elle couverte en assurance auto ?',
+        s_auto_2:'Que couvre “comprehensive” vs “collision” ?',
+        s_auto_3:'Comment baisser ma prime sans perdre de garanties ?'
+      },
+      ru:{$1hero_header_home:'Страхование дома',
+        hero_header_auto:'Страхование авто',
+        hero_header_business:'Страхование бизнеса',
+        s_home_3:'Что проверить по покрытию пожара/дыма?',
+        s_auto_1:'Покрывается ли град автостраховкой?',
+        s_auto_2:'Чем отличается comprehensive от collision?',
+        s_auto_3:'Как снизить платеж без потери покрытия?'
+      }
+    };
+  }
+
+  function getStrings_(lang){
+    var dict = i18nDict_();
+    return dict[lang] || dict.en;
+  }
+
+  function translatePage_(lang){
+    var s = getStrings_(lang);
+
+    // Document metadata
+    try{ document.documentElement.lang = lang || 'en'; }catch(e){}
+    try{ document.title = s.doc_title; }catch(e){}
+    try{
+      var m = document.querySelector('meta[name="description"]');
+      if(m) m.setAttribute('content', s.meta_desc);
+    }catch(e){}
+
+    // Text nodes
+    try{
+      var nodes = document.querySelectorAll('[data-i18n]');
+      for(var i=0;i<nodes.length;i++){
+        var key = nodes[i].getAttribute('data-i18n');
+        if(key && s[key]) nodes[i].innerHTML = String(s[key]);
+      }
+    }catch(e){}
+
+    // Placeholders
+    try{
+      var ph = document.querySelectorAll('[data-i18n-placeholder]');
+      for(var j=0;j<ph.length;j++){
+        var k = ph[j].getAttribute('data-i18n-placeholder');
+        if(k && s[k]) ph[j].setAttribute('placeholder', String(s[k]));
+      }
+    }catch(e){}
+
+    // Re-render suggested questions title/labels if suggestions are currently showing
+    try{
+      if(chatMessages){
+        var t = chatMessages.querySelector('.pp-suggest-title');
+        if(t) t.textContent = s.suggest_title;
+        var labs = chatMessages.querySelectorAll('.pp-suggest-label');
+        if(labs && labs.length >= 2){
+          labs[0].textContent = s.suggest_home;
+          labs[1].textContent = s.suggest_auto;
+        }
+      }
+    }catch(e){}
+
+    // Keep hero header synced to language + current slide
+    try{ syncHeroHeader_(); }catch(e){}
+  }
+
+  function applyLanguage_(lang){
+    lang = (lang || 'en');
+    setLang_(lang);
+    if(ppLangSelect) ppLangSelect.value = lang;
+    translatePage_(lang);
+  }
+
+  // Initialize language dropdown + apply language to whole page
+  (function(){
+    var lang = getLang_();
+    if(ppLangSelect){
+      ppLangSelect.value = lang;
+      ppLangSelect.addEventListener('change', function(){
+        applyLanguage_(ppLangSelect.value);
+      });
+    }
+    applyLanguage_(lang);
+  })();
+
+  // =========================
+  // Hero header sync with rotating images (every 3s)
+  // =========================
+  var __heroIndex = 0;
+  function heroKeys_(){
+    return ['hero_header_home','hero_header_auto','hero_header_business'];
+  }
+  function syncHeroHeader_(){
+    var el = document.getElementById('heroHeader');
+    if(!el) return;
+
+    // If reduced motion, pin to first slide.
+    var reduce = false;
+    try{ reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ reduce = false; }
+    var idx = reduce ? 0 : (__heroIndex % 3);
+
+    var s = getStrings_(getLang_());
+    var key = heroKeys_()[idx];
+    var txt = s[key] || (idx === 0 ? 'Home Insurance' : (idx === 1 ? 'Car Insurance' : 'Business Insurance'));
+    el.textContent = txt;
+  }
+
+  // Start ticking the header exactly on the 3s cadence used by the CSS rotator.
+  (function(){
+    // Initialize immediately
+    __heroIndex = 0;
+    syncHeroHeader_();
+
+    // Advance every 3 seconds
+    setInterval(function(){
+      __heroIndex = (__heroIndex + 1) % 3;
+      syncHeroHeader_();
+    }, 3000);
+  })();
+
   function isEmail_(email){
     email = String(email||'').trim();
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
-
-  function maybeShowChatLeadNudge_(){
-    if(!chatLeadNudge) return;
-    var stored = getStoredEmail_();
-    if(stored){ chatLeadNudge.style.display = 'none'; return; }
-    chatLeadNudge.style.display = 'block';
-  }
-
-  function hideChatLeadNudge_(){
-    if(chatLeadNudge) chatLeadNudge.style.display = 'none';
-  }
-
-  function showLeadOk_(msg){
-    if(chatLeadErr) chatLeadErr.style.display = 'none';
-    if(chatLeadOk){
-      chatLeadOk.textContent = msg || '✅ Got it — check your inbox shortly.';
-      chatLeadOk.style.display = 'block';
-    }
-  }
-  function showLeadErr_(msg){
-    if(chatLeadOk) chatLeadOk.style.display = 'none';
-    if(chatLeadErr){
-      chatLeadErr.textContent = msg || '⚠ Please enter a valid email.';
-      chatLeadErr.style.display = 'block';
-    }
-  }
-
-  function submitChatEmailToBackend_(email){
-    if(!GAS || GAS.indexOf('http') !== 0) return Promise.resolve({ ok:true, skipped:true });
-
-    var payload = {
-      action: 'chat_lead',
-      source: 'GitHub Landing Page',
-      channel: 'PolicyPro Chat',
-      timestamp: new Date().toISOString(),
-      email: email,
-      aiConsent: true,
-      deliverKit: true,
-      kitType: 'FIRE_HAIL_ENDORSEMENTS'
-    };
-
-    return postToGAS(GAS, payload);
-  }
-
-  function handleChatLeadSubmit_(){
-    var email = chatLeadEmail ? chatLeadEmail.value : '';
-    if(!isEmail_(email)){
-      showLeadErr_('⚠ Please enter a valid email (example: name@email.com).');
-      return;
-    }
-
-    setStoredEmail_(email);
-    showLeadOk_('✅ Thanks! Sending your guide to ' + email + '…');
-
-    submitChatEmailToBackend_(email).then(function(){
-      showLeadOk_('✅ Sent! Check ' + email + ' (and spam/promotions).');
-      setTimeout(hideChatLeadNudge_, 1200);
-    }).catch(function(){
-      showLeadOk_('✅ Saved! We\'ll follow up at ' + email + '.');
-      setTimeout(hideChatLeadNudge_, 1200);
-    });
-  }
-
-  if(chatLeadSave) chatLeadSave.addEventListener('click', handleChatLeadSubmit_);
-  if(chatLeadEmail) chatLeadEmail.addEventListener('keydown', function(e){
-    if(e && e.key === 'Enter'){ e.preventDefault(); handleChatLeadSubmit_(); }
-  });
-  if(chatLeadOpenFunnel) chatLeadOpenFunnel.addEventListener('click', function(){
-    hideChatLeadNudge_();
-    if(openFunnelBtn) openFunnelBtn.click();
-  });
-  if(chatLeadNotNow) chatLeadNotNow.addEventListener('click', function(){
-    hideChatLeadNudge_();
-    try{ localStorage.setItem('sc_chat_nudge_dismissed', String(Date.now())); }catch(e){}
-  });
 
   function esc_(s){
     s = String(s == null ? '' : s);
@@ -827,29 +1198,106 @@
   }
 
   function seedChat_(){
-    if(!chatMessages || chatMessages.childElementCount) return;
-    addMsg_('bot',
-      '<div><b>Hi — I\'m PolicyPro™.</b> Ask me anything about Colorado home or auto insurance (hail deductibles, wildfire coverage, bundling, switching, etc.).</div>' +
-      '<div class="meta">Example ZIP reference: <b>81501</b> (example only) • General info • Human review required</div>'
-    );
-    maybeShowChatLeadNudge_();
+    // Messages screen: all-white, with starter question chips.
+    renderSuggestedQuestions_();
+  }
+
+  function renderSuggestedQuestions_(){
+    if(!chatMessages) return;
+
+    // If user already has messages, don't overwrite.
+    if(chatMessages.childElementCount) return;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'pp-suggest-wrap';
+
+    var title = document.createElement('p');
+    title.className = 'pp-suggest-title';
+    title.textContent = getStrings_(getLang_()).suggest_title;
+
+    var lang = getLang_();
+    var s = getStrings_(lang);
+
+    var suggestionsHome = [
+      s.s_home_1,
+      s.s_home_2,
+      s.s_home_3
+    ];
+
+    var suggestionsAuto = [
+      s.s_auto_1,
+      s.s_auto_2,
+      s.s_auto_3
+    ];
+
+    function section_(label, items){
+      var sec = document.createElement('div');
+      sec.className = 'pp-suggest-section';
+
+      var l = document.createElement('div');
+      l.className = 'pp-suggest-label';
+      l.textContent = label;
+
+      var grid = document.createElement('div');
+      grid.className = 'pp-suggest-grid';
+
+      items.forEach(function(text){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pp-suggest-chip';
+        b.textContent = text;
+        b.addEventListener('click', function(){
+          try{ wrap.remove(); }catch(e){}
+          sendChat_(text);
+        });
+        grid.appendChild(b);
+      });
+
+      sec.appendChild(l);
+      sec.appendChild(grid);
+      return sec;
+    }
+
+    wrap.appendChild(title);
+    var s2 = getStrings_(getLang_());
+    wrap.appendChild(section_(s2.suggest_home, suggestionsHome));
+    wrap.appendChild(section_(s2.suggest_auto, suggestionsAuto));
+
+    chatMessages.appendChild(wrap);
   }
 
   function openChat_(){
-    if(chatWindow){ chatWindow.style.display = 'block'; }
-    // Hide the floating launcher while chat is open
-    if(chatBtn){ chatBtn.style.display = 'none'; }
-    seedChat_();
-    setTimeout(function(){ if(chatInput) chatInput.focus(); }, 50);
+    if(chatWindow) chatWindow.style.display = 'block';
+    if(chatBtn) chatBtn.style.display = 'none';
+    setTab_('home');
   }
 
   function closeChat_(){
-    if(chatWindow){ chatWindow.style.display = 'none'; }
-    if(chatBtn){ chatBtn.style.display = 'flex'; }
+    if(chatWindow) chatWindow.style.display = 'none';
+    if(chatBtn) chatBtn.style.display = 'flex';
   }
 
   if(chatBtn) chatBtn.addEventListener('click', openChat_);
   if(closeChat) closeChat.addEventListener('click', closeChat_);
+
+  // Tabs + actions
+  if(ppTabHome) ppTabHome.addEventListener('click', function(){ setTab_('home'); });
+  if(ppTabMessages) ppTabMessages.addEventListener('click', function(){ setTab_('messages'); });
+  if(ppTabSettings) ppTabSettings.addEventListener('click', function(){ setTab_('settings'); });
+
+  // Expected behavior:
+  // When clicking Start a chat -> open Messages tab + show the suggestion chips on an all-white screen.
+  // If you want it to ALSO clear any prior messages each time Start a chat is clicked, tell me.
+  if(ppStartChat) ppStartChat.addEventListener('click', function(){
+    setTab_('messages');
+    setTimeout(function(){ renderSuggestedQuestions_(); }, 0);
+  });
+
+  if(ppOpenDisclaimerLink) ppOpenDisclaimerLink.addEventListener('click', function(e){
+    if(e) e.preventDefault();
+    setTab_('settings');
+    if(typeof showDisclaimer === 'function') showDisclaimer();
+  });
 
   function classifyIntent_(q){
     var s = String(q||'').toLowerCase();
@@ -862,36 +1310,11 @@
 
     if(has('hail')) return 'hail';
     if(has('wildfire','fire','smoke','embers')) return 'wildfire';
-    if(has('wind','storm')) return 'wind';
-    if(has('water backup','sump','sewer','drain','backup')) return 'water_backup';
-    if(has('flood')) return 'flood';
-
-    if(has('deductible')) return 'deductible';
-    if(has('replacement cost','rcv')) return 'replacement_cost';
-    if(has('actual cash value','acv')) return 'acv';
-    if(has('roof','shingles','roof age','hail deductible')) return 'roof';
-    if(has('endorsement','rider','extra coverage','add-on')) return 'endorsements';
-    if(has('limit','coverage amount','how much coverage')) return 'limits';
-
-    if(has('dwelling','coverage a','home value','rebuild')) return 'dwelling';
-    if(has('personal property','contents','coverage c')) return 'personal_property';
-    if(has('loss of use','ale','additional living expense','temporary housing')) return 'loss_of_use';
-    if(has('liability','coverage e','bodily injury','property damage')) return 'liability';
-    if(has('medical payments','med pay','coverage f')) return 'medpay';
-    if(has('rent','renter','apartment')) return 'renters';
-
-    if(has('comprehensive','comp','theft','vandalism','animal','deer')) return 'auto_comp';
-    if(has('collision','at fault','crash')) return 'auto_collision';
-    if(has('uninsured','underinsured','um','uim')) return 'um_uim';
-    if(has('pip')) return 'pip';
-    if(has('sr-22','sr22')) return 'sr22';
-
-    if(has('umbrella')) return 'umbrella';
-    if(has('cancel','lapse','renewal','switch','shopping')) return 'switching';
+    if(has('claim','claims','file a claim','denied')) return 'claims';
     if(has('bundle','multi-policy')) return 'bundle';
-    if(has('claim','file a claim','claims','denied')) return 'claims';
+    if(has('deductible')) return 'deductible';
     if(has('cheapest','save','lower','rate','premium','expensive')) return 'price';
-
+    if(has('comprehensive','collision')) return 'auto_terms';
     return 'general';
   }
 
@@ -902,147 +1325,27 @@
       return (
         '<b>Hail coverage—what to check first:</b><br>' +
         '• <b>Home:</b> many CO policies use a separate <b>wind/hail deductible</b> (often a % of Coverage A). Also check roof settlement: <b>Replacement Cost</b> vs <b>ACV/roof schedule</b>.<br>' +
-        '• <b>Auto:</b> hail is typically under <b>Comprehensive</b> (not Collision), subject to your comp deductible.<br><br>' +
-        '<b>Quick win:</b> comparing wind/hail deductible + roof terms often matters more than the headline premium in hail-prone areas (ZIP <b>81501</b> is an example only).<br><br>' +
+        '• <b>Auto:</b> hail is typically under <b>Comprehensive</b>, subject to your comp deductible.<br><br>' +
         '<b>1 question:</b> Is your home wind/hail deductible a flat $ amount or a %?'
-      );
-    }
-
-    if(intent === 'roof'){
-      return (
-        '<b>Roof coverage (CO)—2 items change claim payouts the most:</b><br>' +
-        '• <b>Roof settlement:</b> <b>Replacement Cost</b> pays to replace (after deductible + depreciation recovered). <b>ACV/roof schedule</b> reduces payment for age/wear.<br>' +
-        '• <b>Wind/Hail deductible:</b> often separate and can be a % of Coverage A.<br><br>' +
-        '<b>Ask your agent/carrier:</b> “Is my roof on RCV or ACV/schedule? What is my wind/hail deductible?”<br><br>' +
-        '<b>1 question:</b> About how old is the roof (0–5, 6–10, 11–15, 16+)?'
       );
     }
 
     if(intent === 'wildfire'){
       return (
         '<b>Wildfire/smoke—focus on these coverage parts:</b><br>' +
-        '• <b>Dwelling (Coverage A)</b> adequacy + any <b>extended replacement</b> option<br>' +
+        '• <b>Dwelling (Coverage A)</b> adequacy + any <b>extended replacement</b><br>' +
         '• <b>Loss of use / ALE</b> for temporary housing<br>' +
-        '• <b>Ordinance or Law</b> (code upgrades after a covered loss)<br>' +
-        '• Underwriting items: <b>defensible space</b>, roof condition, and proximity to brush can impact eligibility in some areas.<br><br>' +
-        '<b>Auto note:</b> fire/embers/smoke-related vehicle damage is typically <b>Comprehensive</b> (deductible applies).<br><br>' +
+        '• <b>Ordinance or Law</b> (code upgrades)<br><br>' +
         '<b>1 question:</b> Homeowner, condo, or renter?'
       );
     }
 
-    if(intent === 'water_backup'){
+    if(intent === 'auto_terms'){
       return (
-        '<b>Water backup (sewer/drain/sump) is usually NOT covered by default.</b><br><br>' +
-        'Most homeowners/renters policies exclude sewer/drain backup unless you add a <b>water backup endorsement</b> (with a separate limit, e.g., $5k–$25k depending on carrier).<br><br>' +
-        '<b>Tip:</b> confirm the endorsement limit, whether finished basement contents are included, and if there are maintenance requirements.<br><br>' +
-        '<b>1 question:</b> Are you asking about a future add-on or an active loss/claim?'
-      );
-    }
-
-    if(intent === 'flood'){
-      return (
-        '<b>Flood is typically separate from homeowners/renters.</b><br><br>' +
-        'Most standard policies exclude flood (rising water / surface water). Flood coverage is usually purchased as a separate policy.<br><br>' +
-        '<b>1 question:</b> Is your concern river/flash flooding, or water backup from a drain/sewer?'
-      );
-    }
-
-    if(intent === 'deductible'){
-      return (
-        '<b>Deductibles—straight breakdown:</b><br>' +
-        '• <b>Home:</b> often multiple deductibles (All Other Perils + separate wind/hail %). Lower wind/hail deductible can raise premium in CO.<br>' +
-        '• <b>Auto:</b> Collision and Comprehensive deductibles are separate. Higher deductibles lower premium but increase out-of-pocket.<br><br>' +
-        '<b>Rule of thumb:</b> pick a deductible you can comfortably pay tomorrow, then shop for better roof terms/eligibility.<br><br>' +
-        '<b>1 question:</b> Are you trying to lower premium or reduce out-of-pocket on hail losses?'
-      );
-    }
-
-    if(intent === 'replacement_cost'){
-      return (
-        '<b>Replacement Cost vs ACV (simple):</b><br>' +
-        '• <b>Replacement Cost</b>: pays to repair/replace with like kind/quality (deductible applies).<br>' +
-        '• <b>ACV</b>: replacement cost <i>minus depreciation</i>—lower payout for older items/roofs.<br><br>' +
-        '<b>On roofs:</b> some carriers use an ACV/scheduled roof approach in hail-heavy areas—this is a big deal on claims.<br><br>' +
-        '<b>1 question:</b> Are you asking about your roof or personal property/contents?'
-      );
-    }
-
-    if(intent === 'acv'){
-      return (
-        '<b>ACV (Actual Cash Value) means depreciation applies.</b><br><br>' +
-        'If something is settled on ACV, the insurer reduces payout for age/wear. This most commonly surprises people on <b>older roofs</b> and sometimes personal property categories.<br><br>' +
-        '<b>Action:</b> ask if you can upgrade roof settlement to Replacement Cost (if available) and what it does to premium/eligibility.<br><br>' +
-        '<b>1 question:</b> What item are you worried about (roof, TV/furniture, etc.)?'
-      );
-    }
-
-    if(intent === 'liability'){
-      return (
-        '<b>Liability coverage—what it does:</b><br>' +
-        'It helps if you’re legally responsible for injury/property damage to others (home or auto, depending on policy). Limits matter most (e.g., $100k/$300k, $300k, $500k, etc.).<br><br>' +
-        '<b>Common upgrade path:</b> increase underlying liability limits and consider an <b>umbrella</b> if you have assets/income to protect.<br><br>' +
-        '<b>1 question:</b> Are you asking about home liability or auto liability?'
-      );
-    }
-
-    if(intent === 'um_uim'){
-      return (
-        '<b>UM/UIM (uninsured/underinsured motorist):</b><br>' +
-        'Helps cover injuries (and sometimes property damage, depending on state/options) if the at-fault driver has no insurance or not enough.<br><br>' +
-        '<b>Why it matters:</b> it protects you when someone else can’t pay for the damage they caused.<br><br>' +
-        '<b>1 question:</b> Are you mainly worried about medical bills/injuries or vehicle damage?'
-      );
-    }
-
-    if(intent === 'renters'){
-      return (
-        '<b>Renters insurance (Colorado):</b> usually covers your personal property, liability, and loss-of-use (temporary housing). It does <b>not</b> insure the building.<br><br>' +
-        '<b>Wildfire/smoke angle:</b> loss-of-use limits are important if you must evacuate or can’t live there during repairs.<br><br>' +
-        '<b>1 question:</b> Do you want lowest cost or stronger liability + loss-of-use?'
-      );
-    }
-
-    if(intent === 'endorsements'){
-      return (
-        '<b>Common add-ons that help in hail + fire scenarios:</b><br>' +
-        '• <b>Ordinance or Law</b> (code upgrades)<br>' +
-        '• <b>Water backup</b> (sewer/drain/sump)<br>' +
-        '• <b>Roof settlement upgrade</b> (RCV vs ACV/schedule, if offered)<br>' +
-        '• <b>Scheduled valuables</b> (jewelry, firearms, etc.) if you have high-value items<br><br>' +
-        '<b>1 question:</b> Is your priority hail/roof, wildfire/evacuation, or water backup?'
-      );
-    }
-
-    if(intent === 'bundle'){
-      return (
-        '<b>Bundling home + auto:</b> can reduce premium and sometimes help eligibility, but only if coverage terms stay strong.<br><br>' +
-        '<b>Compare these before you switch:</b><br>' +
-        '• Home wind/hail deductible + roof settlement method<br>' +
-        '• Auto liability limits + comp/collision deductibles<br>' +
-        '• Any required programs (telematics, inspections, roof age rules)<br><br>' +
-        '<b>1 question:</b> When is your renewal date (rough month is fine)?'
-      );
-    }
-
-    if(intent === 'switching'){
-      return (
-        '<b>Switching carriers—safe sequence:</b><br>' +
-        '1) Bind the new policy first (confirm effective date + coverage).<br>' +
-        '2) Confirm lender/escrow and financed-vehicle requirements.<br>' +
-        '3) Cancel the old policy only after the new one is active to avoid a lapse.<br><br>' +
-        '<b>Watch-outs in CO:</b> wind/hail deductibles and roof settlement can change dramatically between carriers.<br><br>' +
-        '<b>1 question:</b> Are you switching because of premium, coverage terms, or a non-renewal?'
-      );
-    }
-
-    if(intent === 'claims'){
-      return (
-        '<b>Claims—best practice (general):</b><br>' +
-        '• Document damage (photos/video), protect property from further damage, and report promptly per policy terms.<br>' +
-        '• Keep receipts for emergency repairs/temporary living costs (if applicable).<br>' +
-        '• For hail: get a reputable inspection and understand depreciation/deductible effects before authorizing major work.<br><br>' +
-        '<b>Important:</b> for an active loss, follow your carrier’s claim instructions and seek emergency help if unsafe.<br><br>' +
-        '<b>1 question:</b> Is this a home hail claim, wildfire/smoke, or auto claim?'
+        '<b>Comprehensive vs Collision (simple):</b><br>' +
+        '• <b>Comprehensive</b>: theft, vandalism, hail, animal hits, weather (not a crash).<br>' +
+        '• <b>Collision</b>: damage from a crash (your vehicle hitting something / being hit).<br><br>' +
+        '<b>1 question:</b> Are you asking about hail specifically, or a crash/accident?'
       );
     }
 
@@ -1051,17 +1354,14 @@
         '<b>Ways people usually lower premium (without wrecking coverage):</b><br>' +
         '• Right-size deductibles (especially wind/hail vs all-other-perils)<br>' +
         '• Bundle home + auto where it doesn’t weaken roof terms<br>' +
-        '• Verify discounts (protective devices, claim-free, paid-in-full, telematics where comfortable)<br>' +
-        '• Review limits intelligently (don’t underinsure dwelling; consider liability needs)<br><br>' +
-        '<b>Heads-up:</b> the cheapest quote can come with an ACV/scheduled roof and a large hail deductible in CO.<br><br>' +
-        '<b>1 question:</b> Is your main goal “lowest monthly payment” or “best hail/roof terms”?'
+        '• Verify discounts (claim-free, paid-in-full, telematics if comfortable)<br><br>' +
+        '<b>1 question:</b> Is your goal lower monthly payment or better hail/roof terms?'
       );
     }
 
     return (
       '<b>I can help with general home &amp; auto insurance questions.</b><br><br>' +
-      '<b>Common Colorado topics:</b> wind/hail deductibles, roof settlement (RCV vs ACV), wildfire/defensible space, bundling, and switching without a lapse.<br><br>' +
-      '<b>Ask me something like:</b> “Is hail covered on auto?”, “What is a wind/hail deductible?”, “Do I need water backup?”<br><br>' +
+      '<b>Common Colorado topics:</b> wind/hail deductibles, wildfire, bundling, and switching without a lapse.<br><br>' +
       '<b>1 question:</b> Are you asking about home, auto, renters, or umbrella?'
     );
   }
@@ -1074,7 +1374,6 @@
     chatHistory.push({ role:'user', content:q });
 
     addTyping_();
-    setTimeout(maybeShowChatLeadNudge_, 250);
 
     if(CHAT_ENDPOINT && CHAT_ENDPOINT.indexOf('http') === 0){
       var payloadChat = {
@@ -1131,7 +1430,7 @@
     });
   }
 
-  // ===== Disclaimer modal =====
+  // ===== Disclaimer modal (manual only; no auto popups) =====
   var openDisclaimer = document.getElementById('openDisclaimer');
   var discOverlay = document.getElementById('discOverlay');
   var discModal = document.getElementById('discModal');
@@ -1140,65 +1439,38 @@
   var discAccept = document.getElementById('discAccept');
 
   function showDisclaimer(){
-    discOverlay.style.display = 'block';
-    discModal.style.display = 'flex';
+    if(discOverlay) discOverlay.style.display = 'block';
+    if(discModal) discModal.style.display = 'flex';
   }
   function hideDisclaimer(){
-    discOverlay.style.display = 'none';
-    discModal.style.display = 'none';
+    if(discOverlay) discOverlay.style.display = 'none';
+    if(discModal) discModal.style.display = 'none';
   }
-
-  // Track whether we should continue into the lead flow after the user accepts.
-  window.__sc_pendingOpenOptions = false;
-
-  function acceptDisclaimer(){
-    // Session-only acceptance (resets when browser/tab session ends)
+  function acceptDisclaimer_(){
     try{ sessionStorage.setItem('sc_disclaimer_accepted_session','1'); }catch(e){}
     hideDisclaimer();
-
-    if(window.__sc_pendingOpenOptions){
-      window.__sc_pendingOpenOptions = false;
-      openOptionsFlow_();
-    }
   }
 
   if(openDisclaimer) openDisclaimer.addEventListener('click', showDisclaimer);
   if(discOverlay) discOverlay.addEventListener('click', hideDisclaimer);
   if(discClose) discClose.addEventListener('click', hideDisclaimer);
   if(discClose2) discClose2.addEventListener('click', hideDisclaimer);
-  if(discAccept) discAccept.addEventListener('click', acceptDisclaimer);
+  if(discAccept) discAccept.addEventListener('click', acceptDisclaimer_);
 
-  // Require disclaimer acceptance before opening the lead form OR ClickFunnels
-  function openOptionsFlow_(){
-    if(CLICKFUNNEL_URL && CLICKFUNNEL_URL.indexOf('http') === 0){
-      window.location.href = CLICKFUNNEL_URL;
-      return;
-    }
-    showModal();
-  }
-
-  if(openFunnelBtn) openFunnelBtn.addEventListener('click', function(){
-    var accepted = false;
-    try{ accepted = (sessionStorage.getItem('sc_disclaimer_accepted_session') === '1'); }catch(e){ accepted = false; }
-
-    if(!accepted){
-      window.__sc_pendingOpenOptions = true;
-      showDisclaimer();
-      return;
-    }
-
-    openOptionsFlow_();
-  });
-
+  // ===== Lead form submit =====
   if(leadForm){
     leadForm.addEventListener('submit', function(e){
       e.preventDefault();
-      formStatus.style.display='block';
-      formStatus.className='status';
+      if(formStatus){
+        formStatus.style.display='block';
+        formStatus.className='status';
+      }
 
       if(!GAS || GAS.indexOf('http') !== 0){
-        formStatus.className='status err';
-        formStatus.textContent='Backend not connected yet. Paste your Apps Script Web App URL into window.GAS_WEBAPP_URL at the top of this file.';
+        if(formStatus){
+          formStatus.className='status err';
+          formStatus.textContent='Backend not connected yet. Paste your Apps Script Web App URL into window.GAS_WEBAPP_URL at the top of this file.';
+        }
         return;
       }
 
@@ -1227,16 +1499,20 @@
       payloadLead.leadScore = scored.score;
       payloadLead.leadLabel = scored.label;
 
-      formStatus.textContent='Submitting…';
+      if(formStatus) formStatus.textContent='Submitting…';
 
       postToGAS(GAS, payloadLead).then(function(){
-        formStatus.className='status ok';
-        formStatus.textContent='✅ Submitted! Check your email for your coverage guide.';
+        if(formStatus){
+          formStatus.className='status ok';
+          formStatus.textContent='✅ Submitted! Check your email for your coverage guide.';
+        }
         leadForm.reset();
         setTimeout(hideModal, 900);
       }).catch(function(err){
-        formStatus.className='status err';
-        formStatus.textContent='⚠ Could not submit (network error). Double-check the Apps Script URL and that it is deployed as a Web App. (' + (err && err.message ? err.message : 'Error') + ')';
+        if(formStatus){
+          formStatus.className='status err';
+          formStatus.textContent='⚠ Could not submit (network error). Double-check the Apps Script URL and that it is deployed as a Web App. (' + (err && err.message ? err.message : 'Error') + ')';
+        }
       });
     });
   }
@@ -1244,27 +1520,39 @@
   // ===== Tiny self-tests (safe in production; only logs to console) =====
   (function(){
     try{
-      console.assert(esc_('<>&"\'') === '&lt;&gt;&amp;&quot;&#39;', 'esc_ should escape HTML');
       console.assert(isEmail_('a@b.co') === true, 'isEmail_ basic should pass');
       console.assert(isEmail_('nope') === false, 'isEmail_ basic should fail');
 
-      var sample = 'a\n b\r\n c';
-      var out = sample.replace(/\r?\n/g, '<br>');
-      console.assert(out.indexOf('<br>') !== -1, 'newline regex should work');
-      console.assert('x\n'.replace(/\r?\n/g,'<br>') === 'x<br>', 'LF should replace');
-      console.assert('x\r\n'.replace(/\r?\n/g,'<br>') === 'x<br>', 'CRLF should replace');
+      console.assert(typeof openOptionsFlow_ === 'function', 'openOptionsFlow_ should exist');
+      console.assert(!!openFunnelBtn, 'openFunnelBtn should exist');
 
-      // Acceptance gating tests
-      try{ sessionStorage.removeItem('sc_disclaimer_accepted_session'); }catch(e){}
-      var accepted = false;
-      try{ accepted = (sessionStorage.getItem('sc_disclaimer_accepted_session') === '1'); }catch(e){ accepted = false; }
-      console.assert(accepted === false, 'session acceptance should start false');
+      console.assert(typeof showDisclaimer === 'function', 'showDisclaimer should exist');
+      console.assert(typeof hideDisclaimer === 'function', 'hideDisclaimer should exist');
 
-      // Basic sanity: postToGAS should return a Promise when GAS URL looks valid
-      if(GAS && GAS.indexOf('http') === 0){
-        var p = postToGAS(GAS, { test:true });
-        console.assert(!!p && typeof p.then === 'function', 'postToGAS should return a Promise');
+      console.assert(!!chatBtn, 'chatBtn should exist');
+      console.assert(!!chatWindow, 'chatWindow should exist');
+      console.assert(typeof renderSuggestedQuestions_ === 'function', 'renderSuggestedQuestions_ should exist');
+      console.assert(typeof seedChat_ === 'function', 'seedChat_ should exist');
+      console.assert(!ppLangSelect || ppLangSelect.tagName === 'SELECT', 'ppLangSelect should be a select when present');
+      console.assert(typeof applyLanguage_ === 'function', 'applyLanguage_ should exist');
+      console.assert(typeof translatePage_ === 'function', 'translatePage_ should exist');
+      console.assert(typeof getStrings_ === 'function', 'getStrings_ should exist');
+      console.assert(!!getStrings_('en').hero_h1, 'English strings should include hero_h1');
+      console.assert(!!getStrings_('es').hero_h1, 'Spanish strings should include hero_h1');
+      if(ppLangSelect){
+        console.assert(ppLangSelect.options.length >= 6, 'Language dropdown should have 6 options');
       }
+
+      // Suggestions: should render when empty
+      if(chatMessages){
+        var before = chatMessages.childElementCount;
+        renderSuggestedQuestions_();
+        var after = chatMessages.childElementCount;
+        console.assert(after >= before, 'renderSuggestedQuestions_ should not reduce children');
+      }
+
+      console.assert(typeof leadScore === 'function', 'leadScore should exist');
+      console.assert(leadScore('81501','ASAP').score >= 0, 'leadScore should return a score');
     }catch(e){ /* no-op */ }
   })();
 </script>
