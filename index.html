@@ -1945,11 +1945,11 @@
 
 <script>
   // =====================
-  // POLICY HEALTH CHECK (MOBILE TAP FLOW)
-  // - Populates the mobile PHC answer buttons
-  // - Advances steps on Continue/Back
-  // - Syncs answers to the desktop PHC fields so submission works
-  // - Produces a simple Green/Yellow/Red result + Loyalty CTA on Red
+  // POLICY HEALTH CHECK (MOBILE FLOW + RESULTS)
+  // - Builds the mobile PHC screens from the desktop fields (single source of truth)
+  // - Wires Back/Continue/Finish buttons so mobile can advance
+  // - Syncs mobile answers into the hidden desktop PHC inputs so submission works
+  // - Computes Green/Yellow/Red result and shows the correct CTA + message
   // =====================
   (function(){
     function onReady(fn){
@@ -1958,446 +1958,691 @@
     }
 
     function isMobile(){
-      return (window.matchMedia && window.matchMedia('(max-width: 600px)').matches);
+      return !!(window.matchMedia && window.matchMedia('(max-width: 600px)').matches);
     }
 
-    function qs(id){ return document.getElementById(id); }
+    function el(id){ return document.getElementById(id); }
 
-    function setSelectValue(selectEl, value){
-      if(!selectEl) return;
-      // Find exact match first; else set the raw value
-      var opts = Array.prototype.slice.call(selectEl.options || []);
-      var match = opts.find(function(o){ return (o && String(o.text).trim() === String(value).trim()) || (o && String(o.value).trim() === String(value).trim()); });
-      if(match){ selectEl.value = match.value; }
-      else { selectEl.value = value; }
-      // Fire change for any listeners
-      try{ selectEl.dispatchEvent(new Event('change', { bubbles:true })); } catch(e){}
-    }
+    function qs(sel, root){ return (root || document).querySelector(sel); }
+    function qsa(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
 
-    function chipifyLabels(containerId){
-      var box = qs(containerId);
-      if(!box) return;
-      // Make chip labels respond visually when their checkbox changes
-      box.addEventListener('click', function(e){
-        var input = e.target && e.target.tagName === 'INPUT' ? e.target : null;
-        if(!input){
-          // If they clicked the label, input may be inside
-          var label = e.target && e.target.closest ? e.target.closest('label.phc-chip') : null;
-          if(label) input = label.querySelector('input');
-        }
-        if(!input) return;
-        var label2 = input.closest('label.phc-chip');
-        if(label2){
-          label2.classList.toggle('active', !!input.checked);
-        }
-      });
-
-      // Initialize
-      Array.prototype.slice.call(box.querySelectorAll('label.phc-chip')).forEach(function(label){
-        var input = label.querySelector('input');
-        if(input) label.classList.toggle('active', !!input.checked);
-      });
-    }
+    function safeText(s){ return String(s || '').trim(); }
 
     function ensureHiddenInput(name){
-      var form = qs('leadForm');
+      var form = el('leadForm');
       if(!form) return null;
-      var el = form.querySelector('input[name="'+name+'"]');
-      if(el) return el;
-      el = document.createElement('input');
-      el.type = 'hidden';
-      el.name = name;
-      form.appendChild(el);
-      return el;
+      var existing = form.querySelector('input[name="' + name + '"]');
+      if(existing) return existing;
+      var h = document.createElement('input');
+      h.type = 'hidden';
+      h.name = name;
+      form.appendChild(h);
+      return h;
     }
 
     function setHiddenMulti(name, arr){
-      var el = ensureHiddenInput(name);
-      if(!el) return;
-      el.value = (arr || []).join(', ');
+      var h = ensureHiddenInput(name);
+      if(!h) return;
+      h.value = (arr || []).join(', ');
     }
 
-    function buildMultiButtons(mount, options, stateArr){
-      mount.innerHTML = '';
-      options.forEach(function(label){
+    // Extract visible label text from a PHC chip label
+    function chipLabelText(labelEl){
+      if(!labelEl) return '';
+      // label text includes the input; use textContent then trim
+      return safeText(labelEl.textContent);
+    }
+
+    function getChipValue(labelEl){
+      var input = labelEl ? labelEl.querySelector('input') : null;
+      return safeText(input && input.value ? input.value : chipLabelText(labelEl));
+    }
+
+    function setChipActive(labelEl, active){
+      if(!labelEl) return;
+      if(active) labelEl.classList.add('active');
+      else labelEl.classList.remove('active');
+    }
+
+    function setCheckbox(labelEl, checked){
+      if(!labelEl) return;
+      var input = labelEl.querySelector('input[type="checkbox"]');
+      if(input) input.checked = !!checked;
+      setChipActive(labelEl, !!checked);
+    }
+
+    function setSelectValue(selectEl, value){
+      if(!selectEl) return;
+      selectEl.value = value;
+      // Trigger change for any listeners
+      try{ selectEl.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){ }
+    }
+
+    function buildMultiButtons(container, options, onToggle){
+      if(!container) return;
+      container.innerHTML = '';
+      options.forEach(function(opt){
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'phc-answer-btn';
-        btn.textContent = label;
-        btn.dataset.value = label;
+        btn.dataset.value = opt.value;
+        btn.textContent = opt.label;
         btn.addEventListener('click', function(){
-          var v = btn.dataset.value;
-          var idx = stateArr.indexOf(v);
-          if(idx >= 0) stateArr.splice(idx,1);
-          else {
-            // If they choose None, clear others. If they choose anything else, remove None.
-            if(v === 'None'){
-              stateArr.splice(0, stateArr.length);
-              stateArr.push('None');
-            } else {
-              var noneIdx = stateArr.indexOf('None');
-              if(noneIdx >= 0) stateArr.splice(noneIdx,1);
-              stateArr.push(v);
-            }
-          }
-          // Reflect UI
-          Array.prototype.slice.call(mount.querySelectorAll('.phc-answer-btn')).forEach(function(b){
-            b.classList.toggle('active', stateArr.indexOf(b.dataset.value) >= 0);
-          });
+          var isActive = btn.classList.contains('active');
+          onToggle(opt.value, !isActive, btn);
         });
+        // Better mobile tap
         btn.addEventListener('touchend', function(e){ e.preventDefault(); btn.click(); }, { passive:false });
-        mount.appendChild(btn);
-      });
-      // Initial UI
-      Array.prototype.slice.call(mount.querySelectorAll('.phc-answer-btn')).forEach(function(b){
-        b.classList.toggle('active', stateArr.indexOf(b.dataset.value) >= 0);
+        container.appendChild(btn);
       });
     }
 
-    function buildSingleButtons(mount, options, getVal, setVal){
-      mount.innerHTML = '';
-      options.forEach(function(label){
+    function buildSingleButtons(container, options, onSelect){
+      if(!container) return;
+      container.innerHTML = '';
+      options.forEach(function(opt){
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'phc-answer-btn';
-        btn.textContent = label;
-        btn.dataset.value = label;
+        btn.dataset.value = opt.value;
+        btn.textContent = opt.label;
         btn.addEventListener('click', function(){
-          setVal(btn.dataset.value);
-          Array.prototype.slice.call(mount.querySelectorAll('.phc-answer-btn')).forEach(function(b){
-            b.classList.toggle('active', b.dataset.value === getVal());
-          });
+          // Clear siblings
+          qsa('.phc-answer-btn', container).forEach(function(b){ b.classList.remove('active'); });
+          btn.classList.add('active');
+          onSelect(opt.value);
         });
         btn.addEventListener('touchend', function(e){ e.preventDefault(); btn.click(); }, { passive:false });
-        mount.appendChild(btn);
-      });
-      // Initial UI
-      Array.prototype.slice.call(mount.querySelectorAll('.phc-answer-btn')).forEach(function(b){
-        b.classList.toggle('active', b.dataset.value === getVal());
+        container.appendChild(btn);
       });
     }
 
-    function showQ(i){
-      for(var k=0;k<=5;k++){
-        var el = qs('phcQ'+k);
-        if(el) el.style.display = (k===i ? 'block' : 'none');
-      }
-      var done = qs('phcQDone');
-      if(done) done.style.display = 'none';
-    }
+    // Compute result from the canonical desktop inputs
+    function computePHCResult(){
+      // Desktop sources (single truth)
+      var changesLabels = qsa('#phcChanges .phc-chip');
+      var risksLabels   = qsa('#phcRisks .phc-chip');
+      var selProperty   = el('phcProperty');
+      var selDed        = el('phcDeductible');
+      var selLia        = el('phcLiability');
+      var selReview     = el('phcReview');
 
-    function showDone(){
-      for(var k=0;k<=5;k++){
-        var el = qs('phcQ'+k);
-        if(el) el.style.display = 'none';
-      }
-      var done = qs('phcQDone');
-      if(done) done.style.display = 'block';
-    }
+      var changes = changesLabels
+        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
+        .map(function(l){ return getChipValue(l); });
+      var risks = risksLabels
+        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
+        .map(function(l){ return getChipValue(l); });
 
-    function calcResult(state){
-      // Simple scoring heuristic
+      var property = safeText(selProperty && selProperty.value);
+      var deductible = safeText(selDed && selDed.value);
+      var liability = safeText(selLia && selLia.value);
+      var review = safeText(selReview && selReview.value);
+
       var score = 0;
-      var why = [];
-
-      // Review recency
-      if(state.review === '3+ years ago / never'){
-        score += 3; why.push('Your policy hasn\'t been reviewed in 3+ years — that\'s when gaps often creep in.');
-      } else if(state.review === '1–3 years ago'){
-        score += 2; why.push('It\'s been 1–3 years since a full review — worth checking for drift.');
-      }
-
-      // Liability confidence
-      if(state.liability === 'Not protected / Not sure'){
-        score += 3; why.push('If you were sued, you\'re not confident you\'re protected — liability limits may be low.');
-      } else if(state.liability === 'Somewhat protected'){
-        score += 1; why.push('You\'re only somewhat protected — a quick limits check can help.');
-      }
-
-      // Deductible comfort
-      if(state.deductible === '$2,500–$5,000+' || state.deductible === 'Not sure'){
-        score += 2; why.push('Your out-of-pocket comfort is high or unclear — that can surprise people at claim time.');
-      } else if(state.deductible === '$1,000–$2,500'){
-        score += 1;
-      }
 
       // Changes
-      if(state.changes.length && !(state.changes.length === 1 && state.changes[0] === 'None')){
-        score += 2; why.push('You\'ve had life changes — that\'s the #1 reason coverage stops matching reality.');
-      }
+      var hasNoneChange = changes.indexOf('None') !== -1;
+      var changeCount = hasNoneChange ? 0 : changes.length;
+      if(changeCount >= 1) score += 1;
+      if(changeCount >= 3) score += 1;
+
+      // Property
+      if(/Landlord|Rental property/i.test(property)) score += 1;
+      if(/Not sure/i.test(property)) score += 1;
+
+      // Deductible / out-of-pocket
+      if(/\$2,500–\$5,000\+|\$2,500–\$5,000\+/i.test(deductible)) score += 1;
+      if(/Not sure/i.test(deductible)) score += 1;
+
+      // Liability
+      if(/Not protected|Not sure/i.test(liability)) score += 2;
+      else if(/Somewhat/i.test(liability)) score += 1;
+
+      // Review recency
+      if(/3\+ years/i.test(review)) score += 2;
+      else if(/1–3/i.test(review)) score += 1;
+      else if(/Not sure/i.test(review)) score += 1;
 
       // Risks
-      if(state.risks.length && !(state.risks.length === 1 && state.risks[0] === 'None')){
-        score += 1;
-      }
-      if(state.risks.indexOf('Wildfire/brush nearby') >= 0){ score += 1; why.push('Wildfire exposure can change eligibility and pricing quickly.'); }
-      if(state.risks.indexOf('Hail-prone / roof 10+ yrs') >= 0){ score += 1; why.push('Hail + older roofs are a common deductible/coverage pain point in CO.'); }
-      if(state.risks.indexOf('Pool/trampoline/dog') >= 0){ score += 1; why.push('Attractive nuisance items often require higher liability limits.'); }
+      var hasNoneRisk = risks.indexOf('None') !== -1;
+      var riskCount = hasNoneRisk ? 0 : risks.length;
+      if(riskCount >= 1) score += 1;
+      if(riskCount >= 3) score += 1;
 
-      // Property situation special cases
-      if(state.property === 'Not sure'){
-        score += 1; why.push('If you\'re not sure about your property setup, a quick review is helpful.');
-      }
+      // Decide label
+      var label = 'Green';
+      if(score >= 6) label = 'Red';
+      else if(score >= 3) label = 'Yellow';
 
-      var level = 'Green';
-      if(score >= 6) level = 'Red';
-      else if(score >= 3) level = 'Yellow';
+      // Build why bullets (short and punchy)
+      var why = [];
+      if(changeCount >= 1) why.push('Life changes are a top reason policies stop matching reality — a quick review can prevent surprise gaps.');
+      if(/Not protected|Not sure/i.test(liability)) why.push('Liability uncertainty is the biggest “silent risk” — it’s what protects your savings if you’re sued.');
+      if(/3\+ years/i.test(review)) why.push('If it’s been 3+ years since a full review, you may be missing newer discounts and coverage improvements.');
+      if(/\$2,500–\$5,000\+|Not sure/i.test(deductible)) why.push('Your claim out-of-pocket matters most on hail/wildfire seasons — aligning deductibles avoids sticker shock.');
+      if(riskCount >= 1) why.push('Property risk flags often change what carriers require — confirming now avoids last-minute issues.');
+      if(why.length === 0) why.push('Your answers look stable. A quick annual check still helps confirm you’re not overpaying.');
 
+      // Copy line
       var copy = '';
-      if(level === 'Green'){
-        copy = 'You look fairly well-positioned — but a quick check can still confirm you\'re not overpaying or missing a key endorsement.';
-      } else if(level === 'Yellow'){
-        copy = 'There are a few signals your coverage may not match anymore. A fast review can confirm limits, deductibles, and common gaps.';
-      } else {
-        copy = 'There are strong signs your current coverage may not protect you the way you think. A review is worth doing now.';
+      if(label === 'Green') copy = 'Coverage looks generally stable — a quick review can still confirm you’re not overpaying.';
+      if(label === 'Yellow') copy = 'There are a few signals your coverage may not match your life today — worth a quick review.';
+      if(label === 'Red') copy = 'Multiple signals suggest potential gaps or misalignment — a review is strongly recommended.';
+
+      return {
+        label: label,
+        score: score,
+        copy: copy,
+        why: why
+      };
+    }
+
+    function renderDesktopResult(result){
+      var box = el('phcResult');
+      if(!box) return;
+
+      var dot = el('phcDot');
+      var labelEl = el('phcLabel');
+      var copyEl = el('phcCopy');
+      var whyEl = el('phcWhy');
+      var subhead = el('phcSubhead');
+      var loyalty = el('phcLoyalty');
+      var loyaltyMsg = el('phcLoyaltyMsg');
+      var leadCta = el('phcLeadCta');
+      var contBtn = el('phcCta');
+
+      box.classList.add('show');
+
+      if(dot){
+        dot.className = 'phc-dot' + (result.label === 'Yellow' ? ' yellow' : result.label === 'Red' ? ' red' : '');
+      }
+      if(labelEl) labelEl.textContent = result.label;
+      if(copyEl) copyEl.textContent = result.copy;
+
+      if(subhead){
+        subhead.classList.remove('green','red');
+        subhead.classList.add(result.label === 'Red' ? 'red' : 'green');
+        subhead.style.display = 'block';
       }
 
-      // Keep it tight on mobile
-      why = why.slice(0, 4);
-      return { level: level, copy: copy, why: why };
+      if(whyEl){
+        whyEl.innerHTML = '';
+        result.why.slice(0,4).forEach(function(line){
+          var li = document.createElement('li');
+          li.textContent = line;
+          whyEl.appendChild(li);
+        });
+      }
+
+      // Loyalty message + CTA only on Red
+      if(loyalty){
+        if(result.label === 'Red'){
+          loyalty.classList.add('show');
+          if(loyaltyMsg) loyaltyMsg.textContent = "Loyalty isn't the same as protection.";
+          if(leadCta){
+            leadCta.onclick = function(){
+              var openBtn = el('openFunnel');
+              if(openBtn) openBtn.click();
+            };
+          }
+        } else {
+          loyalty.classList.remove('show');
+        }
+      }
+
+      // Always show continue button once results exist
+      if(contBtn){
+        contBtn.style.display = 'inline-flex';
+        contBtn.onclick = function(){
+          // Move to next modal step (Step 4 in the lead form)
+          // We trigger the main stepper Next button if present
+          var next = el('stepNext');
+          if(next) next.click();
+          // If desktop (no stepper), scroll down a bit
+          var body = qs('#modal .card-body');
+          if(body) body.scrollTop += 250;
+        };
+      }
     }
 
     function renderMobileResult(result){
-      var wrap = qs('phcResultMobile');
-      if(!wrap) return;
+      var box = el('phcResultMobile');
+      if(!box) return;
 
-      var dotClass = 'phc-dot';
-      if(result.level === 'Yellow') dotClass += ' yellow';
-      if(result.level === 'Red') dotClass += ' red';
-
-      wrap.innerHTML = '';
+      // Simple, readable card using existing styles
+      box.innerHTML = '';
+      box.className = 'phc-result show';
 
       var top = document.createElement('div');
       top.className = 'phc-result-top';
-      top.innerHTML =
-        '<div class="phc-result-left">' +
-          '<span class="'+dotClass+'" aria-hidden="true"></span>' +
-          '<div><div class="phc-result-label">'+result.level+'</div></div>' +
-        '</div>';
-      wrap.appendChild(top);
+
+      var left = document.createElement('div');
+      left.className = 'phc-result-left';
+
+      var dot = document.createElement('span');
+      dot.className = 'phc-dot' + (result.label === 'Yellow' ? ' yellow' : result.label === 'Red' ? ' red' : '');
+
+      var labelWrap = document.createElement('div');
+      var lab = document.createElement('div');
+      lab.className = 'phc-result-label';
+      lab.textContent = result.label;
+      labelWrap.appendChild(lab);
+
+      left.appendChild(dot);
+      left.appendChild(labelWrap);
+
+      top.appendChild(left);
+      box.appendChild(top);
 
       var copy = document.createElement('div');
       copy.className = 'phc-result-copy';
       copy.textContent = result.copy;
-      wrap.appendChild(copy);
+      box.appendChild(copy);
 
       var sub = document.createElement('div');
-      sub.className = 'phc-subhead ' + (result.level === 'Red' ? 'red' : 'green');
-      sub.textContent = "Most people don't switch because they're happy — they stay because nothing triggered a review.  We help you check if your coverage still makes sense today.";
-      wrap.appendChild(sub);
+      sub.className = 'phc-subhead ' + (result.label === 'Red' ? 'red' : 'green');
+      sub.textContent = "Most people don't switch because they're happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.";
+      box.appendChild(sub);
 
-      if(result.why && result.why.length){
-        var ul = document.createElement('ul');
-        ul.className = 'phc-result-why';
-        result.why.forEach(function(w){
-          var li = document.createElement('li');
-          li.textContent = w;
-          ul.appendChild(li);
-        });
-        wrap.appendChild(ul);
-      }
+      var ul = document.createElement('ul');
+      ul.className = 'phc-result-why';
+      result.why.slice(0,4).forEach(function(line){
+        var li = document.createElement('li');
+        li.textContent = line;
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
 
-      // Loyalty CTA for Red (and optionally Yellow)
-      if(result.level === 'Red'){
+      // Red interstitial CTA
+      if(result.label === 'Red'){
         var loyalty = document.createElement('div');
         loyalty.className = 'phc-loyalty show';
-        loyalty.innerHTML =
-          '<p class="m">Loyalty isn\'t the same as protection.</p>' +
-          '<button class="btn btn-primary" type="button" id="phcMobileLeadBtn">Check My Options</button>';
-        wrap.appendChild(loyalty);
 
-        // Wire to main CTA
-        setTimeout(function(){
-          var b = qs('phcMobileLeadBtn');
-          if(b){
-            b.addEventListener('click', function(){
-              var open = qs('openFunnel');
-              if(open) open.click();
-            });
-            b.addEventListener('touchend', function(e){ e.preventDefault(); b.click(); }, { passive:false });
-          }
-        }, 0);
-      } else {
-        var cta = document.createElement('button');
-        cta.className = 'btn btn-primary';
-        cta.type = 'button';
-        cta.textContent = 'Check My Options';
-        cta.addEventListener('click', function(){
-          var open = qs('openFunnel');
-          if(open) open.click();
-        });
-        cta.addEventListener('touchend', function(e){ e.preventDefault(); cta.click(); }, { passive:false });
-        wrap.appendChild(cta);
+        var msg = document.createElement('p');
+        msg.className = 'm';
+        msg.textContent = "Loyalty isn't the same as protection.";
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn';
+        btn.textContent = 'Check My Options';
+        btn.onclick = function(){
+          var openBtn = el('openFunnel');
+          if(openBtn) openBtn.click();
+        };
+
+        loyalty.appendChild(msg);
+        loyalty.appendChild(btn);
+        box.appendChild(loyalty);
       }
+
+      // Continue button
+      var actions = document.createElement('div');
+      actions.className = 'phc-result-actions';
+      var cont = document.createElement('button');
+      cont.type = 'button';
+      cont.className = 'btn btn-primary';
+      cont.textContent = 'Continue to Options';
+      cont.onclick = function(){
+        var next = el('stepNext');
+        if(next) next.click();
+      };
+      actions.appendChild(cont);
+      box.appendChild(actions);
     }
 
     onReady(function(){
-      // Only run the flow wiring if the mobile flow exists
-      var flow = qs('phcMobileFlow');
+      // Build mobile flow from desktop controls
+      var flow = el('phcMobileFlow');
       if(!flow) return;
 
-      // Visual chip highlight for desktop checkboxes too
-      chipifyLabels('phcChanges');
-      chipifyLabels('phcRisks');
+      // Only wire once
+      if(flow.dataset.wired === '1') return;
+      flow.dataset.wired = '1';
 
-      // State
-      var state = {
-        changes: [],
-        property: '',
-        deductible: '',
-        liability: '',
-        review: '',
-        risks: []
-      };
-
-      // Options (must match the desktop labels so syncing is exact)
-      var changesOpts = [
-        'Moved/bought home',
-        'New driver/teen driver',
-        'New vehicle/financed/leased',
-        'Marriage/divorce/new baby',
-        'Work from home/home business',
-        'Major remodel/new roof/solar',
-        'None'
-      ];
-      var propertyOpts = ['Own a home','Rent','Condo/Townhome','Landlord/Rental property','Not sure'];
-      var deductibleOpts = ['$500–$1,000','$1,000–$2,500','$2,500–$5,000+','Not sure'];
-      var liabilityOpts = ['Very protected (high liability / umbrella)','Somewhat protected','Not protected / Not sure'];
-      var reviewOpts = ['Within 12 months','1–3 years ago','3+ years ago / never','Not sure'];
-      var riskOpts = ['Wildfire/brush nearby','Hail-prone / roof 10+ yrs','Basement/sump pump','Pool/trampoline/dog','Not sure','None'];
-
-      // Mounts
-      var mChanges = qs('phcMobileChanges');
-      var mProp = qs('phcMobileProperty');
-      var mDed = qs('phcMobileDeductible');
-      var mLia = qs('phcMobileLiability');
-      var mRev = qs('phcMobileReview');
-      var mRisk = qs('phcMobileRisks');
-
-      // Desktop field refs
-      var selProp = qs('phcProperty');
-      var selDed = qs('phcDeductible');
-      var selLia = qs('phcLiability');
-      var selRev = qs('phcReview');
-      var boxChanges = qs('phcChanges');
-      var boxRisks = qs('phcRisks');
-
-      // Hidden submission fields for multi-selects
+      // Ensure hidden inputs exist for submission
       ensureHiddenInput('phcChanges');
       ensureHiddenInput('phcRisks');
 
-      // Build buttons
-      if(mChanges) buildMultiButtons(mChanges, changesOpts, state.changes);
+      // Canonical desktop sources
+      var changesLabels = qsa('#phcChanges .phc-chip');
+      var risksLabels   = qsa('#phcRisks .phc-chip');
+      var selProperty   = el('phcProperty');
+      var selDed        = el('phcDeductible');
+      var selLia        = el('phcLiability');
+      var selReview     = el('phcReview');
 
-      if(mProp) buildSingleButtons(mProp, propertyOpts, function(){return state.property;}, function(v){ state.property=v; setSelectValue(selProp, v);} );
-      if(mDed) buildSingleButtons(mDed, deductibleOpts, function(){return state.deductible;}, function(v){ state.deductible=v; setSelectValue(selDed, v);} );
-      if(mLia) buildSingleButtons(mLia, liabilityOpts, function(){return state.liability;}, function(v){ state.liability=v; setSelectValue(selLia, v);} );
-      if(mRev) buildSingleButtons(mRev, reviewOpts, function(){return state.review;}, function(v){ state.review=v; setSelectValue(selRev, v);} );
-      if(mRisk) buildMultiButtons(mRisk, riskOpts, state.risks);
+      // Mobile containers
+      var mChanges = el('phcMobileChanges');
+      var mProperty = el('phcMobileProperty');
+      var mDed = el('phcMobileDeductible');
+      var mLia = el('phcMobileLiability');
+      var mReview = el('phcMobileReview');
+      var mRisks = el('phcMobileRisks');
 
-      function syncMultiToDesktop(){
-        // Sync checkboxes (desktop) so everything stays consistent
-        if(boxChanges){
-          Array.prototype.slice.call(boxChanges.querySelectorAll('input[type="checkbox"]')).forEach(function(cb){
-            cb.checked = state.changes.indexOf(cb.value) >= 0;
-            var label = cb.closest('label.phc-chip');
-            if(label) label.classList.toggle('active', cb.checked);
-          });
+      // State
+      var step = 0;
+      var selected = {
+        changes: new Set(),
+        risks: new Set(),
+        property: '',
+        deductible: '',
+        liability: '',
+        review: ''
+      };
+
+      // Seed from any existing desktop selections
+      changesLabels.forEach(function(l){
+        var v = getChipValue(l);
+        var i = l.querySelector('input');
+        if(i && i.checked) selected.changes.add(v);
+      });
+      risksLabels.forEach(function(l){
+        var v = getChipValue(l);
+        var i = l.querySelector('input');
+        if(i && i.checked) selected.risks.add(v);
+      });
+      selected.property = safeText(selProperty && selProperty.value);
+      selected.deductible = safeText(selDed && selDed.value);
+      selected.liability = safeText(selLia && selLia.value);
+      selected.review = safeText(selReview && selReview.value);
+
+      function syncChangesToDesktop(){
+        // Special rule: If "None" selected, clear others
+        if(selected.changes.has('None')){
+          selected.changes.forEach(function(v){ if(v !== 'None') selected.changes.delete(v); });
         }
-        if(boxRisks){
-          Array.prototype.slice.call(boxRisks.querySelectorAll('input[type="checkbox"]')).forEach(function(cb){
-            cb.checked = state.risks.indexOf(cb.value) >= 0;
-            var label = cb.closest('label.phc-chip');
-            if(label) label.classList.toggle('active', cb.checked);
-          });
+        changesLabels.forEach(function(l){
+          var v = getChipValue(l);
+          setCheckbox(l, selected.changes.has(v));
+        });
+        setHiddenMulti('phcChanges', Array.from(selected.changes));
+      }
+
+      function syncRisksToDesktop(){
+        if(selected.risks.has('None')){
+          selected.risks.forEach(function(v){ if(v !== 'None') selected.risks.delete(v); });
         }
-
-        // Hidden inputs for the sheet
-        setHiddenMulti('phcChanges', state.changes);
-        setHiddenMulti('phcRisks', state.risks);
+        risksLabels.forEach(function(l){
+          var v = getChipValue(l);
+          setCheckbox(l, selected.risks.has(v));
+        });
+        setHiddenMulti('phcRisks', Array.from(selected.risks));
       }
 
-      // Keep multi-selects synced whenever user taps
-      if(mChanges) mChanges.addEventListener('click', syncMultiToDesktop);
-      if(mRisk) mRisk.addEventListener('click', syncMultiToDesktop);
-
-      // Navigation
-      var cur = 0;
-
-      function requireSingle(val){
-        return (val && String(val).trim() !== '');
+      function syncSinglesToDesktop(){
+        setSelectValue(selProperty, selected.property);
+        setSelectValue(selDed, selected.deductible);
+        setSelectValue(selLia, selected.liability);
+        setSelectValue(selReview, selected.review);
       }
 
-      function toast(msg){
-        // Lightweight inline alert
-        try{ alert(msg); } catch(e){}
-      }
-
-      function goNext(){
-        // Validation for required single-select questions
-        if(cur === 1 && !requireSingle(state.property)) return toast('Please select your property situation.');
-        if(cur === 2 && !requireSingle(state.deductible)) return toast('Please select your deductible comfort.');
-        if(cur === 3 && !requireSingle(state.liability)) return toast('Please select how protected you feel.');
-        if(cur === 4 && !requireSingle(state.review)) return toast('Please select when you last reviewed your policy.');
-
-        // Always sync multi-selects
-        syncMultiToDesktop();
-
-        if(cur < 5){
-          cur += 1;
-          showQ(cur);
+      function showStep(n){
+        step = n;
+        for(var i=0;i<=5;i++){
+          var q = el('phcQ'+i);
+          if(q) q.style.display = (i===step ? 'block' : 'none');
         }
+        var done = el('phcQDone');
+        if(done) done.style.display = 'none';
+
+        // Back button enabling
+        var back0 = el('phcBack0');
+        if(back0) back0.disabled = (step===0);
       }
 
-      function goBack(){
-        if(cur > 0){
-          cur -= 1;
-          showQ(cur);
+      function requireSingle(value, message){
+        if(safeText(value) === ''){
+          alert(message);
+          return false;
         }
+        return true;
       }
 
-      // Wire buttons
-      function wireNav(btnId, fn){
-        var b = qs(btnId);
+      // Build mobile options from desktop
+      var changeOpts = changesLabels.map(function(l){
+        var v = getChipValue(l);
+        return { value: v, label: v };
+      });
+      var riskOpts = risksLabels.map(function(l){
+        var v = getChipValue(l);
+        return { value: v, label: v };
+      });
+
+      function selectOptionsFromSelect(selectEl){
+        if(!selectEl) return [];
+        return Array.prototype.slice.call(selectEl.options)
+          .map(function(o){ return { value: safeText(o.value || o.textContent), label: safeText(o.textContent) }; })
+          .filter(function(o){ return o.value !== '' && o.label.toLowerCase() !== 'select…' && o.label.toLowerCase() !== 'select...' });
+      }
+
+      var propertyOpts = selectOptionsFromSelect(selProperty);
+      var dedOpts = selectOptionsFromSelect(selDed);
+      var liaOpts = selectOptionsFromSelect(selLia);
+      var reviewOpts = selectOptionsFromSelect(selReview);
+
+      buildMultiButtons(mChanges, changeOpts, function(value, willSelect, btn){
+        if(willSelect){
+          // None clears others
+          if(value === 'None'){
+            selected.changes.clear();
+            selected.changes.add('None');
+            // reset UI
+            qsa('.phc-answer-btn', mChanges).forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+          } else {
+            selected.changes.delete('None');
+            selected.changes.add(value);
+            btn.classList.add('active');
+          }
+        } else {
+          selected.changes.delete(value);
+          btn.classList.remove('active');
+        }
+        syncChangesToDesktop();
+      });
+
+      buildSingleButtons(mProperty, propertyOpts, function(value){
+        selected.property = value;
+        syncSinglesToDesktop();
+      });
+
+      buildSingleButtons(mDed, dedOpts, function(value){
+        selected.deductible = value;
+        syncSinglesToDesktop();
+      });
+
+      buildSingleButtons(mLia, liaOpts, function(value){
+        selected.liability = value;
+        syncSinglesToDesktop();
+      });
+
+      buildSingleButtons(mReview, reviewOpts, function(value){
+        selected.review = value;
+        syncSinglesToDesktop();
+      });
+
+      buildMultiButtons(mRisks, riskOpts, function(value, willSelect, btn){
+        if(willSelect){
+          if(value === 'None'){
+            selected.risks.clear();
+            selected.risks.add('None');
+            qsa('.phc-answer-btn', mRisks).forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+          } else {
+            selected.risks.delete('None');
+            selected.risks.add(value);
+            btn.classList.add('active');
+          }
+        } else {
+          selected.risks.delete(value);
+          btn.classList.remove('active');
+        }
+        syncRisksToDesktop();
+      });
+
+      // Reflect initial state in mobile UI
+      function markMulti(container, set){
+        qsa('.phc-answer-btn', container).forEach(function(b){
+          if(set.has(b.dataset.value)) b.classList.add('active');
+        });
+      }
+      function markSingle(container, value){
+        qsa('.phc-answer-btn', container).forEach(function(b){
+          if(b.dataset.value === value) b.classList.add('active');
+        });
+      }
+      markMulti(mChanges, selected.changes);
+      markMulti(mRisks, selected.risks);
+      markSingle(mProperty, selected.property);
+      markSingle(mDed, selected.deductible);
+      markSingle(mLia, selected.liability);
+      markSingle(mReview, selected.review);
+
+      // Buttons wiring
+      function bindNav(btnId, fn){
+        var b = el(btnId);
         if(!b) return;
-        b.addEventListener('click', function(e){ e.preventDefault(); fn(); });
+        b.addEventListener('click', fn);
         b.addEventListener('touchend', function(e){ e.preventDefault(); fn(); }, { passive:false });
       }
 
-      wireNav('phcNext0', function(){ goNext(); });
-      wireNav('phcNext1', function(){ goNext(); });
-      wireNav('phcNext2', function(){ goNext(); });
-      wireNav('phcNext3', function(){ goNext(); });
-      wireNav('phcNext4', function(){ goNext(); });
+      bindNav('phcBack0', function(){ /* no-op */ });
+      bindNav('phcNext0', function(){ showStep(1); });
 
-      wireNav('phcBack1', goBack);
-      wireNav('phcBack2', goBack);
-      wireNav('phcBack3', goBack);
-      wireNav('phcBack4', goBack);
-      wireNav('phcBack5', goBack);
-
-      wireNav('phcFinish', function(){
-        syncMultiToDesktop();
-
-        // Ensure the desktop fields are set from state as well
-        setSelectValue(selProp, state.property);
-        setSelectValue(selDed, state.deductible);
-        setSelectValue(selLia, state.liability);
-        setSelectValue(selRev, state.review);
-
-        var result = calcResult(state);
-        renderMobileResult(result);
-        showDone();
+      bindNav('phcBack1', function(){ showStep(0); });
+      bindNav('phcNext1', function(){
+        if(!requireSingle(selected.property, 'Please choose your property situation.')) return;
+        showStep(2);
       });
 
-      // Start state
-      showQ(0);
+      bindNav('phcBack2', function(){ showStep(1); });
+      bindNav('phcNext2', function(){
+        if(!requireSingle(selected.deductible, 'Please choose an out-of-pocket comfort level.')) return;
+        showStep(3);
+      });
 
-      // If not mobile, keep the mobile flow hidden but still allow buttons to be built
-      // (no-op)
-      if(!isMobile()){
-        // nothing
+      bindNav('phcBack3', function(){ showStep(2); });
+      bindNav('phcNext3', function(){
+        if(!requireSingle(selected.liability, 'Please choose how protected you feel for liability.')) return;
+        showStep(4);
+      });
+
+      bindNav('phcBack4', function(){ showStep(3); });
+      bindNav('phcNext4', function(){
+        if(!requireSingle(selected.review, 'Please choose when your last full review was.')) return;
+        showStep(5);
+      });
+
+      bindNav('phcBack5', function(){ showStep(4); });
+      bindNav('phcFinish', function(){
+        // Ensure all desktop inputs are synced
+        syncChangesToDesktop();
+        syncRisksToDesktop();
+        syncSinglesToDesktop();
+
+        var result = computePHCResult();
+        renderDesktopResult(result);
+        renderMobileResult(result);
+
+        // Show done screen
+        for(var i=0;i<=5;i++){
+          var q = el('phcQ'+i);
+          if(q) q.style.display = 'none';
+        }
+        var done = el('phcQDone');
+        if(done) done.style.display = 'block';
+
+        // Ensure PHC panel is open so the desktop result is visible too
+        var phcCollapse = el('phcCollapse');
+        if(phcCollapse) phcCollapse.classList.remove('collapsed');
+
+        // Nudge: reveal the hero CTA (if not already)
+        try{ var openBtn = el('openFunnel'); if(openBtn) openBtn.classList.add('visible'); }catch(_){ }
+      });
+
+      // Desktop "Show my result" button + live result updates
+      function refreshDesktopResultIfReady(force){
+        // Only compute when PHC panel is open OR force is true
+        var phcCollapse = el('phcCollapse');
+        var isOpen = phcCollapse && !phcCollapse.classList.contains('collapsed');
+        if(!force && !isOpen) return;
+
+        // If required selects are empty, don't show a misleading score
+        var missing = [];
+        if(!selected.property) missing.push('property');
+        if(!selected.deductible) missing.push('deductible');
+        if(!selected.liability) missing.push('liability');
+        if(!selected.review) missing.push('review');
+
+        // If user hasn't opened PHC on desktop, keep hidden
+        if(!force && missing.length) return;
+
+        var result = computePHCResult();
+        renderDesktopResult(result);
       }
+
+      var phcRun = el('phcRun');
+      if(phcRun){
+        phcRun.addEventListener('click', function(){
+          // Force a result even if a couple selects are missing
+          // (still encourages them to complete PHC, but shows where they stand)
+          var result = computePHCResult();
+          renderDesktopResult(result);
+        });
+      }
+
+      // Desktop: update the Green/Yellow/Red diagnostic as answers change
+      // so users don't get stuck hunting for a result.
+      function wireDesktopChangeListeners(){
+        // Chips
+        qsa('#phcChanges input[type="checkbox"], #phcRisks input[type="checkbox"]').forEach(function(inp){
+          inp.addEventListener('change', function(){
+            // keep hidden inputs in sync too
+            syncChangesToDesktop();
+            syncRisksToDesktop();
+            refreshDesktopResultIfReady(false);
+          });
+        });
+        // Selects
+        [selProperty, selDed, selLia, selReview].forEach(function(s){
+          if(!s) return;
+          s.addEventListener('change', function(){
+            // mirror into selected state so mobile/desktop stay consistent
+            selected.property = safeText(selProperty && selProperty.value);
+            selected.deductible = safeText(selDed && selDed.value);
+            selected.liability = safeText(selLia && selLia.value);
+            selected.review = safeText(selReview && selReview.value);
+            refreshDesktopResultIfReady(false);
+          });
+        });
+
+        // When PHC is expanded (desktop), immediately compute if already complete
+        var toggle = el('phcToggle');
+        if(toggle){
+          toggle.addEventListener('click', function(){
+            setTimeout(function(){ refreshDesktopResultIfReady(false); }, 60);
+          });
+        }
+      }
+
+      wireDesktopChangeListeners();
+
+      // When the modal opens on mobile, start at step 0
+      // (Only affects mobile; desktop keeps the full grid)
+      var modal = el('modal');
+      if(modal){
+        var observer = new MutationObserver(function(){
+          if(modal.style.display === 'flex' && isMobile()){
+            showStep(0);
+          }
+        });
+        observer.observe(modal, { attributes:true, attributeFilter:['style'] });
+      }
+
+      // Initialize view
+      showStep(0);
     });
   })();
 </script>
