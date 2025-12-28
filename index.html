@@ -34,32 +34,40 @@
 
     // === ClickFunnels (recommended for "Check My Options") ===
     window.CLICKFUNNEL_URL = "";
-    
   // ===== Conditional reveal: Check My Options appears after interaction =====
-  (function(){
+  // NOTE: must run AFTER DOM exists (mobile was not wiring the button)
+  window.addEventListener('DOMContentLoaded', function(){
     var cta = document.getElementById('openFunnel');
+    var hcBtn = document.getElementById('openHealthCheck');
     if(!cta) return;
 
     function revealCTA(){
       cta.classList.add('visible');
       cta.removeAttribute('aria-hidden');
+      cta.style.opacity = '1';
+      cta.style.pointerEvents = 'auto';
+      cta.style.transform = 'translateY(0)';
       window.removeEventListener('scroll', onScroll);
     }
 
     function onScroll(){
-      if(window.scrollY > window.innerHeight * 0.25){
+      if(window.scrollY > window.innerHeight * 0.15){
         revealCTA();
       }
     }
 
-    window.addEventListener('scroll', onScroll, { passive:true });
-
-    // Also reveal if Policy Health Check is started
-    var phcBtn = document.getElementById('startPHC');
-    if(phcBtn){
-      phcBtn.addEventListener('click', revealCTA);
+    // On mobile, show it immediately (no dead CTA)
+    if(window.matchMedia && window.matchMedia('(max-width: 900px)').matches){
+      revealCTA();
+    } else {
+      window.addEventListener('scroll', onScroll, { passive:true });
     }
-  })();
+
+    if(hcBtn){
+      hcBtn.addEventListener('click', revealCTA);
+      hcBtn.addEventListener('touchend', function(){ revealCTA(); }, { passive:true });
+    }
+  });
 
 </script>
 
@@ -713,7 +721,7 @@
     @keyframes chatPulse{
       0%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,.15); }
       50%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 12px rgba(2,6,23,0); }
-      100%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,0); }
+      100%{ box-shadow:0 22c55e; }
     }
 
     /* ================== CHAT WIDGET (ChannelTalk-like) ================== */
@@ -984,7 +992,15 @@
     /* Funnel modal */
     .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:20000;}
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:21000;}
-    .card{width:min(760px,96vw);background:#ffffff;color:#0b1323;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden;border:1px solid #e5e7eb;}
+    .card{width:min(760px,96vw);background:#ffffff;color:#0b1323;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden;border:1px solid #e5e7eb;max-height:86vh;}
+
+/* Desktop: keep modal usable by scrolling inside the card (not the page) */
+@media (min-width: 601px){
+  .card-head{position:sticky;top:0;z-index:3;}
+  .card-body{max-height:calc(86vh - 64px);overflow:auto;-webkit-overflow-scrolling:touch;}
+  .row.row-desktop{position:sticky;bottom:0;left:0;right:0;background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 32%);padding-top:12px;margin-top:12px;}
+}
+
 
     /* Mobile-friendly CTA modal (bottom-sheet style) */
     @media (max-width: 600px){
@@ -1249,7 +1265,7 @@
 
               <div class="field">
                 <label for="phcProperty">2) Property situation *</label>
-                <select id="phcProperty" name="phcProperty" required>
+                <select id="phcProperty" name="phcProperty" data-phc-required="true">
                   <option value="">Select…</option>
                   <option>Own a home</option>
                   <option>Rent</option>
@@ -1261,7 +1277,7 @@
 
               <div class="field">
                 <label for="phcDeductible">3) Comfortable out-of-pocket if a claim happened tomorrow? *</label>
-                <select id="phcDeductible" name="phcDeductible" required>
+                <select id="phcDeductible" name="phcDeductible" data-phc-required="true">
                   <option value="">Select…</option>
                   <option>$500–$1,000</option>
                   <option>$1,000–$2,500</option>
@@ -1272,7 +1288,7 @@
 
               <div class="field">
                 <label for="phcLiability">4) If you were sued after an accident/injury, how protected do you feel? *</label>
-                <select id="phcLiability" name="phcLiability" required>
+                <select id="phcLiability" name="phcLiability" data-phc-required="true">
                   <option value="">Select…</option>
                   <option>Very protected (high liability / umbrella)</option>
                   <option>Somewhat protected</option>
@@ -1282,7 +1298,7 @@
 
               <div class="field">
                 <label for="phcReview">5) Last full policy review with a licensed agent? *</label>
-                <select id="phcReview" name="phcReview" required>
+                <select id="phcReview" name="phcReview" data-phc-required="true">
                   <option value="">Select…</option>
                   <option>Within 12 months</option>
                   <option>1–3 years ago</option>
@@ -1442,7 +1458,7 @@
               </div>
               <div class="field" style="grid-column:1 / -1;">
                 <label style="display:flex;gap:10px;align-items:flex-start;font-weight:800;color:#0f172a;">
-                  <input id="consent" type="checkbox" required style="margin-top:2px;" />
+                  <input id="consent" name="consent" type="checkbox" required style="margin-top:2px;" />
                   I agree to be contacted by phone, SMS, and email about insurance options. Msg &amp; data rates may apply.
                 </label>
               </div>
@@ -1650,7 +1666,7 @@
         <span data-i18n="tab_messages">Messages</span>
       </button>
       <button class="pp-tab" id="ppTabSettings" type="button" role="tab" aria-selected="false" aria-controls="ppScreenSettings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7 1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7 1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7 1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 a2 2 0 0 1-3.8 0"/></svg>
         <span data-i18n="tab_settings">Settings</span>
       </button>
     </div>
@@ -1660,1580 +1676,296 @@
 </div>
 
 <script>
-  // ===== Lead funnel + Google Apps Script backend =====
-
-  // ===== PHC (Option A) collapse behavior =====
-  var phcCollapse = document.getElementById('phcCollapse');
-  var phcToggle = document.getElementById('phcToggle');
-  function phcSetCollapsed_(collapsed){
-    if(!phcCollapse || !phcToggle) return;
-    phcCollapse.classList.toggle('collapsed', !!collapsed);
-    phcToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    phcToggle.textContent = collapsed ? 'Show' : 'Hide';
-    phcToggle.classList.toggle('alt', !collapsed);
-  }
-  function phcInitCollapse_(){
-    // Desktop: collapsed by default. Mobile uses the tap flow.
-    try{
-      if(window.matchMedia && window.matchMedia('(min-width: 601px)').matches){
-        phcSetCollapsed_(true);
-      }else{
-        phcSetCollapsed_(false);
-      }
-    }catch(e){ phcSetCollapsed_(true); }
-  }
-  if(phcToggle){
-    phcToggle.addEventListener('click', function(){
-      var isCollapsed = phcCollapse && phcCollapse.classList.contains('collapsed');
-      phcSetCollapsed_(!isCollapsed);
-      if(isCollapsed){
-        try{ phcCollapse.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
-      }
-    });
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', phcInitCollapse_);
-  else phcInitCollapse_();
-
-  var GAS = window.GAS_WEBAPP_URL || "";
-  var CLICKFUNNEL_URL = (window.CLICKFUNNEL_URL || '').trim();
-
-  var openFunnelBtn = document.getElementById('openFunnel');
-  var openHealthCheckBtn = document.getElementById('openHealthCheck');
-
-  // ===== Optional: gently de-emphasize "Check My Options" until the Health Check has been seen once =====
-  var PHC_SEEN_KEY = 'sc_phc_seen_v1';
-  function hasSeenPHC_(){ try{ return localStorage.getItem(PHC_SEEN_KEY) === '1'; }catch(e){ return false; } }
-  function markSeenPHC_(){ try{ localStorage.setItem(PHC_SEEN_KEY,'1'); }catch(e){} }
-  function applyPHCGate_(){
-    try{
-      if(!document.body) return;
-      if(hasSeenPHC_()) document.body.classList.remove('phc-gate');
-      else document.body.classList.add('phc-gate');
-    }catch(e){}
-  }
-  function setupPHCGate_(){
-    applyPHCGate_();
-
-    // Clicking Health Check counts as "seen"
-    try{
-      if(openHealthCheckBtn){
-        openHealthCheckBtn.addEventListener('click', function(){
-          markSeenPHC_();
-          applyPHCGate_();
-        }, { once:false });
-      }
-    }catch(e){}
-
-    // If the hook or button becomes visible, count as "seen" (no click required)
-    try{
-      var hook = document.getElementById('phcHook');
-      var target = hook || openHealthCheckBtn;
-      if(target && 'IntersectionObserver' in window){
-        var io = new IntersectionObserver(function(entries){
-          for(var i=0;i<entries.length;i++){
-            if(entries[i].isIntersecting){
-              markSeenPHC_();
-              applyPHCGate_();
-              try{ io.disconnect(); }catch(err){}
-              break;
-            }
-          }
-        }, { root:null, threshold:0.35 });
-        io.observe(target);
-      }
-    }catch(e){}
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupPHCGate_);
-  else setupPHCGate_();
-
-  var modalOverlay = document.getElementById('modalOverlay');
-  var modal = document.getElementById('modal');
-  var closeModalBtn = document.getElementById('closeModal');
-  var cancelBtn = document.getElementById('cancelBtn');
-  var leadForm = document.getElementById('leadForm');
-  var formStatus = document.getElementById('formStatus');
-
-  function showModal(){ if(modalOverlay) modalOverlay.style.display='block'; if(modal) modal.style.display='flex'; try{ resetStepper_(); }catch(e){} }
-  function hideModal(){ if(modalOverlay) modalOverlay.style.display='none'; if(modal) modal.style.display='none'; try{ resetStepper_(); }catch(e){} }
-
-  if(closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
-  if(cancelBtn) cancelBtn.addEventListener('click', hideModal);
-  if(modalOverlay) modalOverlay.addEventListener('click', hideModal);
-
-  // Policy Health Check button opens the same stepper flow directly on Step 3 (Policy Health Check)
-  if(openHealthCheckBtn) openHealthCheckBtn.addEventListener('click', function(){
-    showModal();
-    try{
-      if(isMobile_()){
-        setStep_(2);
-      }else{
-        // Desktop: expand PHC since they explicitly asked for it
-        phcSetCollapsed_(false);
-        setTimeout(function(){
-          try{ if(phcCollapse) phcCollapse.scrollIntoView({ behavior:'smooth', block:'start' }); }catch(e){}
-        }, 50);
-      }
-    }catch(e){}
-  });
-
-  // Open funnel: ClickFunnels if configured, otherwise in-page modal
-  if(openFunnelBtn){
-    openFunnelBtn.addEventListener('click', function(){
-      if(CLICKFUNNEL_URL){
-        window.location.href = CLICKFUNNEL_URL;
-      }else{
-        showModal();
-      }
-    });
-  }
-
-  // ===== Step-based mobile funnel =====
-  var stepsWrap = document.getElementById('steps');
-  var stepKicker = document.getElementById('stepperKicker');
-  var stepBarFill = document.getElementById('stepperBarFill');
-  var stepDots = document.querySelectorAll('.dotx');
-  var stepBack = document.getElementById('stepBack');
-  var stepNext = document.getElementById('stepNext');
-  var stepSubmit = document.getElementById('stepSubmit');
-
-  var __stepIndex = 0;
-  var __stepTotal = 4;
-
-  function isMobile_(){ return window.matchMedia && window.matchMedia('(max-width: 600px)').matches; }
-
-  function setStep_(idx){
-    __stepIndex = Math.max(0, Math.min(__stepTotal-1, idx|0));
-
-    if(stepsWrap){
-      var stepEls = stepsWrap.querySelectorAll('.step');
-      for(var i=0;i<stepEls.length;i++) stepEls[i].classList.toggle('active', i === __stepIndex);
-    }
-
-    if(stepDots && stepDots.length){
-      for(var d=0;d<stepDots.length;d++) stepDots[d].classList.toggle('active', d === __stepIndex);
-    }
-
-    if(stepKicker) stepKicker.textContent = 'Step ' + (__stepIndex+1) + ' of ' + __stepTotal;
-    if(stepBarFill) stepBarFill.style.width = (((__stepIndex+1) / __stepTotal) * 100) + '%';
-
-    if(stepBack) stepBack.style.display = (__stepIndex === 0) ? 'none' : 'inline-flex';
-    if(stepNext) stepNext.style.display = (__stepIndex === __stepTotal-1) ? 'none' : 'inline-flex';
-    if(stepSubmit) stepSubmit.style.display = (__stepIndex === __stepTotal-1) ? 'inline-flex' : 'none';
-
-    try{
-      if(isMobile_() && stepsWrap){
-        var cur = stepsWrap.querySelector('.step.active');
-        if(cur){
-          var focusEl = cur.querySelector('input,select,textarea');
-          if(focusEl) setTimeout(function(){ focusEl.focus(); }, 50);
-        }
-      }
-    }catch(e){}
-  }
-
-  function validateStep_(idx){
-    if(!stepsWrap) return true;
-    var stepEls = stepsWrap.querySelectorAll('.step');
-    var cur = stepEls && stepEls[idx];
-    if(!cur) return true;
-
-    var fields = cur.querySelectorAll('input,select,textarea');
-    for(var i=0;i<fields.length;i++){
-      var el = fields[i];
-      if(el && typeof el.reportValidity === 'function'){
-        if(!el.checkValidity()){
-          el.reportValidity();
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  function resetStepper_(){ if(isMobile_()) setStep_(0); }
-
-  if(stepBack) stepBack.addEventListener('click', function(){ setStep_(__stepIndex - 1); });
-  if(stepNext) stepNext.addEventListener('click', function(){ if(validateStep_(__stepIndex)) setStep_(__stepIndex + 1); });
-
-  window.addEventListener('resize', function(){ try{ if(isMobile_()) resetStepper_(); }catch(e){} });
-
-  // ===== Reliable Apps Script submit from GitHub Pages =====
-  // Your Apps Script doPost() reads JSON from e.postData.contents,
-  // so we send a JSON body via fetch() with mode:'no-cors' to avoid CORS/preflight issues.
-  function postToGAS(url, payload){
-    return new Promise(function(resolve, reject){
-      try{
-        if(!url || url.indexOf('http') !== 0){ reject(new Error('Invalid GAS URL')); return; }
-
-        fetch(url, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload || {})
-        }).then(function(){
-          // no-cors responses are opaque; treat as success once request is sent.
-          resolve({ ok:true, opaque:true });
-        }).catch(function(err){
-          reject(err);
-        });
-      }catch(e){
-        reject(e);
-      }
-    });
-  }
-
-  // ===== PolicyPro DOM refs =====
-  var chatHistory = [];
-  var chatBtn = document.getElementById('chatBtn');
-  var chatWindow = document.getElementById('chatWindow');
-  var closeChat = document.getElementById('closeChat');
-
-  var ppTabHome = document.getElementById('ppTabHome');
-  var ppTabMessages = document.getElementById('ppTabMessages');
-  var ppTabSettings = document.getElementById('ppTabSettings');
-
-  var ppScreenHome = document.getElementById('ppScreenHome');
-  var ppScreenMessages = document.getElementById('ppScreenMessages');
-  var ppScreenSettings = document.getElementById('ppScreenSettings');
-
-  var ppStartChat = document.getElementById('ppStartChat');
-  var ppLangSelect = document.getElementById('ppLangSelect');
-  var ppOpenDisclaimerLink = document.getElementById('ppOpenDisclaimerLink');
-
-  var chatMessages = document.getElementById('chatMessages');
-  var chatForm = document.getElementById('chatForm');
-  var chatInput = document.getElementById('chatInput');
-  var chatSend = document.getElementById('chatSend');
-
-  function setTab_(tab){
-    tab = String(tab || 'home').toLowerCase();
-    if(tab !== 'home' && tab !== 'messages' && tab !== 'settings') tab = 'home';
-
-    if(ppScreenHome) ppScreenHome.classList.toggle('active', tab === 'home');
-    if(ppScreenMessages) ppScreenMessages.classList.toggle('active', tab === 'messages');
-    if(ppScreenSettings) ppScreenSettings.classList.toggle('active', tab === 'settings');
-
-    function setTabBtn(btn, active){
-      if(!btn) return;
-      btn.classList.toggle('active', !!active);
-      btn.setAttribute('aria-selected', active ? 'true' : 'false');
-    }
-    setTabBtn(ppTabHome, tab === 'home');
-    setTabBtn(ppTabMessages, tab === 'messages');
-    setTabBtn(ppTabSettings, tab === 'settings');
-
-    if(tab === 'messages'){
-      try{ renderSuggestedQuestions_(); }catch(e){}
-      try{ if(chatInput) chatInput.focus(); }catch(e){}
-    }
-  }
-
-  // Persist chat
-  var PP_CHAT_KEY = 'pp_chat_state_v1';
-  function loadChatState_(){ try{ var raw = localStorage.getItem(PP_CHAT_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
-  function saveChatState_(){
-    try{
-      var state = { history: chatHistory.slice(-60), rendered: [] };
-      if(chatMessages){
-        var msgEls = chatMessages.querySelectorAll('.msg');
-        for(var i=0;i<msgEls.length;i++){
-          var isUser = msgEls[i].classList.contains('user');
-          var bub = msgEls[i].querySelector('.bubble');
-          state.rendered.push({ role: isUser ? 'user' : 'bot', html: bub ? bub.innerHTML : '' });
-        }
-      }
-      localStorage.setItem(PP_CHAT_KEY, JSON.stringify(state));
-    }catch(e){}
-  }
-
-  function restoreChatUI_(){
-    var state = loadChatState_();
-    if(!state || !chatMessages) return;
-
-    try{
-      chatMessages.innerHTML = '';
-      if(Array.isArray(state.rendered) && state.rendered.length){
-        state.rendered.forEach(function(m){
-          var wrap = document.createElement('div');
-          wrap.className = 'msg ' + (m.role === 'user' ? 'user' : 'bot');
-          var b = document.createElement('div');
-          b.className = 'bubble ' + (m.role === 'user' ? 'user' : 'bot');
-          b.innerHTML = m.html || '';
-          wrap.appendChild(b);
-          chatMessages.appendChild(wrap);
-        });
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-      if(Array.isArray(state.history)) chatHistory = state.history;
-    }catch(e){}
-  }
-  restoreChatUI_();
-
-  // =========================
-  // i18n
-  // =========================
-  var PP_LANG_KEY = 'pp_lang_v1';
-  function getLang_(){ try{ return (localStorage.getItem(PP_LANG_KEY) || 'en'); }catch(e){ return 'en'; } }
-  function setLang_(v){ try{ localStorage.setItem(PP_LANG_KEY, String(v||'en')); }catch(e){} }
-
-  function i18nDict_(){
-  return {
-    en:{
-      doc_title:'Colorado Relief Options — Home & Auto Insurance',
-      meta_desc:'Colorado residents: explore flexible home & auto insurance options designed to protect your budget and peace of mind.',
-      hero_h1:'Get flexible home & auto options that fit your budget and protect what matters.',
-      hero_header_home:'Home Insurance',
-      hero_header_auto:'Car Insurance',
-      hero_header_business:'Business Insurance',
-      cta_check:'Check My Options',
-      disclaimer_btn:'Disclaimer',
-      chat_peek_label:'Need help?',
-      chat_peek_name:'Chat with PolicyPro™',
-      pp_home_title:'Hi — how can we help?',
-      pp_home_sub:'Ask a Colorado home or auto insurance question. General info only — a licensed agent reviews before any quote, application, or binding.',
-      pp_start_chat:'Start a chat',
-      tab_home:'Home',
-      tab_messages:'Messages',
-      tab_settings:'Settings',
-      settings_title:'Settings',
-      settings_contact:'Contact',
-      settings_language:'Language',
-      settings_disclaimer:'Disclaimer',
-      settings_available:'Available',
-      settings_open_disclaimer:'Open legal disclaimer',
-      chat_placeholder:'Ask about hail deductibles, wildfire coverage, bundling…',
-      chat_send:'Send',
-      suggest_title:'Popular questions',
-      suggest_home:'HOME INSURANCE',
-      suggest_auto:'CAR INSURANCE',
-      s_home_1:'Does home insurance cover hail and roof damage?',
-      s_home_2:'What is a wind/hail deductible (and why is it different)?',
-      s_home_3:'What should I check for wildfire/smoke coverage?',
-      s_auto_1:'Is hail damage covered on auto insurance?',
-      s_auto_2:'What does comprehensive vs collision cover?',
-      s_auto_3:'How can I lower my auto premium without losing coverage?',
-
-      /* PHC result-based CTA */
-      phc_based_on:'Based on what you shared…',
-      phc_cta_green:'Confirm My Coverage',
-      phc_cta_yellow:'Fix Potential Gaps',
-      phc_cta_red:'Review My Policy Now',
-
-      /* Red-result interstitial */
-      phc_loyalty:"Loyalty isn't the same as protection.",
-      phc_lead_cta:'Check My Options'
-    },
-    es:{
-      doc_title:'Opciones en Colorado — Seguro de hogar y auto',
-      meta_desc:'Residentes de Colorado: explore opciones flexibles de seguro de hogar y auto para proteger su presupuesto y tranquilidad.',
-      hero_h1:'Obtén opciones flexibles de hogar y auto que se ajusten a tu presupuesto y protejan lo importante.',
-      hero_header_home:'Seguro de hogar',
-      hero_header_auto:'Seguro de auto',
-      hero_header_business:'Seguro para negocios',
-      cta_check:'Ver mis opciones',
-      disclaimer_btn:'Aviso legal',
-      chat_peek_label:'¿Necesitas ayuda?',
-      chat_peek_name:'Chatea con PolicyPro™',
-      pp_home_title:'Hola — ¿en qué podemos ayudar?',
-      pp_home_sub:'Haz una pregunta sobre seguro de hogar o auto en Colorado. Solo info general — un agente con licencia revisa antes de cualquier cotización o contratación.',
-      pp_start_chat:'Iniciar chat',
-      tab_home:'Inicio',
-      tab_messages:'Mensajes',
-      tab_settings:'Ajustes',
-      settings_title:'Ajustes',
-      settings_contact:'Contacto',
-      settings_language:'Idioma',
-      settings_disclaimer:'Aviso',
-      settings_available:'Disponible',
-      settings_open_disclaimer:'Abrir aviso legal',
-      chat_placeholder:'Pregunta sobre deducibles por granizo, cobertura de incendios, paquetes…',
-      chat_send:'Enviar',
-      suggest_title:'Preguntas populares',
-      suggest_home:'SEGURO DE HOGAR',
-      suggest_auto:'SEGURO DE AUTO',
-      s_home_1:'¿El seguro de hogar cubre granizo y daño del techo?',
-      s_home_2:'¿Qué es un deducible por viento/granizo?',
-      s_home_3:'¿Qué debo revisar para cobertura de incendio/humo?',
-      s_auto_1:'¿El granizo está cubierto en el seguro de auto?',
-      s_auto_2:'¿Qué cubre comprensivo vs colisión?',
-      s_auto_3:'¿Cómo bajo mi prima sin perder cobertura?',
-
-      /* PHC result-based CTA */
-      phc_based_on:'Según lo que compartiste…',
-      phc_cta_green:'Confirmar mi cobertura',
-      phc_cta_yellow:'Corregir posibles vacíos',
-      phc_cta_red:'Revisar mi póliza ahora',
-
-      /* Intersticial (resultado rojo) */
-      phc_loyalty:'La lealtad no es lo mismo que la protección.',
-      phc_lead_cta:'Ver mis opciones'
-    },
-    ja:{
-      doc_title:'コロラド保険オプション — 住宅・自動車',
-      meta_desc:'コロラド州向け。住宅保険・自動車保険の柔軟な選択肢を確認できます。',
-      hero_h1:'予算に合う住宅・自動車の柔軟な選択肢。大切なものを守る。',
-      hero_header_home:'住宅保険',
-      hero_header_auto:'自動車保険',
-      hero_header_business:'事業保険',
-      cta_check:'オプションを見る',
-      disclaimer_btn:'免責事項',
-      chat_peek_label:'お困りですか？',
-      chat_peek_name:'PolicyPro™ に質問',
-      pp_home_title:'こんにちは — どうしましたか？',
-      pp_home_sub:'コロラドの住宅/自動車保険について質問できます（一般情報）。見積や加入前に有資格者が確認します。',
-      pp_start_chat:'チャットを開始',
-      tab_home:'ホーム',
-      tab_messages:'メッセージ',
-      tab_settings:'設定',
-      settings_title:'設定',
-      settings_contact:'連絡先',
-      settings_language:'言語',
-      settings_disclaimer:'免責事項',
-      settings_available:'利用可能',
-      settings_open_disclaimer:'免責事項を開く',
-      chat_placeholder:'雹の免責、山火事補償、バンドル…',
-      chat_send:'送信',
-      suggest_title:'よくある質問',
-      suggest_home:'住宅保険',
-      suggest_auto:'自動車保険',
-      s_home_1:'雹や屋根の損害は補償される？',
-      s_home_2:'風/雹の免責（％）って何？',
-      s_home_3:'山火事/煙の補償で確認すべき点は？',
-      s_auto_1:'雹被害は自動車保険で補償される？',
-      s_auto_2:'包括（Comprehensive）と衝突（Collision）の違いは？',
-      s_auto_3:'補償を落とさず保険料を下げる方法は？'
-    },
-    zh:{
-      doc_title:'科罗拉多方案 — 房屋与汽车保险',
-      meta_desc:'科罗拉多居民：了解更灵活的房屋与汽车保险方案，保护预算与安心。',
-      hero_h1:'获取适合预算的房屋与汽车保险方案，守护重要资产。',
-      hero_header_home:'房屋保险',
-      hero_header_auto:'汽车保险',
-      hero_header_business:'商业保险',
-      cta_check:'查看我的选项',
-      disclaimer_btn:'免责声明',
-      chat_peek_label:'需要帮助？',
-      chat_peek_name:'咨询 PolicyPro™',
-      pp_home_title:'你好 — 我们能帮什么？',
-      pp_home_sub:'可咨询科罗拉多房屋/汽车保险问题（仅一般信息）。报价/投保前由持牌代理复核。',
-      pp_start_chat:'开始聊天',
-      tab_home:'主页',
-      tab_messages:'消息',
-      tab_settings:'设置',
-      settings_title:'设置',
-      settings_contact:'联系',
-      settings_language:'语言',
-      settings_disclaimer:'免责声明',
-      settings_available:'可用',
-      settings_open_disclaimer:'打开免责声明',
-      chat_placeholder:'询问冰雹免赔、野火保障、打包优惠…',
-      chat_send:'发送',
-      suggest_title:'常见问题',
-      suggest_home:'房屋保险',
-      suggest_auto:'汽车保险',
-      s_home_1:'房屋保险是否涵盖冰雹与屋顶损失？',
-      s_home_2:'什么是风/冰雹免赔额（%）？',
-      s_home_3:'野火/烟雾保障应重点查看什么？',
-      s_auto_1:'汽车保险是否涵盖冰雹损失？',
-      s_auto_2:'综合险 vs 碰撞险分别保什么？',
-      s_auto_3:'不降低保障的情况下如何降保费？'
-    },
-    fr:{
-      doc_title:'Options Colorado — Assurance habitation & auto',
-      meta_desc:'Résidents du Colorado : explorez des options flexibles d’assurance habitation et auto pour protéger votre budget et votre tranquillité.',
-      hero_h1:"Obtenez des options habitation & auto flexibles, adaptées à votre budget et à ce qui compte.",
-      hero_header_home:'Assurance habitation',
-      hero_header_auto:'Assurance auto',
-      hero_header_business:"Assurance entreprise",
-      cta_check:'Voir mes options',
-      disclaimer_btn:'Avertissement',
-      chat_peek_label:'Besoin d’aide ?',
-      chat_peek_name:'Discuter avec PolicyPro™',
-      pp_home_title:'Bonjour — comment pouvons-nous aider ?',
-      pp_home_sub:"Posez une question sur l’assurance habitation/auto au Colorado (info générale). Un agent agréé vérifie avant toute offre ou souscription.",
-      pp_start_chat:'Démarrer le chat',
-      tab_home:'Accueil',
-      tab_messages:'Messages',
-      tab_settings:'Réglages',
-      settings_title:'Réglages',
-      settings_contact:'Contact',
-      settings_language:'Langue',
-      settings_disclaimer:'Avertissement',
-      settings_available:'Disponible',
-      settings_open_disclaimer:"Ouvrir l’avertissement légal",
-      chat_placeholder:'Grêle, incendies, franchises, regroupement…',
-      chat_send:'Envoyer',
-      suggest_title:'Questions fréquentes',
-      suggest_home:'ASSURANCE HABITATION',
-      suggest_auto:'ASSURANCE AUTO',
-      s_home_1:'La grêle et le toit sont-ils couverts ?',
-      s_home_2:'Qu’est-ce qu’une franchise vent/grêle (en %)?',
-      s_home_3:'Que vérifier pour la couverture feu/fumée ?',
-      s_auto_1:'La grêle est-elle couverte en assurance auto ?',
-      s_auto_2:'Que couvre “comprehensive” vs “collision” ?',
-      s_auto_3:'Comment baisser ma prime sans perdre de garanties ?'
-    },
-    ru:{
-      doc_title:'Варианты в Колорадо — Дом и авто',
-      meta_desc:'Жители Колорадо: гибкие варианты страхования дома и авто для защиты бюджета и спокойствия.',
-      hero_h1:'Гибкие варианты страхования дома и авто под ваш бюджет — защитите важное.',
-      hero_header_home:'Страхование дома',
-      hero_header_auto:'Страхование авто',
-      hero_header_business:'Страхование бизнеса',
-      cta_check:'Проверить варианты',
-      disclaimer_btn:'Дисклеймер',
-      chat_peek_label:'Нужна помощь?',
-      chat_peek_name:'Чат с PolicyPro™',
-      pp_home_title:'Здравствуйте — чем помочь?',
-      pp_home_sub:'Вопросы по страхованию дома/авто в Колорадо (общая информация). Перед любыми действиями проверит лицензированный агент.',
-      pp_start_chat:'Начать чат',
-      tab_home:'Домой',
-      tab_messages:'Сообщения',
-      tab_settings:'Настройки',
-      settings_title:'Настройки',
-      settings_contact:'Контакт',
-      settings_language:'Язык',
-      settings_disclaimer:'Дисклеймер',
-      settings_available:'Доступно',
-      settings_open_disclaimer:'Открыть дисклеймер',
-      chat_placeholder:'Град, пожары, франшизы, пакет…',
-      chat_send:'Отправить',
-      suggest_title:'Популярные вопросы',
-      suggest_home:'СТРАХОВАНИЕ ДОМА',
-      suggest_auto:'СТРАХОВАНИЕ АВTO',
-      s_home_1:'Покрывает ли страховка дома град и крышу?',
-      s_home_2:'Что такое франшиза по ветру/граду (в %)?',
-      s_home_3:'Что проверить по покрытию пожара/дыма?',
-      s_auto_1:'Покрывается ли град автостраховкой?',
-      s_auto_2:'Чем отличается comprehensive от collision?',
-      s_auto_3:'Как снизить платеж без потери покрытия?'
-    }
-  };
-}
-
-  function getStrings_(lang){ var dict = i18nDict_(); return dict[lang] || dict.en; }
-  function heroKeys_(){ return ['hero_header_home','hero_header_auto','hero_header_business']; }
-
-  var __heroIndex = 0;
-  function syncHeroHeader_(){
-    var el = document.getElementById('heroHeader');
-    if(!el) return;
-    var reduce = false;
-    try{ reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ reduce = false; }
-    var idx = reduce ? 0 : (__heroIndex % 3);
-
-    var s = getStrings_(getLang_());
-    var key = heroKeys_()[idx];
-    el.textContent = s[key] || (idx === 0 ? 'Home Insurance' : (idx === 1 ? 'Car Insurance' : 'Business Insurance'));
-  }
-
-  function translatePage_(lang){
-    var s = getStrings_(lang);
-
-    try{ document.documentElement.lang = lang || 'en'; }catch(e){}
-    try{ document.title = s.doc_title; }catch(e){}
-    try{ var m = document.querySelector('meta[name="description"]'); if(m) m.setAttribute('content', s.meta_desc); }catch(e){}
-
-    try{
-      var nodes = document.querySelectorAll('[data-i18n]');
-      for(var i=0;i<nodes.length;i++){
-        var key = nodes[i].getAttribute('data-i18n');
-        if(key && s[key]) nodes[i].innerHTML = String(s[key]);
-      }
-    }catch(e){}
-
-    try{
-      var ph = document.querySelectorAll('[data-i18n-placeholder]');
-      for(var j=0;j<ph.length;j++){
-        var k = ph[j].getAttribute('data-i18n-placeholder');
-        if(k && s[k]) ph[j].setAttribute('placeholder', String(s[k]));
-      }
-    }catch(e){}
-
-    try{ syncHeroHeader_(); }catch(e){}
-  }
-
-  function applyLanguage_(lang){
-    lang = (lang || 'en');
-    setLang_(lang);
-    if(ppLangSelect) ppLangSelect.value = lang;
-    translatePage_(lang);
-  }
-
+  // =====================
+  // CHECK MY OPTIONS (CTA)
+  // Ensures the CTA opens on mobile.
+  // - If CLICKFUNNEL_URL is set -> open it in a new tab
+  // - Else -> open the built-in modal form
+  // =====================
   (function(){
-    var lang = getLang_();
-    if(ppLangSelect){
-      ppLangSelect.value = lang;
-      ppLangSelect.addEventListener('change', function(){ applyLanguage_(ppLangSelect.value); });
-    }
-    applyLanguage_(lang);
-  })();
-
-  // =========================
-  // Hero rotation (every 3s)
-  // =========================
-  function heroEls_(){
-    return [
-      document.getElementById('heroImg0'),
-      document.getElementById('heroImg1'),
-      document.getElementById('heroImg2')
-    ];
-  }
-
-  function setActiveHero_(idx){
-    var els = heroEls_();
-    for(var i=0;i<els.length;i++) if(els[i]) els[i].classList.toggle('active', i === idx);
-  }
-
-  var HERO_SRCS = ['hero-house.png','hero-auto.png','hero-business.png'];
-  function setHeroImgs_(srcs){
-    var ids = ['heroImg0','heroImg1','heroImg2'];
-    for(var i=0;i<ids.length;i++){
-      var el = document.getElementById(ids[i]);
-      if(el) el.src = srcs[i] || '';
+    function onReady(fn){
+      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+      else fn();
     }
 
-    // Update widget header image to match first hero (home)
-    try{
-      var top = document.querySelector('.pp-top');
-      if(top && srcs[0]){
-        top.style.background =
-          "linear-gradient(180deg, rgba(2,6,23,0) 40%, rgba(2,6,23,.45) 100%), url('" + srcs[0] + "') center/cover no-repeat";
+    onReady(function(){
+      var openBtn = document.getElementById('openFunnel');
+      var modal = document.getElementById('modal');
+      var overlay = document.getElementById('modalOverlay');
+      var closeBtn = document.getElementById('closeModal');
+      var cancelBtn = document.getElementById('cancelBtn');
+
+      if(!openBtn) return;
+
+      function openModal(){
+        // Prefer ClickFunnels when configured
+        if(window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== ''){
+          window.open(window.CLICKFUNNEL_URL, '_blank', 'noopener');
+          return;
+        }
+        if(overlay) overlay.style.display = 'block';
+        if(modal) modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
       }
-    }catch(e){}
-  }
 
+      function closeModal(){
+        if(overlay) overlay.style.display = 'none';
+        if(modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+
+      // Mobile Safari sometimes delays click — listen to both
+      openBtn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+      openBtn.addEventListener('touchend', function(e){ e.preventDefault(); openModal(); }, { passive:false });
+
+      if(overlay) overlay.addEventListener('click', closeModal);
+      if(closeBtn) closeBtn.addEventListener('click', closeModal);
+      if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+      // Esc to close (desktop)
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape') closeModal();
+      });
+
+      // If a deep-link hash is present, open the modal
+      if(location.hash === '#options'){
+        openModal();
+      }
+
+      // Make sure CTA is never inert
+      openBtn.style.pointerEvents = 'auto';
+    });
+  })();
+</script>
+
+<script>
+  // =====================
+  // LEAD FORM SUBMIT (DESKTOP + MOBILE)
+  // Fixes desktop submit failing when PHC fields are hidden/collapsed.
+  // - PHC is optional unless the user opens it.
+  // - Sends lead to Google Apps Script (GAS_WEBAPP_URL)
+  // =====================
   (function(){
-    __heroIndex = 0;
-    setActiveHero_(0);
-    syncHeroHeader_();
-    setHeroImgs_(HERO_SRCS);
-
-    setInterval(function(){
-      var reduce = false;
-      try{ reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ reduce = false; }
-      if(reduce) return;
-
-      __heroIndex = (__heroIndex + 1) % 3;
-      setActiveHero_(__heroIndex);
-      syncHeroHeader_();
-    }, 3000);
-  })();
-
-  function esc_(s){
-    s = String(s == null ? '' : s);
-    return s.replace(/[&<>"']/g, function(c){
-      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c] || c;
-    });
-  }
-
-  function addMsg_(role, html){
-    if(!chatMessages) return;
-    var wrap = document.createElement('div');
-    wrap.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
-
-    var b = document.createElement('div');
-    b.className = 'bubble ' + (role === 'user' ? 'user' : 'bot');
-    b.innerHTML = html;
-
-    wrap.appendChild(b);
-    chatMessages.appendChild(wrap);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    saveChatState_();
-  }
-
-  function addTyping_(){
-    addMsg_('bot', '<span class="typing" aria-label="PolicyPro is typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>');
-  }
-
-  function replaceLastBot_(html){
-    if(!chatMessages) return;
-    var items = chatMessages.querySelectorAll('.msg.bot .bubble');
-    if(!items || !items.length) return;
-    items[items.length-1].innerHTML = html;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    saveChatState_();
-  }
-
-  function renderSuggestedQuestions_(){
-    if(!chatMessages) return;
-    if(chatMessages.childElementCount) return;
-    if(chatHistory && chatHistory.length) return;
-
-    var wrap = document.createElement('div');
-    wrap.className = 'pp-suggest-wrap';
-
-    var title = document.createElement('p');
-    title.className = 'pp-suggest-title';
-    title.textContent = getStrings_(getLang_()).suggest_title;
-
-    var s = getStrings_(getLang_());
-    var suggestionsHome = [s.s_home_1, s.s_home_2, s.s_home_3];
-    var suggestionsAuto = [s.s_auto_1, s.s_auto_2, s.s_auto_3];
-
-    function section_(label, items){
-      var sec = document.createElement('div');
-      sec.className = 'pp-suggest-section';
-
-      var l = document.createElement('div');
-      l.className = 'pp-suggest-label';
-      l.textContent = label;
-
-      var grid = document.createElement('div');
-      grid.className = 'pp-suggest-grid';
-
-      items.forEach(function(text){
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'pp-suggest-chip';
-        b.textContent = text;
-        b.addEventListener('click', function(){
-          try{ wrap.remove(); }catch(e){}
-          sendChat_(text);
-        });
-        grid.appendChild(b);
-      });
-
-      sec.appendChild(l);
-      sec.appendChild(grid);
-      return sec;
+    function onReady(fn){
+      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+      else fn();
     }
 
-    wrap.appendChild(title);
-    wrap.appendChild(section_(s.suggest_home, suggestionsHome));
-    wrap.appendChild(section_(s.suggest_auto, suggestionsAuto));
+    onReady(function(){
+      var form = document.getElementById('leadForm');
+      var statusEl = document.getElementById('formStatus');
+      var submitBtn = document.getElementById('submitBtn');
+      var stepSubmitBtn = document.getElementById('stepSubmit');
 
-    chatMessages.appendChild(wrap);
-  }
+      // PHC is optional unless user opens it
+      var phcCollapse = document.getElementById('phcCollapse');
+      var phcToggle = document.getElementById('phcToggle');
+      var phcFields = Array.prototype.slice.call(document.querySelectorAll('[data-phc-required="true"]'));
 
-  function openChat_(){
-    if(chatWindow) chatWindow.style.display = 'block';
-    if(chatBtn) chatBtn.style.display = 'none';
-    setTab_('home');
-  }
-
-  function closeChat_(){
-    if(chatWindow) chatWindow.style.display = 'none';
-    if(chatBtn) chatBtn.style.display = 'flex';
-  }
-
-  if(chatBtn) chatBtn.addEventListener('click', openChat_);
-  if(closeChat) closeChat.addEventListener('click', closeChat_);
-
-  if(ppTabHome) ppTabHome.addEventListener('click', function(){ setTab_('home'); });
-  if(ppTabMessages) ppTabMessages.addEventListener('click', function(){ setTab_('messages'); });
-  if(ppTabSettings) ppTabSettings.addEventListener('click', function(){ setTab_('settings'); });
-
-  if(ppStartChat) ppStartChat.addEventListener('click', function(){
-    setTab_('messages');
-    setTimeout(function(){ renderSuggestedQuestions_(); }, 0);
-  });
-
-  // Link inside Settings to open disclaimer
-  if(ppOpenDisclaimerLink){
-    ppOpenDisclaimerLink.addEventListener('click', function(e){
-      e.preventDefault();
-      try{ showDisclaimer(); }catch(err){}
-    });
-  }
-
-  // ===== Disclaimer modal (manual only; no auto popups) =====
-  var openDisclaimer = document.getElementById('openDisclaimer');
-  var discOverlay = document.getElementById('discOverlay');
-  var discModal = document.getElementById('discModal');
-  var discClose = document.getElementById('discClose');
-  var discClose2 = document.getElementById('discClose2');
-  var discAccept = document.getElementById('discAccept');
-
-  function showDisclaimer(){ if(discOverlay) discOverlay.style.display = 'block'; if(discModal) discModal.style.display = 'flex'; }
-  function hideDisclaimer(){ if(discOverlay) discOverlay.style.display = 'none'; if(discModal) discModal.style.display = 'none'; }
-  function acceptDisclaimer_(){ try{ sessionStorage.setItem('sc_disclaimer_accepted_session','1'); }catch(e){} hideDisclaimer(); }
-
-  if(openDisclaimer) openDisclaimer.addEventListener('click', showDisclaimer);
-  if(discOverlay) discOverlay.addEventListener('click', hideDisclaimer);
-  if(discClose) discClose.addEventListener('click', hideDisclaimer);
-  if(discClose2) discClose2.addEventListener('click', hideDisclaimer);
-  if(discAccept) discAccept.addEventListener('click', acceptDisclaimer_);
-
-  // ===== Policy Health Check persistence (prefill across sessions) =====
-  var PHC_STATE_KEY = 'sc_phc_state_v1';
-
-  function readPHCState_(){
-    try{ var raw = localStorage.getItem(PHC_STATE_KEY); return raw ? JSON.parse(raw) : null; }
-    catch(e){ return null; }
-  }
-
-  function writePHCState_(state){
-    try{ localStorage.setItem(PHC_STATE_KEY, JSON.stringify(state || {})); }catch(e){}
-  }
-
-  function getPHCStateFromDOM_(){
-    return {
-      changes: collectCheckedValues_('phcChanges'),
-      property: (document.getElementById('phcProperty') ? document.getElementById('phcProperty').value : ''),
-      deductible: (document.getElementById('phcDeductible') ? document.getElementById('phcDeductible').value : ''),
-      liability: (document.getElementById('phcLiability') ? document.getElementById('phcLiability').value : ''),
-      review: (document.getElementById('phcReview') ? document.getElementById('phcReview').value : ''),
-      risks: collectCheckedValues_('phcRisks'),
-      updatedAt: new Date().toISOString()
-    };
-  }
-
-  function savePHCState_(){ writePHCState_(getPHCStateFromDOM_()); }
-
-  function setCheckboxGroupFromValues_(containerId, values){
-    try{
-      var c = document.getElementById(containerId);
-      if(!c) return;
-      var v = Array.isArray(values) ? values : [];
-      var boxes = c.querySelectorAll('input[type="checkbox"]');
-      var noneOnly = v.indexOf('None') >= 0;
-      for(var i=0;i<boxes.length;i++){
-        var val = String(boxes[i].value || '').trim();
-        boxes[i].checked = noneOnly ? (val === 'None') : (v.indexOf(val) >= 0);
-        try{ boxes[i].dispatchEvent(new Event('change', { bubbles:true })); }catch(e){}
-      }
-    }catch(e){}
-  }
-
-  function setSelectValueIfExists_(selectId, value){
-    try{
-      var sel = document.getElementById(selectId);
-      if(!sel) return;
-      var v = String(value || '');
-      if(!v) return;
-      var opts = sel.querySelectorAll('option');
-      var ok = false;
-      for(var i=0;i<opts.length;i++){
-        var ov = String(opts[i].value || '').trim();
-        var ot = String(opts[i].textContent || '').trim();
-        if(ov === v || ot === v){ ok = true; break; }
-      }
-      if(ok){ sel.value = v; try{ sel.dispatchEvent(new Event('change', { bubbles:true })); }catch(e){} }
-    }catch(e){}
-  }
-
-  function hydratePHCFromSaved_(){
-    var st = readPHCState_();
-    if(!st) return;
-    setCheckboxGroupFromValues_('phcChanges', st.changes);
-    setSelectValueIfExists_('phcProperty', st.property);
-    setSelectValueIfExists_('phcDeductible', st.deductible);
-    setSelectValueIfExists_('phcLiability', st.liability);
-    setSelectValueIfExists_('phcReview', st.review);
-    setCheckboxGroupFromValues_('phcRisks', st.risks);
-  }
-
-  function bindPHCPersistListeners_(){
-    function onAnyChange(){ try{ savePHCState_(); }catch(e){} }
-    try{
-      var ids = ['phcProperty','phcDeductible','phcLiability','phcReview'];
-      for(var i=0;i<ids.length;i++){
-        var el = document.getElementById(ids[i]);
-        if(el) el.addEventListener('change', onAnyChange);
-      }
-      var groups = ['phcChanges','phcRisks'];
-      for(var g=0;g<groups.length;g++){
-        var c = document.getElementById(groups[g]);
-        if(c) c.addEventListener('change', onAnyChange);
-      }
-    }catch(e){}
-  }
-
-  try{
-    if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', function(){ bindPHCPersistListeners_(); hydratePHCFromSaved_(); });
-    }else{
-      bindPHCPersistListeners_();
-      hydratePHCFromSaved_();
-    }
-  }catch(e){}
-
-  // ===== Mobile-friendly Policy Health Check (tap-to-advance) =====
-  function setupChipHighlights_(){
-    try{
-      var chips = document.querySelectorAll('.phc-chip');
-      for(var i=0;i<chips.length;i++){
-        (function(chip){
-          var box = chip.querySelector('input[type="checkbox"]');
-          if(!box) return;
-          function sync(){ chip.classList.toggle('active', !!box.checked); }
-          sync();
-          chip.addEventListener('click', function(){ setTimeout(sync, 0); });
-          box.addEventListener('change', sync);
-        })(chips[i]);
-      }
-    }catch(e){}
-  }
-
-  function isMobilePHC_(){ return window.matchMedia && window.matchMedia('(max-width: 600px)').matches; }
-
-  function clearActiveBtns_(wrap){
-    try{
-      var btns = wrap.querySelectorAll('.phc-answer-btn');
-      for(var i=0;i<btns.length;i++) btns[i].classList.remove('active');
-    }catch(e){}
-  }
-
-  function buildButtonsFromSelect_(selectId, targetId){
-    var sel = document.getElementById(selectId);
-    var target = document.getElementById(targetId);
-    if(!sel || !target) return;
-
-    target.innerHTML = '';
-
-    var opts = sel.querySelectorAll('option');
-    for(var i=0;i<opts.length;i++){
-      var val = (opts[i].value || '').trim();
-      var txt = (opts[i].textContent || '').trim();
-      if(!txt || val === '') continue; // skip placeholder
-
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'phc-answer-btn';
-      b.textContent = txt;
-      b.setAttribute('data-value', txt);
-      b.addEventListener('click', function(){
-        var v = this.getAttribute('data-value') || '';
-        try{ sel.value = v; }catch(e){}
-        clearActiveBtns_(target);
-        this.classList.add('active');
-      });
-      target.appendChild(b);
-    }
-
-    // Preselect if value already set
-    try{
-      if(sel.value){
-        var btns = target.querySelectorAll('.phc-answer-btn');
-        for(var j=0;j<btns.length;j++){
-          if((btns[j].getAttribute('data-value')||'') === sel.value){
-            btns[j].classList.add('active');
-            break;
+      function setPhcRequired(isRequired){
+        phcFields.forEach(function(el){
+          if(!el) return;
+          if(isRequired){
+            el.setAttribute('required','required');
+          } else {
+            el.removeAttribute('required');
           }
-        }
-      }
-    }catch(e){}
-  }
-
-  function buildButtonsFromCheckboxGroup_(containerId, targetId){
-    var c = document.getElementById(containerId);
-    var target = document.getElementById(targetId);
-    if(!c || !target) return;
-
-    target.innerHTML = '';
-    var labels = c.querySelectorAll('label.phc-chip');
-
-    for(var i=0;i<labels.length;i++){
-      (function(lbl){
-        var box = lbl.querySelector('input[type="checkbox"]');
-        if(!box) return;
-        var text = (lbl.textContent || '').trim();
-
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'phc-answer-btn';
-        b.textContent = text;
-
-        function sync(){ b.classList.toggle('active', !!box.checked); }
-        sync();
-
-        b.addEventListener('click', function(){
-          // Special handling for None
-          var v = String(box.value || '').trim();
-          if(v === 'None'){
-            // uncheck all others
-            try{
-              var others = c.querySelectorAll('input[type="checkbox"]');
-              for(var k=0;k<others.length;k++) others[k].checked = false;
-              box.checked = true;
-            }catch(e){}
-          }else{
-            // if any non-None is checked, uncheck None
-            try{
-              var noneBox = c.querySelector('input[type="checkbox"][value="None"]');
-              if(noneBox) noneBox.checked = false;
-            }catch(e){}
-            box.checked = !box.checked;
-          }
-          try{ box.dispatchEvent(new Event('change', { bubbles:true })); }catch(e){}
-          sync();
         });
-
-        // keep button in sync with underlying checkbox
-        box.addEventListener('change', sync);
-
-        target.appendChild(b);
-      })(labels[i]);
-    }
-  }
-
-  var __phcMobileStep = 0;
-  var __phcMobileTotal = 6; // Q0..Q5
-
-  function phcShow_(idx){
-    __phcMobileStep = Math.max(0, Math.min(__phcMobileTotal, idx|0));
-    for(var i=0;i<=__phcMobileTotal;i++){
-      var el = document.getElementById(i === __phcMobileTotal ? 'phcQDone' : ('phcQ' + i));
-      if(el) el.style.display = (i === __phcMobileStep) ? 'block' : 'none';
-    }
-  }
-
-  function phcEnsureSelected_(selectId){
-    var sel = document.getElementById(selectId);
-    if(!sel) return true;
-    return !!String(sel.value || '').trim();
-  }
-
-  function setupPhcMobileFlow_(){
-    if(!isMobilePHC_()) return;
-
-    // Build mobile answer buttons
-    buildButtonsFromCheckboxGroup_('phcChanges', 'phcMobileChanges');
-    buildButtonsFromSelect_('phcProperty', 'phcMobileProperty');
-    buildButtonsFromSelect_('phcDeductible', 'phcMobileDeductible');
-    buildButtonsFromSelect_('phcLiability', 'phcMobileLiability');
-    buildButtonsFromSelect_('phcReview', 'phcMobileReview');
-    buildButtonsFromCheckboxGroup_('phcRisks', 'phcMobileRisks');
-
-    // Wire nav buttons + auto-advance on single-choice taps
-    function bindAutoAdvance_(wrapId, nextFn){
-      var w = document.getElementById(wrapId);
-      if(!w) return;
-      w.addEventListener('click', function(e){
-        var t = e.target;
-        if(!t || !t.classList || !t.classList.contains('phc-answer-btn')) return;
-        // For single-choice groups, advance shortly after selection
-        if(wrapId !== 'phcMobileChanges' && wrapId !== 'phcMobileRisks'){
-          setTimeout(nextFn, 120);
-        }
-      });
-    }
-
-    var n0 = document.getElementById('phcNext0');
-    var b1 = document.getElementById('phcBack1');
-    var n1 = document.getElementById('phcNext1');
-    var b2 = document.getElementById('phcBack2');
-    var n2 = document.getElementById('phcNext2');
-    var b3 = document.getElementById('phcBack3');
-    var n3 = document.getElementById('phcNext3');
-    var b4 = document.getElementById('phcBack4');
-    var n4 = document.getElementById('phcNext4');
-    var b5 = document.getElementById('phcBack5');
-    var fin = document.getElementById('phcFinish');
-
-    if(n0) n0.addEventListener('click', function(){ phcShow_(1); });
-
-    if(b1) b1.addEventListener('click', function(){ phcShow_(0); });
-    if(n1) n1.addEventListener('click', function(){
-      if(!phcEnsureSelected_('phcProperty')){ try{ document.getElementById('phcProperty').reportValidity(); }catch(e){} return; }
-      phcShow_(2);
-    });
-
-    if(b2) b2.addEventListener('click', function(){ phcShow_(1); });
-    if(n2) n2.addEventListener('click', function(){
-      if(!phcEnsureSelected_('phcDeductible')){ try{ document.getElementById('phcDeductible').reportValidity(); }catch(e){} return; }
-      phcShow_(3);
-    });
-
-    if(b3) b3.addEventListener('click', function(){ phcShow_(2); });
-    if(n3) n3.addEventListener('click', function(){
-      if(!phcEnsureSelected_('phcLiability')){ try{ document.getElementById('phcLiability').reportValidity(); }catch(e){} return; }
-      phcShow_(4);
-    });
-
-    if(b4) b4.addEventListener('click', function(){ phcShow_(3); });
-    if(n4) n4.addEventListener('click', function(){
-      if(!phcEnsureSelected_('phcReview')){ try{ document.getElementById('phcReview').reportValidity(); }catch(e){} return; }
-      phcShow_(5);
-    });
-
-    if(b5) b5.addEventListener('click', function(){ phcShow_(4); });
-    if(fin) fin.addEventListener('click', function(){
-      phcShow_(__phcMobileTotal);
-      // Render result immediately on mobile finish
-      try{
-        if(phcRequiredComplete_()){
-          var res = computePHC_();
-          renderPHCResult_(res.health, 'mobile');
-        }
-      }catch(e){}
-    });
-
-    bindAutoAdvance_('phcMobileProperty', function(){ if(n1) n1.click(); });
-    bindAutoAdvance_('phcMobileDeductible', function(){ if(n2) n2.click(); });
-    bindAutoAdvance_('phcMobileLiability', function(){ if(n3) n3.click(); });
-    bindAutoAdvance_('phcMobileReview', function(){ if(n4) n4.click(); });
-
-    phcShow_(0);
-  }
-
-  // Build mobile flow when modal is shown (ensures DOM exists)
-  try{
-    if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', function(){
-        setupChipHighlights_();
-      });
-    }else{
-      setupChipHighlights_();
-    }
-  }catch(e){}
-
-  // Also (re)initialize when opening the funnel/health check
-  function setupPHCOnOpen_(){
-    // Prefill from saved state first
-    try{ hydratePHCFromSaved_(); }catch(e){}
-
-    // Then sync UI affordances
-    try{ setupChipHighlights_(); }catch(e){}
-    try{ setupPhcMobileFlow_(); }catch(e){}
-
-    // Ensure mobile answer buttons reflect hydrated values
-    try{
-      if(isMobilePHC_()){
-        buildButtonsFromCheckboxGroup_('phcChanges', 'phcMobileChanges');
-        buildButtonsFromSelect_('phcProperty', 'phcMobileProperty');
-        buildButtonsFromSelect_('phcDeductible', 'phcMobileDeductible');
-        buildButtonsFromSelect_('phcLiability', 'phcMobileLiability');
-        buildButtonsFromSelect_('phcReview', 'phcMobileReview');
-        buildButtonsFromCheckboxGroup_('phcRisks', 'phcMobileRisks');
       }
-    }catch(e){}
-  }
 
-  // Hook into existing modal open paths
-  try{
-    if(openFunnelBtn) openFunnelBtn.addEventListener('click', function(){ setTimeout(setupPHCOnOpen_, 0); });
-    if(openHealthCheckBtn) openHealthCheckBtn.addEventListener('click', function(){ setTimeout(setupPHCOnOpen_, 0); });
-  }catch(e){}
+      // Default: NOT required so desktop can submit even if PHC stays collapsed.
+      setPhcRequired(false);
 
-  // ===== Policy Health Check scoring =====
-  function collectCheckedValues_(containerId){
-    var out = [];
-    try{
-      var c = document.getElementById(containerId);
-      if(!c) return out;
-      var boxes = c.querySelectorAll('input[type="checkbox"]');
-      for(var i=0;i<boxes.length;i++) if(boxes[i].checked) out.push(String(boxes[i].value || '').trim());
-    }catch(e){}
-    if(out.indexOf('None') >= 0) return ['None'];
-    return out;
-  }
-
-  function policyHealthScore_(answers){
-    answers = answers || {};
-    var triggers = [];
-    var score = 100;
-
-    function has_(arr, v){ return Array.isArray(arr) && arr.indexOf(v) >= 0; }
-
-    var changes = answers.changes || [];
-    var risks = answers.risks || [];
-    var property = String(answers.property || '');
-    var deductible = String(answers.deductible || '');
-    var liability = String(answers.liability || '');
-    var review = String(answers.review || '');
-
-    var unsureCount = 0;
-    if(property === 'Not sure') unsureCount++;
-    if(deductible === 'Not sure') unsureCount++;
-    if(review === 'Not sure') unsureCount++;
-    if(liability === 'Not protected / Not sure') unsureCount++;
-    if(has_(changes,'None') === false && changes.length === 0) unsureCount++;
-    if(has_(risks,'Not sure')) unsureCount++;
-
-    if(unsureCount >= 2){ score -= 18; triggers.push('Multiple unknowns'); }
-
-    var majorChange = false;
-    var majorSet = ['Moved/bought home','New driver/teen driver','New vehicle/financed/leased','Marriage/divorce/new baby','Work from home/home business','Major remodel/new roof/solar'];
-    for(var i=0;i<majorSet.length;i++) if(has_(changes, majorSet[i])){ majorChange = true; break; }
-    if(majorChange){ score -= 14; triggers.push('Recent life change'); }
-
-    if(review === '1–3 years ago') score -= 8;
-    if(review === '3+ years ago / never'){ score -= 18; triggers.push('No recent policy review'); }
-    if(review === 'Not sure'){ score -= 10; triggers.push('Review date unknown'); }
-
-    if(liability === 'Somewhat protected'){ score -= 8; triggers.push('Liability may be low'); }
-    if(liability === 'Not protected / Not sure'){ score -= 18; triggers.push('Liability likely insufficient'); }
-
-    if(deductible === '$500–$1,000') score -= 6;
-    if(deductible === 'Not sure'){ score -= 10; triggers.push('Deductible unknown'); }
-
-    if(has_(risks,'Wildfire/brush nearby')){ score -= 6; triggers.push('Wildfire exposure'); }
-    if(has_(risks,'Hail-prone / roof 10+ yrs')){ score -= 6; triggers.push('Hail/roof exposure'); }
-    if(has_(risks,'Basement/sump pump')){ score -= 4; triggers.push('Water backup risk'); }
-    if(has_(risks,'Pool/trampoline/dog')){ score -= 4; triggers.push('Higher liability exposure'); }
-
-    if(score < 0) score = 0;
-    if(score > 100) score = 100;
-
-    var label = 'Green';
-    if(score < 55) label = 'Red';
-    else if(score < 80) label = 'Yellow';
-
-    if((majorChange && (review === '3+ years ago / never' || review === 'Not sure')) || unsureCount >= 3){
-      if(triggers.indexOf('High mismatch risk') < 0) triggers.push('High mismatch risk');
-      label = 'Red';
-    }
-
-    return { score0to100: score, label: label, triggers: triggers };
-  }
-
-  function leadPriorityScore_(payloadLead, health){
-    var score = 0;
-
-    var tf = String(payloadLead.timeframe || '');
-    if(tf === 'ASAP') score += 35;
-    else if(tf === 'Within 7 days') score += 28;
-    else if(tf === 'Within 30 days') score += 18;
-    else if(tf === 'Just exploring') score += 8;
-
-    if(payloadLead.zip) score += 6;
-    if(payloadLead.phone) score += 6;
-    if(payloadLead.email) score += 6;
-
-    if(health && health.label === 'Red') score += 30;
-    else if(health && health.label === 'Yellow') score += 18;
-    else score += 10;
-
-    try{ if(health && Array.isArray(health.triggers) && health.triggers.indexOf('Recent life change') >= 0) score += 6; }catch(e){}
-
-    if(score > 100) score = 100;
-
-    var label = 'COOL';
-    if(score >= 70) label = 'HOT';
-    else if(score >= 45) label = 'WARM';
-
-    return { score: score, label: label };
-  }
-
-  // ===== PHC Result UI (Green / Yellow / Red) =====
-  function triggerExplain_(t){
-    var map = {
-      'Multiple unknowns':'Several items are unknown — a quick review can prevent surprises.',
-      'Recent life change':'Recent life changes often require updates (drivers, vehicles, address, usage, etc.).',
-      'No recent policy review':'It’s been a while since a full review — coverage and discounts may be out of date.',
-      'Review date unknown':'If you’re not sure when it was reviewed, it’s worth a quick check.',
-      'Liability may be low':'Liability is often the most cost-effective protection to increase.',
-      'Liability likely insufficient':'If liability is low/unknown, your risk exposure may be higher than expected.',
-      'Deductible unknown':'Knowing your deductible helps avoid “surprise” out-of-pocket costs.',
-      'Wildfire exposure':'Wildfire exposure can affect availability, deductibles, and endorsements.',
-      'Hail/roof exposure':'Hail/roof items can affect deductibles and roof settlement/eligibility.',
-      'Water backup risk':'Water backup is commonly excluded unless specifically added.',
-      'Higher liability exposure':'Pools/trampolines/dogs can increase liability exposure.',
-      'High mismatch risk':'Multiple signals suggest your policy may not match your current life/property.'
-    };
-    return map[t] || t;
-  }
-
-  function resultCopy_(label){
-    if(label === 'Green') return 'Likely on-track. Still, a quick review can confirm deductibles, liability, and endorsements match your current life.';
-    if(label === 'Yellow') return 'A few things may be worth tightening. A 5-minute agent review can spot gaps and find better-fit options.';
-    return 'High mismatch risk. Based on your answers, your coverage may not reflect your current life/property — an agent review is recommended.';
-  }
-
-  function phcCtaText_(label, lang){
-    var s = getStrings_(lang || getLang_());
-    if(label === 'Yellow') return s.phc_cta_yellow || 'Fix Potential Gaps';
-    if(label === 'Red') return s.phc_cta_red || 'Review My Policy Now';
-    return s.phc_cta_green || 'Confirm My Coverage';
-  }
-
-  function renderPHCResult_(health, where){
-    where = where || 'desktop';
-
-    var root = document.getElementById(where === 'mobile' ? 'phcResultMobile' : 'phcResult');
-    var dot = document.getElementById(where === 'mobile' ? 'phcDotMobile' : 'phcDot');
-    var lab = document.getElementById(where === 'mobile' ? 'phcLabelMobile' : 'phcLabel');
-    var copy = document.getElementById(where === 'mobile' ? 'phcCopyMobile' : 'phcCopy');
-    var why = document.getElementById(where === 'mobile' ? 'phcWhyMobile' : 'phcWhy');
-    var cta = document.getElementById(where === 'mobile' ? 'phcCtaMobile' : 'phcCta');
-    var summary = document.getElementById(where === 'mobile' ? 'phcSummaryMobile' : 'phcSummary');
-
-    // Red-result interstitial
-    var loyalty = document.getElementById(where === 'mobile' ? 'phcLoyaltyMobile' : 'phcLoyalty');
-    var loyaltyMsg = document.getElementById(where === 'mobile' ? 'phcLoyaltyMsgMobile' : 'phcLoyaltyMsg');
-    var loyaltyBtn = document.getElementById(where === 'mobile' ? 'phcLeadCtaMobile' : 'phcLeadCta');
-
-    if(!root || !dot || !lab || !copy || !why) return;
-
-    dot.className = 'phc-dot' + (health.label === 'Yellow' ? ' yellow' : (health.label === 'Red' ? ' red' : ''));
-    lab.textContent = health.label;
-    copy.textContent = resultCopy_(health.label);
-
-    why.innerHTML = '';
-    var triggers = Array.isArray(health.triggers) ? health.triggers.slice(0, 3) : [];
-    if(!triggers.length) triggers = ['General review recommended'];
-
-    for(var i=0;i<triggers.length;i++){
-      var li = document.createElement('li');
-      li.textContent = triggerExplain_(triggers[i]);
-      why.appendChild(li);
-    }
-
-    // Show the interstitial only for RED results
-    try{
-      var sL = getStrings_(getLang_());
-      if(loyalty) loyalty.classList.toggle('show', health.label === 'Red');
-      if(loyaltyMsg && sL && sL.phc_loyalty) loyaltyMsg.textContent = sL.phc_loyalty;
-      if(loyaltyBtn && sL && sL.phc_lead_cta) loyaltyBtn.textContent = sL.phc_lead_cta;
-    }catch(e){}
-
-    // Micro-summary above CTA
-    try{
-      if(summary){
-        var s2 = getStrings_(getLang_());
-        summary.textContent = (s2 && s2.phc_based_on) ? s2.phc_based_on : 'Based on what you shared…';
-        summary.style.display = 'block';
+      if(phcToggle && phcCollapse){
+        phcToggle.addEventListener('click', function(){
+          var isCollapsed = phcCollapse.classList.contains('collapsed');
+          // After this click, the panel will toggle.
+          // If it is currently collapsed, user is opening -> make required.
+          setPhcRequired(isCollapsed);
+        });
       }
-    }catch(e){}
 
-    // Result-based CTA copy
-    if(cta){
-      cta.textContent = phcCtaText_(health.label, getLang_());
-      cta.style.display = 'inline-flex';
-    }
+      function showStatus(msg, kind){
+        if(!statusEl) return;
+        statusEl.className = 'status ' + (kind || '');
+        statusEl.style.display = 'block';
+        statusEl.textContent = msg;
+      }
 
-    root.classList.add('show');
-  }
+      function disableSubmit(disabled){
+        if(submitBtn) submitBtn.disabled = disabled;
+        if(stepSubmitBtn) stepSubmitBtn.disabled = disabled;
+      }
 
-  function computePHC_(){
+      if(!form) return;
 
-    var phc = {
-      changes: collectCheckedValues_('phcChanges'),
-      property: (document.getElementById('phcProperty') ? document.getElementById('phcProperty').value : ''),
-      deductible: (document.getElementById('phcDeductible') ? document.getElementById('phcDeductible').value : ''),
-      liability: (document.getElementById('phcLiability') ? document.getElementById('phcLiability').value : ''),
-      review: (document.getElementById('phcReview') ? document.getElementById('phcReview').value : ''),
-      risks: collectCheckedValues_('phcRisks')
-    };
-    return { phc: phc, health: policyHealthScore_(phc) };
-  }
+      form.addEventListener('submit', async function(e){
+        e.preventDefault();
 
-  function phcRequiredComplete_(){
-    try{
-      var p = document.getElementById('phcProperty');
-      var d = document.getElementById('phcDeductible');
-      var l = document.getElementById('phcLiability');
-      var r = document.getElementById('phcReview');
-      return !!(p && p.value && d && d.value && l && l.value && r && r.value);
-    }catch(e){ return false; }
-  }
+        // If PHC is still collapsed, ensure PHC fields don't block constraint validation
+        if(phcCollapse && phcCollapse.classList.contains('collapsed')){
+          setPhcRequired(false);
+        }
 
-  function bindPHCResultUI_(){
-    var runBtn = document.getElementById('phcRun');
-    var ctaDesk = document.getElementById('phcCta');
-    var ctaMob = document.getElementById('phcCtaMobile');
+        // Native constraint validation
+        if(!form.checkValidity()){
+          // Let the browser show which field is missing
+          form.reportValidity();
+          showStatus('Please complete the required fields highlighted above.', 'err');
+          return;
+        }
 
-    var leadDesk = document.getElementById('phcLeadCta');
-    var leadMob = document.getElementById('phcLeadCtaMobile');
+        if(!window.GAS_WEBAPP_URL || String(window.GAS_WEBAPP_URL).trim() === ''){
+          showStatus('Missing GAS_WEBAPP_URL. Paste your Google Apps Script Web App URL in the header script.', 'err');
+          return;
+        }
 
-    function runDesk(){
-      if(!phcRequiredComplete_()){
+        disableSubmit(true);
+        showStatus('Submitting…', '');
+
         try{
-          var p = document.getElementById('phcProperty');
-          var d = document.getElementById('phcDeductible');
-          var l = document.getElementById('phcLiability');
-          var r = document.getElementById('phcReview');
-          if(p && !p.value) p.reportValidity();
-          else if(d && !d.value) d.reportValidity();
-          else if(l && !l.value) l.reportValidity();
-          else if(r && !r.value) r.reportValidity();
-        }catch(e){}
-        return;
-      }
-      var res = computePHC_();
-      renderPHCResult_(res.health, 'desktop');
-    }
+          var fd = new FormData(form);
 
-    if(runBtn) runBtn.addEventListener('click', runDesk);
+          // Add a couple of helpful fields for tracking
+          fd.append('source', 'landing');
+          fd.append('submittedAt', new Date().toISOString());
+          fd.append('page', location.href);
 
-    function goOptions_(){
-      try{
-        if(isMobile_()) setStep_(3);
-        else{
-          var consent = document.getElementById('consent');
-          if(consent) consent.scrollIntoView({ behavior:'smooth', block:'start' });
-        }
-      }catch(e){}
-    }
+          // If PHC collapsed, blank PHC fields so they don’t confuse your sheet
+          if(phcCollapse && phcCollapse.classList.contains('collapsed')){
+            fd.set('phcProperty','');
+            fd.set('phcDeductible','');
+            fd.set('phcLiability','');
+            fd.set('phcReview','');
+          }
 
-    // Red-result lead CTA: jump to lead capture fields so you get the lead
-    function goLeadCapture_(){
-      try{
-        if(isMobile_()){
-          setStep_(0);
-        }else{
-          var fn = document.getElementById('firstName');
-          if(fn) fn.scrollIntoView({ behavior:'smooth', block:'start' });
-          try{ fn.focus(); }catch(e){}
-        }
-      }catch(e){}
-    }
+          var res = await fetch(window.GAS_WEBAPP_URL, {
+            method: 'POST',
+            body: fd,
+            mode: 'cors',
+            credentials: 'omit'
+          });
 
-    if(ctaDesk) ctaDesk.addEventListener('click', goOptions_);
-    if(ctaMob) ctaMob.addEventListener('click', goOptions_);
+          var text = await res.text();
+          if(!res.ok){
+            throw new Error('HTTP ' + res.status + ': ' + text);
+          }
 
-    if(leadDesk) leadDesk.addEventListener('click', goLeadCapture_);
-    if(leadMob) leadMob.addEventListener('click', goLeadCapture_);
-  }
+          showStatus('✅ Submitted. We’ll follow up shortly.', 'ok');
+          form.reset();
 
-  try{ bindPHCResultUI_(); }catch(e){}
+          // Close modal if present
+          var modal = document.getElementById('modal');
+          var overlay = document.getElementById('modalOverlay');
+          if(modal && overlay){
+            overlay.style.display = 'none';
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+          }
 
-  // ===== Lead form submit =====
-  if(leadForm){
-    leadForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      if(formStatus){ formStatus.style.display='block'; formStatus.className='status'; }
-
-      if(!GAS || GAS.indexOf('http') !== 0){
-        if(formStatus){
-          formStatus.className='status err';
-          formStatus.textContent='Backend not connected yet. Paste your Apps Script Web App URL into window.GAS_WEBAPP_URL at the top of this file.';
-        }
-        return;
-      }
-
-      var payloadLead = {
-        action: 'lead',
-        source: 'GitHub Landing Page',
-        channel: 'CTA Funnel',
-        timestamp: new Date().toISOString(),
-        firstName: (document.getElementById('firstName').value || '').trim(),
-        lastName: (document.getElementById('lastName').value || '').trim(),
-        zip: (document.getElementById('zip').value || '').trim(),
-        email: (document.getElementById('email').value || '').trim(),
-        phone: (document.getElementById('phone').value || '').trim(),
-        homeowner: (document.getElementById('homeowner').value || ''),
-        roofAge: (document.getElementById('roofAge').value || ''),
-        vehicles: (document.getElementById('vehicles').value || ''),
-        timeframe: (document.getElementById('timeframe').value || ''),
-        notes: (document.getElementById('notes').value || '').trim(),
-        consent: true,
-        aiConsent: true,
-        deliverKit: true,
-        kitType: 'FIRE_HAIL_ENDORSEMENTS'
-      };
-
-      var phc = {
-        changes: collectCheckedValues_('phcChanges'),
-        property: (document.getElementById('phcProperty') ? document.getElementById('phcProperty').value : ''),
-        deductible: (document.getElementById('phcDeductible') ? document.getElementById('phcDeductible').value : ''),
-        liability: (document.getElementById('phcLiability') ? document.getElementById('phcLiability').value : ''),
-        review: (document.getElementById('phcReview') ? document.getElementById('phcReview').value : ''),
-        risks: collectCheckedValues_('phcRisks')
-      };
-
-      var health = policyHealthScore_(phc);
-      payloadLead.policyHealthScore = health.score0to100;
-      payloadLead.policyHealthLabel = health.label;
-      payloadLead.policyHealthTriggers = (health.triggers || []).join(' | ');
-      payloadLead.policyHealthAnswers = phc;
-      // Store the exact result-based CTA copy shown to the user (useful for analytics + Sheets)
-      payloadLead.policyHealthCtaText = phcCtaText_(health.label, getLang_());
-
-      var priority = leadPriorityScore_(payloadLead, health);
-      payloadLead.leadScore = priority.score;
-      payloadLead.leadLabel = priority.label;
-
-      if(formStatus) formStatus.textContent='Submitting…';
-
-      postToGAS(GAS, payloadLead).then(function(){
-        if(formStatus){
-          formStatus.className='status ok';
-          formStatus.textContent='✅ Submitted! Check your email for your coverage guide.';
-        }
-        leadForm.reset();
-        setTimeout(hideModal, 900);
-        try{ resetStepper_(); }catch(e){}
-      }).catch(function(err){
-        if(formStatus){
-          formStatus.className='status err';
-          formStatus.textContent='⚠ Could not submit (network error). Double-check the Apps Script URL and that it is deployed as a Web App. (' + (err && err.message ? err.message : 'Error') + ')';
+        } catch(err){
+          console.error(err);
+          showStatus('Submission failed. Please try again — or text/call instead. (' + (err && err.message ? err.message : 'error') + ')', 'err');
+        } finally {
+          disableSubmit(false);
         }
       });
     });
-  }
+  })();
+</script>
 
-  // ===== Basic chat send (LOCAL mode gives safe canned response; REMOTE can use your endpoint later) =====
-  var POLICYPRO_MODE = ((window.POLICYPRO_MODE || '') + '').trim().toLowerCase() || 'local';
-  var CHAT_ENDPOINT = (POLICYPRO_MODE === 'remote')
-    ? (((window.POLICYPRO_LLM_ENDPOINT || '').trim() || (window.GAS_WEBAPP_URL || '').trim()))
-    : '';
-
-  function localAnswer_(q){
-    var t = String(q||'').toLowerCase();
-    if(t.indexOf('hail')>=0 || t.indexOf('roof')>=0) return 'Generally, hail damage can be covered depending on your policy type, deductibles (often a wind/hail deductible), and roof condition. An agent should review your declarations page and endorsements to confirm.';
-    if(t.indexOf('wildfire')>=0 || t.indexOf('smoke')>=0) return 'Wildfire/smoke impacts are very policy-specific. Common items to review: dwelling limit, additional living expense (ALE), debris removal, smoke damage, and any wildfire-specific exclusions/endorsements. An agent review is recommended.';
-    if(t.indexOf('auto')>=0 || t.indexOf('comprehensive')>=0) return 'Auto hail is typically under comprehensive coverage (not collision). Deductibles and repair method can affect outcomes. An agent can confirm what your policy includes.';
-    return 'I can share general insurance info, but a licensed agent must confirm anything policy-specific. If you want, tap “Check My Options” so an agent can follow up with personalized options.';
-  }
-
-  function sendChat_(text){
-    text = String(text||'').trim();
-    if(!text) return;
-
-    addMsg_('user', esc_(text));
-    addTyping_();
-
-    if(POLICYPRO_MODE !== 'remote'){
-      setTimeout(function(){
-        replaceLastBot_(esc_(localAnswer_(text)));
-      }, 550);
-      return;
+<script>
+  // =====================
+  // POLICY HEALTH CHECK (OPEN + COLLAPSE TOGGLE)
+  // - Hero button "30-Second Policy Health Check" opens the modal and jumps to PHC section.
+  // - "Show" button inside PHC section expands/collapses the PHC questions.
+  // =====================
+  (function(){
+    function onReady(fn){
+      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+      else fn();
     }
 
-    // Remote mode (optional): post question to your endpoint
-    fetch(CHAT_ENDPOINT, {
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'chat', message:text, lang:getLang_(), history:chatHistory.slice(-20) })
-    }).then(function(){
-      // Opaque in no-cors; show a friendly fallback
-      setTimeout(function(){
-        replaceLastBot_(esc_('Thanks — an agent will follow up shortly. If you want faster help, tap “Check My Options”.'));
-      }, 600);
-    }).catch(function(){
-      replaceLastBot_(esc_(localAnswer_(text)));
+    function openBuiltInModal(){
+      var modal = document.getElementById('modal');
+      var overlay = document.getElementById('modalOverlay');
+      if(overlay) overlay.style.display = 'block';
+      if(modal) modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function scrollToPHC(){
+      var phc = document.getElementById('phcCollapse');
+      if(!phc) return;
+      // Ensure expanded so user sees content
+      phc.classList.remove('collapsed');
+      var toggle = document.getElementById('phcToggle');
+      if(toggle){
+        toggle.setAttribute('aria-expanded','true');
+        toggle.textContent = 'Hide';
+        toggle.classList.add('alt');
+      }
+      // Scroll the modal body to PHC
+      var body = document.querySelector('#modal .card-body');
+      if(body){
+        // Wait a tick so layout is correct
+        setTimeout(function(){
+          var top = phc.getBoundingClientRect().top;
+          var bodyTop = body.getBoundingClientRect().top;
+          body.scrollTop += (top - bodyTop) - 10;
+        }, 50);
+      } else {
+        phc.scrollIntoView({ behavior:'smooth', block:'start' });
+      }
+    }
+
+    function togglePHCCollapse(){
+      var phcCollapse = document.getElementById('phcCollapse');
+      var phcToggle = document.getElementById('phcToggle');
+      if(!phcCollapse || !phcToggle) return;
+
+      var willOpen = phcCollapse.classList.contains('collapsed');
+      phcCollapse.classList.toggle('collapsed');
+      phcToggle.setAttribute('aria-expanded', String(willOpen));
+      phcToggle.textContent = willOpen ? 'Hide' : 'Show';
+      phcToggle.classList.toggle('alt', willOpen);
+
+      // If user opened PHC, make PHC selects required (submit handler already respects this)
+      var phcFields = Array.prototype.slice.call(document.querySelectorAll('[data-phc-required="true"]'));
+      phcFields.forEach(function(el){
+        if(!el) return;
+        if(willOpen) el.setAttribute('required','required');
+        else el.removeAttribute('required');
+      });
+    }
+
+    onReady(function(){
+      // HERO: open the modal and jump to PHC
+      var heroPHC = document.getElementById('openHealthCheck');
+      if(heroPHC){
+        heroPHC.addEventListener('click', function(e){
+          e.preventDefault();
+          // If ClickFunnels is configured, still open the built-in modal for PHC
+          openBuiltInModal();
+          scrollToPHC();
+        });
+        heroPHC.addEventListener('touchend', function(e){
+          e.preventDefault();
+          openBuiltInModal();
+          scrollToPHC();
+        }, { passive:false });
+      }
+
+      // INSIDE MODAL: expand/collapse toggle
+      var phcToggle = document.getElementById('phcToggle');
+      if(phcToggle){
+        phcToggle.addEventListener('click', function(e){
+          e.preventDefault();
+          togglePHCCollapse();
+        });
+      }
     });
-  }
-
-  if(chatForm){
-    chatForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      var v = (chatInput && chatInput.value) ? chatInput.value : '';
-      if(chatInput) chatInput.value = '';
-      sendChat_(v);
-    });
-  }
-
-  // =========================
-  // Minimal self-tests (run only when ?test=1 is present)
-  // =========================
-  function __assert_(cond, msg){ if(!cond) throw new Error('Test failed: ' + (msg || '')); }
-  function runTests_(){
-  __assert_(typeof setTab_ === 'function', 'setTab_ exists');
-
-  // i18n sanity
-  var dict = i18nDict_();
-  __assert_(dict && dict.en && dict.es, 'i18n has en + es');
-  __assert_(typeof getStrings_('en').cta_check === 'string', 'en strings resolve');
-  __assert_(typeof getStrings_('es').cta_check === 'string', 'es strings resolve');
-
-  // tab switching
-  setTab_('home');
-  __assert_(ppScreenHome ? ppScreenHome.classList.contains('active') : true, 'home screen active');
-  setTab_('messages');
-  __assert_(ppScreenMessages ? ppScreenMessages.classList.contains('active') : true, 'messages screen active');
-  setTab_('settings');
-  __assert_(ppScreenSettings ? ppScreenSettings.classList.contains('active') : true, 'settings screen active');
-
-  // Invalid values should not throw
-  setTab_('nope');
-}
-
-  try{ if((location.search || '').indexOf('test=1') >= 0) runTests_(); }catch(e){ console.error(e); }
+  })();
 </script>
 
 </body>
