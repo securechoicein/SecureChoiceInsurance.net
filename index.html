@@ -34,42 +34,7 @@
 
     // === ClickFunnels (recommended for "Check My Options") ===
     window.CLICKFUNNEL_URL = "";
-  // ===== Conditional reveal: Check My Options appears after interaction =====
-  // NOTE: must run AFTER DOM exists (mobile was not wiring the button)
-  window.addEventListener('DOMContentLoaded', function(){
-    var cta = document.getElementById('openFunnel');
-    var hcBtn = document.getElementById('openHealthCheck');
-    if(!cta) return;
-
-    function revealCTA(){
-      cta.classList.add('visible');
-      cta.removeAttribute('aria-hidden');
-      cta.style.opacity = '1';
-      cta.style.pointerEvents = 'auto';
-      cta.style.transform = 'translateY(0)';
-      window.removeEventListener('scroll', onScroll);
-    }
-
-    function onScroll(){
-      if(window.scrollY > window.innerHeight * 0.15){
-        revealCTA();
-      }
-    }
-
-    // On mobile, show it immediately (no dead CTA)
-    if(window.matchMedia && window.matchMedia('(max-width: 900px)').matches){
-      revealCTA();
-    } else {
-      window.addEventListener('scroll', onScroll, { passive:true });
-    }
-
-    if(hcBtn){
-      hcBtn.addEventListener('click', revealCTA);
-      hcBtn.addEventListener('touchend', function(){ revealCTA(); }, { passive:true });
-    }
-  });
-
-</script>
+  </script>
 
   <!-- Preload hero images for smoother first paint (PNG only) -->
   <link rel="preload" as="image" href="hero-house.png">
@@ -119,22 +84,18 @@
       isolation:isolate;
     }
 
-    /* Make hero content readable + consistent across screen sizes */
     .hero-content{position:relative;max-width:680px;z-index:2;width:100%;}
 
-    /* Dark overlay so text stays readable on photos */
-    /* Dark overlay so text stays readable on photos — tuned for brightness */
     .hero::before{
       content:"";
       position:absolute;
       inset:0;
-      /* Lighter, contrast-preserving overlay instead of heavy dark wash */
       background:linear-gradient(rgba(5,10,25,.55), rgba(5,10,25,.55));
       z-index:1;
       pointer-events:none;
     }
 
-    /* Rotating background slides (mobile-safe): JS-driven crossfade */
+    /* Rotating background slides */
     .hero-rotator{
       position:absolute;
       inset:0;
@@ -144,7 +105,7 @@
       background:transparent;
     }
 
-        .hero-slide{
+    .hero-slide{
       position:absolute;
       inset:0;
       width:100%;
@@ -152,17 +113,13 @@
       object-fit:cover;
       object-position:50% 50%;
       opacity:0;
-      /* Increase perceived sharpness + brightness */
       filter: brightness(1.08) contrast(1.12) saturate(1.12);
-      image-rendering:auto;
       transition:opacity 900ms ease;
       will-change:opacity;
     }
-
     .hero-slide.active{ opacity:1; }
 
-    /* Desktop: prefer showing full PNG without awkward cropping */
-        /* Desktop: prefer showing full PNG without awkward cropping */
+    /* Desktop hero fit */
     @media (min-width: 901px){
       .hero{ min-height:100vh; padding:72px 72px; }
       .hero-content{ max-width:760px; }
@@ -170,31 +127,25 @@
       .hero-slide{
         object-fit: var(--hero-fit-desktop);
         object-position: 50% 45%;
-        transform:none;
-        /* Extra desktop clarity (large screens can handle it) */
         filter: brightness(1.12) contrast(1.15) saturate(1.15);
       }
     }
-  .hero-content{ max-width:760px; }
-  .hero-rotator{ background: var(--hero-bg-desktop); }
-  .hero-slide{
-    object-fit: var(--hero-fit-desktop);
-    object-position: 50% 50%;
-    /* Remove scaling on desktop so images don't overflow */
-    transform:none;
-  }
-}
 
-/* Reduce motion for accessibility */
-@media (prefers-reduced-motion: reduce){
-  .hero-slide{ transition:none; }
-}
+    @media (prefers-reduced-motion: reduce){
+      .hero-slide{ transition:none; }
     }
 
-    .hero-content{position:relative;max-width:680px;z-index:2}
-    .badge{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);font-size:12px;font-weight:700;color:#c7e9ff}
+    .badge{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      background:rgba(56,189,248,.15);
+      border:1px solid rgba(56,189,248,.4);
+      font-size:12px;
+      font-weight:700;
+      color:#c7e9ff
+    }
 
-    /* Hero header (uses the same font as the PP mark) */
     .hero-headline{
       margin:0 0 18px;
       font-size:clamp(40px,6vw,72px);
@@ -206,17 +157,13 @@
       text-shadow:0 18px 70px rgba(0,0,0,.55);
     }
 
-    /* Primary CTA – ChannelTalk-style (white, PP font) */
     .hero-cta-wrap{display:flex;flex-direction:column;gap:10px;max-width:520px;}
+
     .cta{
       margin-top:24px;
       padding:14px 28px;
-      font-size: 16px;
-  line-height: 1.6;
-  opacity: 0;
-  transform: translateY(6px);
-  animation: phcFadeIn 0.6s ease-out forwards;
-  animation-delay: 0.4s;
+      font-size:16px;
+      line-height:1.6;
       font-weight:700;
       border-radius:999px;
       border:1px solid #e5e7eb;
@@ -225,17 +172,14 @@
       color:#0b1120;
       font-family:'Playfair Display','Didot','Bodoni MT',serif;
       box-shadow:0 18px 55px rgba(0,0,0,.25);
-      transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+      transition:transform .15s ease, box-shadow .15s ease, filter .15s ease, opacity .35s ease;
+      opacity:1;
+      transform:translateY(0);
     }
-    .cta:hover{
-      transform:translateY(-1px);
-      box-shadow:0 22px 70px rgba(0,0,0,.28);
-      filter:brightness(1.01);
-    }
+    .cta:hover{transform:translateY(-1px);box-shadow:0 22px 70px rgba(0,0,0,.28);filter:brightness(1.01);}
     .cta:active{transform:translateY(0);box-shadow:0 14px 40px rgba(0,0,0,.22);}
 
     /* Secondary CTA */
-    /* Secondary CTA (Health Check) — add subtle gradient border so it doesn’t blend */
     .cta.cta-secondary{
       margin-top:0;
       background:rgba(255,255,255,.94);
@@ -248,25 +192,26 @@
       border-radius:999px;
       background:linear-gradient(90deg, rgba(56,189,248,.75), rgba(34,197,94,.55), rgba(56,189,248,.75));
       z-index:-1;
-      filter:blur(.0px);
       opacity:.85;
     }
     .cta.cta-secondary:hover{ filter:brightness(1.03); }
 
-    /* Policy Health Check hook (A/B + subtle attention draw) */
-    /* Policy Health Check hook (HERO) — make it pop */
-    /* Policy Health Check hook — match Channelview / ChannelTalk font */
+    /* Reveal effect for Check My Options */
+    .cta-secondary{ opacity:0; pointer-events:none; transform:translateY(6px); }
+    .cta-secondary.visible{ opacity:1 !important; pointer-events:auto !important; transform:translateY(0); }
+
+    /* PHC hook (ChannelTalk-ish font) */
     .phc-hook-hero{
       margin:0 0 10px;
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size:16px;
-      font-weight:600; /* ChannelTalk-style medium weight */
+      font-weight:600;
       line-height:1.45;
       letter-spacing:-0.01em;
       color:#ffffff;
       text-shadow:0 12px 36px rgba(0,0,0,.45);
       opacity:.98;
-      padding:12px 14px 12px 14px;
+      padding:12px 14px;
       border-radius:16px;
       background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
       border:1px solid rgba(148,196,255,.35);
@@ -283,27 +228,14 @@
                  radial-gradient(420px 180px at 92% 10%, rgba(34,197,94,.14), transparent 60%);
       opacity:.95;
     }
-    .phc-hook-hero
     .phc-hook-hero.attn{ animation:phcGlow 2.4s ease-in-out 1; }
     @keyframes phcGlow{
-      0%{transform:translateY(0); filter:saturate(1);}
-      45%{transform:translateY(-1px); filter:saturate(1.15);}
+      0%{transform:translateY(0); filter:saturate(1); opacity:.9;}
+      45%{transform:translateY(-1px); filter:saturate(1.12); opacity:1;}
       70%{box-shadow:0 22px 80px rgba(56,189,248,.12), 0 18px 60px rgba(0,0,0,.26);}
-      100%{transform:translateY(0);}
-    }
-    @keyframes phcGlow{
-      0%{opacity:.85;}
-      40%{opacity:1; text-shadow:0 0 0 rgba(56,189,248,0);}
-      70%{text-shadow:0 0 28px rgba(56,189,248,.45);}
-      100%{opacity:.96;}
+      100%{transform:translateY(0); opacity:.98;}
     }
 
-    /* Optional: gently guide users to start with the Health Check once per visitor */
-    body.phc-gate #openFunnel{ opacity:.82; filter:saturate(.92) brightness(.98); transform:translateY(0); }
-    body.phc-gate #ctaMicro{ opacity:.92; }
-    body.phc-gate #openHealthCheck{ box-shadow:0 22px 80px rgba(56,189,248,.10), 0 18px 55px rgba(0,0,0,.25); }
-
-    /* Microcopy under CTA */
     .cta-micro{
       font-size:12px;
       font-weight:800;
@@ -312,14 +244,15 @@
       letter-spacing:.01em;
     }
 
-    /* Mobile: make the primary CTA easier to tap and not oversized */
     @media (max-width: 900px){
+      .hero{padding:18px;min-height:100vh;align-items:flex-start;padding-top:72px;}
+      .hero-headline{font-size:clamp(34px,9vw,52px);}
+      .hero-content{max-width:100%;padding-bottom:90px;}
       .hero-cta-wrap{max-width:520px;width:100%;}
       .cta{
         width:100%;
         max-width:520px;
         margin-top:10px;
-        margin-bottom:0;
         padding:14px 18px;
         font-size:15px;
         min-height:50px;
@@ -327,74 +260,7 @@
       .cta-micro{font-size:12px;opacity:.95;}
     }
 
-    /* Alert */
-    .alert-box{position:absolute;right:8%;bottom:12%;width:260px;background:rgba(15,23,42,.92);border-radius:14px;padding:14px;border:1px solid rgba(148,196,255,.55);box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:2}
-    .alert-title{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#facc15;margin-bottom:6px}
-    .alert-text{font-size:13px;color:#e5e7eb;line-height:1.35}
-
-    /* Hide floating alert on smaller screens so it doesn't overlap CTA */
-    @media (max-width: 1100px){
-      .alert-box{display:none;}
-    }
-
-    /* ================== POLICY HEALTH CHECK ==================
-   Desktop shrink + density tuning */
-
-/* Constrain PHC width on desktop so it feels like a diagnostic, not a form */
-@media (min-width: 1024px){
-  .phc-container{
-    max-width: 720px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .phc-card{
-    padding: 16px 18px;
-  }
-
-  .phc-question{
-    margin-bottom: 12px;
-  }
-
-  .phc-answers{
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-}
-
-/* Keep result section full-width for impact */
-.phc-result{
-  max-width: 100%;
-}
-
-/* ========================================================= */
-
-    /* Option A (Desktop): collapsed by default to reduce form height */
-    .phc-collapse{border:1px solid #e5e7eb;border-radius:18px;background:#ffffff;box-shadow:0 14px 40px rgba(2,6,23,.06);overflow:hidden;}
-    .phc-collapse-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px;background:linear-gradient(180deg,#ffffff,#f8fafc);}
-    .phc-collapse-title{display:flex;flex-direction:column;gap:4px;}
-    .phc-collapse-title .t{font-weight:1000;color:#0b1120;font-size:13px;}
-    .phc-collapse-title .s{font-weight:800;color:#64748b;font-size:11.5px;line-height:1.35;max-width:70ch;}
-    .phc-toggle{flex:0 0 auto;padding:10px 12px;border-radius:999px;border:1px solid #0b1120;background:#0b1120;color:#fff;font-weight:1000;font-size:12px;cursor:pointer;}
-    .phc-toggle.alt{border:1px solid #cbd5e1;background:#fff;color:#0b1120;}
-
-    .phc-collapsible{padding:0 12px 12px;}
-    .phc-collapsible-inner{padding:12px 0 0;}
-    .phc-collapse.collapsed .phc-collapsible{display:none;}
-
-    /* Keep mobile flow unchanged */
-    @media (max-width: 600px){
-      .phc-collapse{box-shadow:none;}
-      .phc-collapse-head{padding:0;background:transparent;border:0;}
-      .phc-toggle{display:none;}
-      .phc-collapse-title .t{font-size:0;}
-      .phc-collapse-title .s{font-size:0;}
-      .phc-collapse.collapsed .phc-collapsible{display:block;}
-    }
-
-    /* ================== END PHC COLLAPSE ================== */
-
+    /* ================== POLICY HEALTH CHECK ================== */
     .phc-wrap{
       max-width:960px;
       margin:32px auto 18px;
@@ -409,105 +275,37 @@
       padding:22px 22px 18px;
     }
 
-    .phc-header{
-      display:flex;
-      gap:14px;
-      align-items:flex-start;
-      margin-bottom:16px;
-    }
-
+    .phc-header{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;}
     .phc-badge{
-      flex:0 0 auto;
-      width:36px;height:36px;
-      border-radius:10px;
+      flex:0 0 auto;width:36px;height:36px;border-radius:10px;
       display:flex;align-items:center;justify-content:center;
-      background:#0ea5e9;
-      color:#fff;
-      font-weight:900;
+      background:#0ea5e9;color:#fff;font-weight:900;
+    }
+    .phc-title{font-size:18px;font-weight:900;color:#0b1120;margin:0;}
+    .phc-hook{margin:6px 0 0;font-size:13px;line-height:1.4;color:#475569;font-weight:700;}
+
+    .phc-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+    .phc-chip{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:12px 14px;border-radius:16px;
+      border:1px solid #e2e8f0;background:#f8fafc;color:#0b1120;
+      font-weight:900;font-size:12.5px;cursor:pointer;
+      box-shadow:0 12px 26px rgba(2,6,23,.06);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .phc-chip.active{
+      border-color:#0ea5e9 !important;
+      background:rgba(14,165,233,.10) !important;
+    }
+    .phc-chip input{transform:scale(1.05);}
+
+    /* Desktop layout */
+    @media (min-width: 1024px){
+      .phc-wrap{ max-width:880px; }
+      .phc-card{ padding:20px 20px 16px; }
     }
 
-    .phc-title{
-      font-size:18px;
-      font-weight:900;
-      color:#0b1120;
-      margin:0;
-    }
-
-    .phc-hook{
-      margin:6px 0 0;
-      font-size:13px;
-      line-height:1.4;
-      color:#475569;
-      font-weight:700;
-    }
-
-    .phc-steps{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:12px;
-    }
-
-    .phc-step{
-      border:1px solid #e5e7eb;
-      border-radius:16px;
-      padding:14px 14px 12px;
-      background:#f8fafc;
-    }
-
-    .phc-step h4{
-      margin:0 0 6px;
-      font-size:13px;
-      font-weight:900;
-      color:#0b1120;
-    }
-
-    .phc-options{
-      display:grid;
-      gap:8px;
-    }
-
-    .phc-opt{
-      border:1px solid #cbd5e1;
-      background:#ffffff;
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:12.5px;
-      font-weight:800;
-      cursor:pointer;
-      text-align:left;
-    }
-
-    .phc-opt.active{
-      border-color:#0ea5e9;
-      background:rgba(14,165,233,.08);
-    }
-
-    .phc-footer{
-      margin-top:16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-
-    .phc-progress{
-      font-size:11px;
-      color:#64748b;
-      font-weight:800;
-    }
-
-    .phc-submit{
-      padding:10px 18px;
-      border-radius:999px;
-      border:1px solid #0b1120;
-      background:#0b1120;
-      color:#ffffff;
-      font-weight:900;
-      font-size:13px;
-      cursor:pointer;
-    }
-
-    /* ================== PHC RESULT (Green/Yellow/Red) ================== */
+    /* Result */
     .phc-result{
       display:none;
       margin-top:14px;
@@ -518,534 +316,67 @@
       box-shadow:0 14px 40px rgba(2,6,23,.06);
     }
     .phc-result.show{display:block;}
-
     .phc-result-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
     .phc-result-left{display:flex;align-items:center;gap:10px;}
-    .phc-dot{width:12px;height:12px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.12);} /* green */
-    .phc-dot.yellow{background:#facc15;box-shadow:0 0 0 6px rgba(250,204,21,.16);} /* yellow */
-    .phc-dot.red{background:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.14);} /* red */
+    .phc-dot{width:12px;height:12px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.12);}
+    .phc-dot.yellow{background:#facc15;box-shadow:0 0 0 6px rgba(250,204,21,.16);}
+    .phc-dot.red{background:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.14);}
     .phc-result-label{font-weight:1000;color:#0b1120;font-size:12px;letter-spacing:.08em;text-transform:uppercase;}
-
     .phc-result-copy{margin:10px 0 8px;color:#0b1120;font-weight:900;font-size:13px;line-height:1.35;}
 
-/* Subhead animation (shown after PHC completes) */
-.phc-subhead{
-  margin:10px 0 6px;
-  color:#0b1120;
-  font-weight:700;
-  font-size:13px;
-  line-height:1.45;
-  opacity:0;
-  transform:translateY(6px);
-  animation:phcSubheadIn .55s ease-out forwards;
-  animation-delay:.15s;
-}
+    .phc-subhead{
+      margin:10px 0 6px;color:#0b1120;font-weight:700;font-size:13px;line-height:1.45;
+      opacity:0;transform:translateY(6px);
+      animation:phcSubheadIn .55s ease-out forwards;
+      animation-delay:.15s;
+    }
+    .phc-subhead.green{ animation-delay:.1s; }
+    .phc-subhead.red{ animation-delay:.28s; }
+    @keyframes phcSubheadIn{ to{opacity:1;transform:translateY(0);} }
 
-/* Subhead animation timing varies by result */
-.phc-subhead.green{
-  animation-delay:.1s;
-}
-.phc-subhead.red{
-  animation-delay:.28s;
-}
-
-@keyframes phcSubheadIn{
-  to{opacity:1;transform:translateY(0);}
-}
     .phc-result-why{margin:0;padding-left:18px;display:grid;gap:6px;}
-    $1
 
-    /* Loyalty callout (shown on Red results) */
     .phc-loyalty{display:none;margin-top:12px;padding:12px 12px;border-radius:16px;border:1px solid rgba(15,23,42,.12);background:linear-gradient(180deg, #ffffff, #f8fafc);box-shadow:0 12px 26px rgba(2,6,23,.06);}
     .phc-loyalty.show{display:block;}
     .phc-loyalty .m{font-weight:1000;color:#0b1120;font-size:13px;line-height:1.3;margin:0 0 10px;}
-    .phc-loyalty .btn{width:100%;}
-
-    /* Micro-summary (above CTA) */
-    .phc-summary{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px dashed rgba(15,23,42,.18);
-      background:rgba(248,250,252,.9);
-      color:#0b1120;
-      font-weight:900;
-      font-size:12.5px;
-      line-height:1.35;
-    }
 
     .phc-result-actions{margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
-    .phc-run{border:1px solid #cbd5e1;background:#fff;color:#0b1120;font-weight:1000;}
-    .phc-continue{border:1px solid #0b1120;background:#0b1120;color:#fff;font-weight:1000;}
 
-    @media (max-width: 600px){
-      .phc-result{border-radius:16px;}
-      .phc-result-actions .btn{width:100%;}
-    }
-
-    /* Desktop tightening */
-    @media (min-width: 1000px){
-      .phc-wrap{ max-width:880px; }
-      .phc-steps{ grid-template-columns:repeat(4,1fr); }
-      .phc-card{ padding:20px 20px 16px; }
-    }
-
-    /* Tablet */
-    @media (max-width: 999px){
-      .phc-steps{ grid-template-columns:repeat(2,1fr); }
-    }
-
-    /* Mobile */
-    @media (max-width: 560px){
-      .phc-steps{ grid-template-columns:1fr; }
-      .phc-card{ padding:18px 14px 14px; }
-      .phc-title{ font-size:17px; }
-    }
-
-    /* ================== POLICY HEALTH CHECK (MOBILE TAP FLOW) ================== */
-    .phc-mobile-flow{display:none;}
-
-    .phc-q{
-      border:1px solid #e5e7eb;
-      border-radius:16px;
-      padding:12px 12px 10px;
-      background:#f8fafc;
-    }
-    .phc-q-title{margin:0 0 8px;font-weight:1000;color:#0b1120;font-size:13px;line-height:1.25;}
-    .phc-q-hint{margin:0 0 10px;color:#64748b;font-weight:800;font-size:11.5px;line-height:1.35;}
-
-    .phc-answers{display:grid;gap:10px;}
-    .phc-answer-btn{
-      width:100%;
-      text-align:left;
-      border:1px solid #cbd5e1;
-      background:#ffffff;
-      border-radius:14px;
-      padding:12px 12px;
-      font-weight:1000;
-      color:#0b1120;
-      cursor:pointer;
-      box-shadow:0 10px 22px rgba(2,6,23,.05);
-      -webkit-tap-highlight-color: transparent;
-    }
-    .phc-answer-btn:active{transform:translateY(1px)}
-    .phc-answer-btn.active{
-      border-color:#0ea5e9;
-      background:rgba(14,165,233,.10);
-      box-shadow:0 12px 26px rgba(2,6,23,.07);
-    }
-
-    .phc-mobile-nav{display:flex;gap:10px;margin-top:12px;}
-    .phc-mobile-nav .btn{flex:1;}
-
-    /* Checkbox chips highlight when tapped */
-    .phc-chip.active{
-      border-color:#0ea5e9 !important;
-      background:rgba(14,165,233,.10) !important;
-    }
-
-    /* Mobile: turn PHC selects into tap-to-advance flow */
-    @media (max-width: 600px){
-      .phc-mobile-flow{display:block;}
-      .phc-desktop-grid{display:none !important;}
-      .phc-grid{gap:8px;}
-      .phc-chip{width:100%;justify-content:flex-start;}
-    }
-
-/* ================== CHAT: Channel.io-like launcher ================== */
-    .chat-launcher{
-      position:fixed;
-      right:20px;
-      bottom:22px;
-      z-index:26000;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      cursor:pointer;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .chat-peek{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      padding:10px 12px;
-      border-radius:14px;
-      background:#ffffff;
-      border:1px solid #e5e7eb;
-      backdrop-filter:blur(10px);
-      box-shadow:0 18px 55px rgba(0,0,0,.25);
-    }
-    .chat-peek .chat-label{
-      font-size:11px;
-      opacity:.85;
-      font-weight:700;
-      color:#0b1120;
-      letter-spacing:.01em;
-      font-family:'Playfair Display','Didot','Bodoni MT',serif;
-    }
-    .chat-peek .chat-name{
-      font-weight:700;
-      font-size:13px;
-      letter-spacing:.01em;
-      color:#0b1120;
-      font-family:'Playfair Display','Didot','Bodoni MT',serif;
-    }
-
-    .chat-bubble{
-      width:56px;height:56px;
-      border-radius:999px;
-      display:flex;align-items:center;justify-content:center;
-      background:#ffffff;
-      border:1px solid #e5e7eb;
-      box-shadow:0 22px 70px rgba(0,0,0,.25);
-      position:relative;
-      transition:transform .18s ease, filter .18s ease;
-      animation: chatPulse 2.6s ease-in-out infinite;
-    }
-    .chat-bubble:hover{transform:translateY(-2px) scale(1.03);filter:brightness(1.06)}
-    .chat-bubble:active{transform:translateY(0) scale(0.99)}
-
-    .chat-avatar{
-      width:44px;height:44px;
-      border-radius:999px;
-      display:flex;align-items:center;justify-content:center;
-      font-family:'Playfair Display', 'Didot', 'Bodoni MT', serif;
-      font-weight:600;
-      font-size:22px;
-      color:#020617;
-      background:#ffffff;
-    }
-
-    @keyframes chatPulse{
-      0%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,.15); }
-      50%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 12px rgba(2,6,23,0); }
-      100%{ box-shadow:0 22c55e; }
-    }
-
-    /* ================== CHAT WIDGET (ChannelTalk-like) ================== */
-    .chat-window{
-      display:none;
-      position:fixed;
-      right:20px;
-      bottom:96px;
-      width:360px;
-      max-height:78vh;
-      z-index:25000;
-    }
-
-    .pp-widget{
-      width:100%;
-      background:#fff;
-      color:#0b1120;
-      border-radius:22px;
-      overflow:hidden;
-      border:1px solid rgba(15,23,42,.10);
-      box-shadow:0 40px 120px rgba(0,0,0,.42);
-    }
-
-    .pp-top{
-      position:relative;
-      height:150px;
-      background:
-        linear-gradient(180deg, rgba(2,6,23,0) 40%, rgba(2,6,23,.45) 100%),
-        url('hero-house.png') center/cover no-repeat;
-    }
-
-    .pp-topbar{
-      position:absolute;
-      left:0; right:0; bottom:0;
-      padding:14px 14px 12px;
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .pp-brand{
-      color:#fff;
-      font-weight:900;
-      letter-spacing:.01em;
-      font-size:18px;
-      text-shadow:0 8px 30px rgba(0,0,0,.55);
-    }
-
-    .pp-body{padding:12px 14px 10px;background:#fff;}
-
-    .pp-screen{ display:none; }
-    .pp-screen.active{ display:block; }
-
-    .pp-home-card{
-      border:1px solid #eef2f7;
-      border-radius:18px;
-      padding:12px 12px;
-      background:#fff;
-      box-shadow:0 14px 40px rgba(2,6,23,.06);
-    }
-
-    .pp-home-row{display:flex;gap:10px;align-items:flex-start}
-    .pp-avatar{
-      width:38px;height:38px;border-radius:999px;
-      display:flex;align-items:center;justify-content:center;
-      border:1px solid #e5e7eb;
-      background:#fff;
-      font-family:'Playfair Display','Didot','Bodoni MT',serif;
-      font-weight:700;
-      color:#0b1120;
-      flex:0 0 auto;
-    }
-
-    .pp-home-title{margin:0;font-weight:900;font-size:13.5px;line-height:1.25}
-    .pp-home-sub{margin:6px 0 0;color:#475569;font-weight:700;font-size:12px;line-height:1.35}
-
-    .pp-primary{
-      width:100%;
-      margin-top:12px;
-      padding:12px 12px;
-      border-radius:999px;
-      border:1px solid #eef2f7;
-      background:#f3f4f6;
-      color:#0b1120;
-      font-weight:900;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-    }
-    .pp-primary:hover{filter:brightness(1.01)}
-
-    .pp-footer-note{
-      margin-top:10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      color:#94a3b8;
-      font-weight:800;
-      font-size:11px;
-    }
-
-    .pp-messages-wrap{
-      border:1px solid #eef2f7;
-      border-radius:18px;
-      overflow:hidden;
-      background:#fff;
-    }
-
-    .chat-main{display:flex;flex-direction:column;height:360px;min-height:320px;}
-    .chat-messages{padding:12px;overflow:auto;flex:1;background:#ffffff;}
-
-    .msg{display:flex;margin:10px 0}
-    .msg.user{justify-content:flex-end}
-    .msg.bot{justify-content:flex-start}
-    .bubble{max-width:86%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;box-shadow:0 10px 26px rgba(0,0,0,.06)}
-    .bubble.user{background:#0b1120;color:#e5e7eb;border-top-right-radius:6px}
-    .bubble.bot{background:#ffffff;color:#0f172a;border:1px solid #e5e7eb;border-top-left-radius:6px}
-
-    .chat-inputbar{padding:10px;border-top:1px solid #eef2f7;background:#fff;display:flex;gap:10px;align-items:center}
-    .chat-input{flex:1;padding:12px 12px;border-radius:14px;border:1px solid #cbd5e1;font-size:14px;outline:none}
-    .chat-input:focus{border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
-    .send-btn{padding:12px 14px;border-radius:14px;border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;font-weight:1000;cursor:pointer}
-    .send-btn:disabled{opacity:.55;cursor:not-allowed}
-
-    /* Suggested question chips (ChannelTalk-like) */
-    .pp-suggest-wrap{padding:14px 14px 10px;}
-    .pp-suggest-title{font-weight:1000;font-size:12px;color:#0b1120;margin:0 0 12px;letter-spacing:.01em;text-align:left;}
-    .pp-suggest-section{display:grid;gap:10px;margin-bottom:14px;}
-    .pp-suggest-label{font-weight:1000;font-size:11px;color:#94a3b8;letter-spacing:.08em;}
-    .pp-suggest-grid{display:flex;flex-wrap:wrap;gap:10px;}
-    .pp-suggest-chip{
-      border:1px solid #e2e8f0;
-      background:#f8fafc;
-      color:#0b1120;
-      border-radius:16px;
-      padding:12px 14px;
-      font-weight:900;
-      font-size:12.5px;
-      cursor:pointer;
-      line-height:1.25;
-      box-shadow:0 12px 26px rgba(2,6,23,.06);
-      transition:transform .12s ease, filter .12s ease, box-shadow .12s ease;
-    }
-    .pp-suggest-chip:hover{filter:brightness(1.01);transform:translateY(-1px)}
-    .pp-suggest-chip:active{transform:translateY(0)}
-
-    /* Policy Health Check chips */
-    .phc-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
-    .phc-chip{display:inline-flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;background:#f8fafc;color:#0b1120;font-weight:900;font-size:12.5px;cursor:pointer;box-shadow:0 12px 26px rgba(2,6,23,.06);}
-    .phc-chip input{transform:scale(1.05);}
-    @media (max-width: 420px){.phc-chip{width:100%;justify-content:flex-start;}}
-
-    @media (max-width: 420px){
-      .pp-suggest-grid{gap:8px;}
-      .pp-suggest-chip{width:100%;text-align:left;}
-    }
-
-    .pp-tabs{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      border-top:1px solid #eef2f7;
-      background:#fff;
-      padding:8px 6px;
-    }
-
-    .pp-tab{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      padding:8px 6px;
-      border-radius:14px;
-      border:0;
-      background:transparent;
-      cursor:pointer;
-      color:#64748b;
-      font-weight:900;
-      font-size:11px;
-    }
-
-    .pp-tab svg{width:18px;height:18px;opacity:.75;transition:transform .15s ease, opacity .15s ease}
-
-    /* Nicer Settings gear */
-    .pp-tab#ppTabSettings svg{width:19px;height:19px;stroke-width:1.8;}
-    .pp-tab#ppTabSettings:hover svg{opacity:.95;transform:rotate(20deg)}
-    .pp-tab#ppTabSettings.active svg{opacity:1;transform:rotate(0deg)}
-
-    .pp-tab.active{color:#0b1120;background:#f8fafc;}
-    .pp-tab:hover{color:#0b1120;background:#f8fafc}
-
-    .pp-close-fab{
-      position:absolute;
-      right:10px;
-      bottom:-62px;
-      width:48px;height:48px;
-      border-radius:999px;
-      border:1px solid #e5e7eb;
-      background:#fff;
-      color:#0b1120;
-      box-shadow:0 18px 60px rgba(0,0,0,.25);
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:20px;
-      font-weight:900;
-    }
-    .pp-close-fab:hover{filter:brightness(1.02)}
-
-    .pp-settings{
-      border:1px solid #eef2f7;
-      border-radius:18px;
-      padding:12px 12px;
-      background:#fff;
-    }
-    .pp-settings h3{margin:0 0 10px;font-size:13.5px;font-weight:1000;color:#0b1120}
-    .pp-setting-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 10px;border:1px solid #eef2f7;border-radius:14px;background:#fff;margin-bottom:10px}
-    .pp-select{
-      appearance:none;
-      -webkit-appearance:none;
-      -moz-appearance:none;
-      border:1px solid #e2e8f0;
-      background:#f8fafc;
-      color:#0b1120;
-      font-weight:900;
-      font-size:12px;
-      border-radius:12px;
-      padding:10px 34px 10px 12px;
-      cursor:pointer;
-      line-height:1;
-      box-shadow:0 10px 22px rgba(2,6,23,.05);
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23647569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat:no-repeat;
-      background-position:right 10px center;
-      background-size:18px 18px;
-    }
-    .pp-select:focus{outline:none;border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
-    .pp-select:hover{filter:brightness(1.01)}
-    .pp-setting-item .k{font-weight:900;color:#0b1120;font-size:12px}
-    .pp-setting-item .v{font-weight:900;color:#64748b;font-size:12px}
-    .pp-setting-link{display:block;text-align:center;margin-top:6px;color:#0ea5e9;font-weight:1000;text-decoration:none}
-
-    .typing{display:inline-flex;gap:4px;align-items:center}
-    .dot{width:6px;height:6px;border-radius:999px;background:#94a3b8;animation:bounce 1.1s infinite}
-    .dot:nth-child(2){animation-delay:.15s}
-    .dot:nth-child(3){animation-delay:.3s}
-    @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-4px);opacity:1}}
-
-    @media (max-width: 900px){
-      .hero{padding:18px;min-height:100vh;align-items:flex-start;padding-top:72px;}
-      /* Keep headlines from feeling oversized on narrow screens */
-      .hero-headline{font-size:clamp(34px,9vw,52px);}
-      .hero-content{max-width:100%;padding-bottom:90px;}
-
-      .chat-launcher{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));}
-      .chat-peek{display:none;}
-
-      .chat-window{left:12px;right:12px;width:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:78vh;}
-
-      .disc-btn{left:14px;right:auto;bottom:calc(14px + env(safe-area-inset-bottom));padding:8px 12px;font-size:11px;z-index:26000;opacity:.92;}
-    }
-
-    /* Funnel modal */
+    /* ================== MODALS ================== */
     .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:20000;}
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:21000;}
-    .card{width:min(760px,96vw);background:#ffffff;color:#0b1323;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden;border:1px solid #e5e7eb;max-height:86vh;}
+    .card{
+      width:min(760px,96vw);
+      background:#ffffff;
+      color:#0b1323;
+      border-radius:18px;
+      box-shadow:0 40px 100px rgba(0,0,0,.8);
+      overflow:hidden;
+      border:1px solid #e5e7eb;
+      max-height:86vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;}
+    .card-head h2{margin:0;font-size:16px;font-weight:900;}
+    .card-head p{margin:2px 0 0;font-size:12px;color:#475569;}
+    .icon-btn{background:transparent;border:none;font-size:18px;cursor:pointer;color:#475569;}
+    .card-body{padding:14px 16px;overflow:auto;-webkit-overflow-scrolling:touch;}
 
-/* Desktop: keep modal usable by scrolling inside the card (not the page) */
-@media (min-width: 601px){
-  .card-head{position:sticky;top:0;z-index:3;}
-  .card-body{max-height:calc(86vh - 64px);overflow:auto;-webkit-overflow-scrolling:touch;}
-  .row.row-desktop{position:sticky;bottom:0;left:0;right:0;background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 32%);padding-top:12px;margin-top:12px;}
-}
+    /* Desktop: keep modal usable by scrolling inside the card */
+    @media (min-width: 601px){
+      .card-head{position:sticky;top:0;z-index:3;}
+      .card-body{max-height:calc(86vh - 64px);overflow:auto;}
+      .row.row-desktop{position:sticky;bottom:0;left:0;right:0;background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 32%);padding-top:12px;margin-top:12px;}
+    }
 
-
-    /* Mobile-friendly CTA modal (bottom-sheet style) */
+    /* Mobile: bottom sheet */
     @media (max-width: 600px){
       .modal{align-items:flex-end;}
       .card{width:100%;max-width:100%;max-height:85vh;border-radius:18px 18px 0 0;}
       .card-head{position:sticky;top:0;z-index:2;}
-      .card-body{overflow:auto;-webkit-overflow-scrolling:touch;}
     }
 
-    /* Stepper (used mainly on mobile) */
-    .stepper{display:none;padding:12px 2px 10px;margin:0 0 8px;}
-    .stepper-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
-    .stepper-kicker{font-size:11px;font-weight:900;color:#64748b;letter-spacing:.02em;}
-    .stepper-title{font-size:12px;font-weight:1000;color:#0b1120;}
-    .stepper-dots{display:flex;gap:8px;margin-top:10px;}
-    .dotx{width:10px;height:10px;border-radius:999px;background:#e2e8f0;}
-    .dotx.active{background:#0b1120;}
-    .stepper-bar{height:6px;border-radius:999px;background:#eef2f7;margin-top:10px;overflow:hidden;}
-    .stepper-bar-fill{display:block;height:100%;width:25%;background:#0b1120;transition:width .2s ease;}
-
-    .steps{margin-top:6px;}
-    .step{display:none;}
-    .step.active{display:block;}
-
-    /* Desktop keeps the original all-sections view */
-    @media (min-width: 601px){
-      .stepper{display:none;}
-      .step{display:block;}
-      .row-mobile{display:none !important;}
-    }
-
-    /* Mobile: one step at a time + sticky step controls */
-    @media (max-width: 600px){
-      .stepper{display:block;}
-      .grid{grid-template-columns:1fr !important;}
-      .row-desktop{display:none !important;}
-      .row-mobile{position:sticky;bottom:0;left:0;right:0;padding:12px 0 0;background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 28%);gap:10px;justify-content:space-between;}
-      .row-mobile .btn{flex:1;}
-    }
-
-    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;}
-    .card-head h2{margin:0;font-size:16px;font-weight:900;}
-    .card-head p{margin:2px 0 0;font-size:12px;color:#475569;max-width:none;}
-    .icon-btn{background:transparent;border:none;font-size:18px;cursor:pointer;color:#475569;}
-    .card-body{padding:14px 16px;}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     @media(max-width:740px){.grid{grid-template-columns:1fr;}}
     .field{display:grid;gap:6px;}
@@ -1056,33 +387,82 @@
     .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px;}
     .btn{padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-weight:900;}
     .btn-primary{border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;}
+
     .status{display:none;margin-top:10px;font-size:12px;font-weight:800;}
     .status.ok{color:#166534;}
     .status.err{color:#b91c1c;}
 
-    /* Disclaimer button */
-    .disc-btn{position:fixed;left:18px;bottom:18px;z-index:15000;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);border:1px solid rgba(148,196,255,.45);color:#e5e7eb;padding:10px 14px;border-radius:999px;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 16px 50px rgba(0,0,0,.6)}
-    .disc-btn:hover{filter:brightness(1.06)}
+    /* Stepper */
+    .stepper{display:none;padding:12px 2px 10px;margin:0 0 8px;}
+    .stepper-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+    .stepper-kicker{font-size:11px;font-weight:900;color:#64748b;letter-spacing:.02em;}
+    .stepper-title{font-size:12px;font-weight:1000;color:#0b1120;}
+    .stepper-dots{display:flex;gap:8px;margin-top:10px;}
+    .dotx{width:10px;height:10px;border-radius:999px;background:#e2e8f0;}
+    .dotx.active{background:#0b1120;}
+    .stepper-bar{height:6px;border-radius:999px;background:#eef2f7;margin-top:10px;overflow:hidden;}
+    .stepper-bar-fill{display:block;height:100%;width:25%;background:#0b1120;transition:width .2s ease;}
+    .steps{margin-top:6px;}
+    .step{display:none;}
+    .step.active{display:block;}
 
-    /* Disclaimer modal */
+    @media (min-width: 601px){
+      .stepper{display:none;}
+      .step{display:block;}
+      .row-mobile{display:none !important;}
+    }
+    @media (max-width: 600px){
+      .stepper{display:block;}
+      .grid{grid-template-columns:1fr !important;}
+      .row-desktop{display:none !important;}
+      .row-mobile{
+        position:sticky;bottom:0;left:0;right:0;padding:12px 0 0;
+        background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 28%);
+        gap:10px;justify-content:space-between;
+      }
+      .row-mobile .btn{flex:1;}
+    }
+
+    /* Disclaimer */
+    .disc-btn{
+      position:fixed;left:18px;bottom:18px;z-index:26000;
+      background:rgba(15,23,42,.85);backdrop-filter:blur(10px);
+      border:1px solid rgba(148,196,255,.45);color:#e5e7eb;padding:10px 14px;
+      border-radius:999px;font-weight:900;font-size:12px;cursor:pointer;
+      box-shadow:0 16px 50px rgba(0,0,0,.6)
+    }
+    .disc-btn:hover{filter:brightness(1.06)}
     .disc-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:30000;}
     .disc-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:31000;overflow:auto;}
-    .disc-card{width:min(880px,96vw);max-height:86vh;background:#ffffff;color:#0b1323;border-radius:22px;box-shadow:0 50px 130px rgba(0,0,0,.85);overflow:hidden;border:1px solid rgba(148,196,255,.35);position:relative;}
-    .disc-card::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(1200px 500px at 20% -10%, rgba(56,189,248,.18), transparent 55%),radial-gradient(900px 500px at 90% 10%, rgba(34,197,94,.14), transparent 55%);}
-    .disc-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:linear-gradient(180deg,#0b1120,#0f172a);border-bottom:1px solid rgba(148,196,255,.25);color:#e5e7eb;}
+    .disc-card{
+      width:min(880px,96vw);max-height:86vh;background:#ffffff;color:#0b1323;border-radius:22px;
+      box-shadow:0 50px 130px rgba(0,0,0,.85);overflow:hidden;border:1px solid rgba(148,196,255,.35);position:relative;
+      display:flex;flex-direction:column;
+    }
+    .disc-card::before{
+      content:"";position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(1200px 500px at 20% -10%, rgba(56,189,248,.18), transparent 55%),
+                 radial-gradient(900px 500px at 90% 10%, rgba(34,197,94,.14), transparent 55%);
+    }
+    .disc-head{
+      position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+      padding:14px 16px;background:linear-gradient(180deg,#0b1120,#0f172a);
+      border-bottom:1px solid rgba(148,196,255,.25);color:#e5e7eb;
+    }
     .disc-head h2{margin:0;font-size:16px;font-weight:900;letter-spacing:.01em;}
     .disc-kicker{margin:4px 0 0;font-size:12px;color:rgba(226,232,240,.9);font-weight:800;max-width:66ch;line-height:1.35;}
     .disc-icon{width:34px;height:34px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(148,196,255,.45);background:rgba(15,23,42,.5);box-shadow:0 10px 30px rgba(0,0,0,.35);font-weight:900;}
     .disc-head-left{display:flex;gap:12px;align-items:flex-start;}
     .disc-close{background:rgba(248,250,252,.06);border:1px solid rgba(148,196,255,.35);color:#e5e7eb;border-radius:12px;padding:8px 10px;font-weight:900;cursor:pointer;}
     .disc-close:hover{filter:brightness(1.08)}
-
-    .disc-body{position:relative;padding:14px 16px 12px;font-size:14px;line-height:1.55;color:#0b1120;overflow:auto;max-height:calc(86vh - 62px - 74px);font-weight:700;}
+    .disc-body{
+      position:relative;padding:14px 16px 12px;font-size:14px;line-height:1.55;color:#0b1120;
+      overflow:auto;font-weight:700;flex:1;
+    }
     .disc-body p{margin:0 0 10px;font-weight:700;color:#0b1120;}
     .disc-body strong{font-weight:900;color:#020617;}
     .disc-sections{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     @media(max-width:860px){.disc-sections{grid-template-columns:1fr;}}
-
     .disc-section{border:1px solid #e5e7eb;border-radius:16px;background:#ffffff;box-shadow:0 10px 26px rgba(0,0,0,.06);overflow:hidden;}
     .disc-sec-head{display:flex;gap:10px;align-items:flex-start;padding:12px 12px;background:linear-gradient(180deg,#ffffff,#f8fafc);border-bottom:1px solid #e5e7eb;}
     .disc-sec-badge{width:30px;height:30px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;color:#0b1120;border:1px solid rgba(56,189,248,.35);background:rgba(56,189,248,.12);}
@@ -1090,37 +470,141 @@
     .disc-sec-sub{margin:2px 0 0;font-size:11px;color:#64748b;font-weight:800;line-height:1.35;}
     .disc-sec-body{padding:12px 12px 10px;font-size:13px;color:#0b1120;}
     .disc-sec-body ul{margin:0;padding-left:18px;display:grid;gap:8px;}
-    .disc-sec-body li{margin:0;}
-
     .disc-footer-note{margin-top:12px;padding:12px;border-radius:16px;border:1px dashed rgba(15,23,42,.25);background:rgba(248,250,252,.9);font-size:12px;color:#0f172a;font-weight:800;}
-
     .disc-actions{position:relative;display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;background:linear-gradient(180deg,#f8fafc,#ffffff);border-top:1px solid #e5e7eb;}
-    .disc-actions .btn{min-width:140px}
     .btn-accept{border:1px solid rgba(34,197,94,.35);background:linear-gradient(180deg, rgba(34,197,94,.18), rgba(34,197,94,.08));color:#0b1120;}
     .btn-accept:hover{filter:brightness(1.03)}
-  @keyframes phcFadeIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-.cta-secondary{
-  transition: opacity .35s ease, transform .35s ease;
-}
-.cta-secondary.visible{
-  opacity:1 !important;
-  pointer-events:auto !important;
-  transform:translateY(0);
-}
+    /* ================== CHAT ================== */
+    .chat-launcher{
+      position:fixed;right:20px;bottom:22px;z-index:26000;
+      display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chat-peek{
+      display:flex;flex-direction:column;gap:2px;
+      padding:10px 12px;border-radius:14px;background:#ffffff;border:1px solid #e5e7eb;
+      box-shadow:0 18px 55px rgba(0,0,0,.25);
+    }
+    .chat-peek .chat-label{
+      font-size:11px;opacity:.85;font-weight:700;color:#0b1120;letter-spacing:.01em;
+      font-family:'Playfair Display','Didot','Bodoni MT',serif;
+    }
+    .chat-peek .chat-name{
+      font-weight:700;font-size:13px;letter-spacing:.01em;color:#0b1120;
+      font-family:'Playfair Display','Didot','Bodoni MT',serif;
+    }
 
-</style>
+    .chat-bubble{
+      width:56px;height:56px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+      background:#ffffff;border:1px solid #e5e7eb;box-shadow:0 22px 70px rgba(0,0,0,.25);
+      position:relative;transition:transform .18s ease, filter .18s ease;
+      animation: chatPulse 2.6s ease-in-out infinite;
+    }
+    .chat-bubble:hover{transform:translateY(-2px) scale(1.03);filter:brightness(1.06)}
+    .chat-bubble:active{transform:translateY(0) scale(0.99)}
+    .chat-avatar{
+      width:44px;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+      font-family:'Playfair Display', 'Didot', 'Bodoni MT', serif;font-weight:600;font-size:22px;color:#020617;background:#ffffff;
+    }
+    @keyframes chatPulse{
+      0%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,.15); }
+      50%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 12px rgba(2,6,23,0); }
+      100%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,0); }
+    }
+
+    .chat-window{
+      display:none;position:fixed;right:20px;bottom:96px;width:360px;max-height:78vh;z-index:25000;
+    }
+    .pp-widget{
+      width:100%;background:#fff;color:#0b1120;border-radius:22px;overflow:hidden;
+      border:1px solid rgba(15,23,42,.10);box-shadow:0 40px 120px rgba(0,0,0,.42);
+    }
+    .pp-top{
+      position:relative;height:150px;
+      background:linear-gradient(180deg, rgba(2,6,23,0) 40%, rgba(2,6,23,.45) 100%),
+              url('hero-house.png') center/cover no-repeat;
+    }
+    .pp-topbar{position:absolute;left:0;right:0;bottom:0;padding:14px 14px 12px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;}
+    .pp-brand{color:#fff;font-weight:900;letter-spacing:.01em;font-size:18px;text-shadow:0 8px 30px rgba(0,0,0,.55);}
+    .pp-body{padding:12px 14px 10px;background:#fff;}
+
+    .pp-screen{display:none;}
+    .pp-screen.active{display:block;}
+
+    .pp-home-card{
+      border:1px solid #eef2f7;border-radius:18px;padding:12px;background:#fff;
+      box-shadow:0 14px 40px rgba(2,6,23,.06);
+    }
+    .pp-home-row{display:flex;gap:10px;align-items:flex-start}
+    .pp-avatar{
+      width:38px;height:38px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+      border:1px solid #e5e7eb;background:#fff;font-family:'Playfair Display','Didot','Bodoni MT',serif;font-weight:700;color:#0b1120;flex:0 0 auto;
+    }
+    .pp-home-title{margin:0;font-weight:900;font-size:13.5px;line-height:1.25}
+    .pp-home-sub{margin:6px 0 0;color:#475569;font-weight:700;font-size:12px;line-height:1.35}
+    .pp-primary{
+      width:100%;margin-top:12px;padding:12px;border-radius:999px;border:1px solid #eef2f7;background:#f3f4f6;
+      color:#0b1120;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+    }
+
+    .pp-messages-wrap{border:1px solid #eef2f7;border-radius:18px;overflow:hidden;background:#fff;}
+    .chat-main{display:flex;flex-direction:column;height:360px;min-height:320px;}
+    .chat-messages{padding:12px;overflow:auto;flex:1;background:#ffffff;}
+    .msg{display:flex;margin:10px 0}
+    .msg.user{justify-content:flex-end}
+    .msg.bot{justify-content:flex-start}
+    .bubble{max-width:86%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;box-shadow:0 10px 26px rgba(0,0,0,.06)}
+    .bubble.user{background:#0b1120;color:#e5e7eb;border-top-right-radius:6px}
+    .bubble.bot{background:#ffffff;color:#0f172a;border:1px solid #e5e7eb;border-top-left-radius:6px}
+    .chat-inputbar{padding:10px;border-top:1px solid #eef2f7;background:#fff;display:flex;gap:10px;align-items:center}
+    .chat-input{flex:1;padding:12px 12px;border-radius:14px;border:1px solid #cbd5e1;font-size:14px;outline:none}
+    .chat-input:focus{border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
+    .send-btn{padding:12px 14px;border-radius:14px;border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;font-weight:1000;cursor:pointer}
+    .send-btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .pp-tabs{
+      display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #eef2f7;background:#fff;padding:8px 6px;
+    }
+    .pp-tab{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+      padding:8px 6px;border-radius:14px;border:0;background:transparent;cursor:pointer;color:#64748b;
+      font-weight:900;font-size:11px;
+    }
+    .pp-tab svg{width:18px;height:18px;opacity:.75;transition:transform .15s ease, opacity .15s ease}
+    .pp-tab.active{color:#0b1120;background:#f8fafc;}
+    .pp-tab:hover{color:#0b1120;background:#f8fafc}
+
+    .pp-close-fab{
+      position:absolute;right:10px;bottom:-62px;width:48px;height:48px;border-radius:999px;border:1px solid #e5e7eb;
+      background:#fff;color:#0b1120;box-shadow:0 18px 60px rgba(0,0,0,.25);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;
+    }
+
+    .pp-settings{border:1px solid #eef2f7;border-radius:18px;padding:12px;background:#fff;}
+    .pp-settings h3{margin:0 0 10px;font-size:13.5px;font-weight:1000;color:#0b1120}
+    .pp-setting-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #eef2f7;border-radius:14px;background:#fff;margin-bottom:10px}
+    .pp-select{
+      appearance:none;-webkit-appearance:none;-moz-appearance:none;
+      border:1px solid #e2e8f0;background:#f8fafc;color:#0b1120;font-weight:900;font-size:12px;border-radius:12px;
+      padding:10px 34px 10px 12px;cursor:pointer;line-height:1;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23647569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 10px center;background-size:18px 18px;
+    }
+    .pp-setting-link{display:block;text-align:center;margin-top:6px;color:#0ea5e9;font-weight:1000;text-decoration:none}
+
+    @media (max-width: 900px){
+      .chat-launcher{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));}
+      .chat-peek{display:none;}
+      .chat-window{left:12px;right:12px;width:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:78vh;}
+      .disc-btn{left:14px;right:auto;bottom:calc(14px + env(safe-area-inset-bottom));padding:8px 12px;font-size:11px;opacity:.92;}
+    }
+  </style>
 </head>
 
 <body>
 
 <section class="hero">
-  <!-- Rotating background images (PNG) -->
   <div class="hero-rotator" aria-hidden="true">
     <img class="hero-slide active" id="heroImg0" alt="" loading="eager" decoding="async" src="hero-house.png">
     <img class="hero-slide" id="heroImg1" alt="" loading="eager" decoding="async" src="hero-auto.png">
@@ -1131,15 +615,146 @@
     <h1 class="hero-headline" id="heroHeader" data-i18n="hero_header_home">Home Insurance</h1>
 
     <div class="hero-cta-wrap">
-      <p class="phc-hook-hero attn" id="phcHook" data-i18n="phc_hook_v1">If your life looks different than when you started your policy, your coverage may not match anymore.</p>
-      <button class="cta cta-secondary" id="openHealthCheck" type="button">30-Second Policy Health Check</button>
-      <button class="cta cta-secondary" id="openFunnel" type="button" data-i18n="cta_check" aria-hidden="true" style="opacity:0;pointer-events:none;">Check My Options</button>
+      <p class="phc-hook-hero attn" id="phcHook" data-i18n="phc_hook_v1">
+        If your life looks different than when you started your policy, your coverage may not match anymore.
+      </p>
+
+      <button class="cta cta-secondary visible" id="openHealthCheck" type="button">30-Second Policy Health Check</button>
+      <button class="cta cta-secondary" id="openFunnel" type="button" data-i18n="cta_check" aria-hidden="true">Check My Options</button>
       <div class="cta-micro" id="ctaMicro">2 minutes • Not a quote • Agent follow-up</div>
     </div>
   </div>
 </section>
 
-<!-- Lead Funnel Modal (fallback if CLICKFUNNEL_URL is blank) -->
+<!-- =====================
+     POLICY HEALTH CHECK MODAL (SEPARATE TOOL)
+     ===================== -->
+<div class="modal-overlay" id="phcModalOverlay"></div>
+<div class="modal" id="phcModal">
+  <div class="card" role="dialog" aria-label="30-Second Policy Health Check">
+    <div class="card-head">
+      <div>
+        <h2>30-Second Policy Health Check</h2>
+        <p>General info only — a licensed agent reviews before any quote, application, binding, or policy change.</p>
+      </div>
+      <button class="icon-btn" id="phcCloseModal" type="button">✕</button>
+    </div>
+
+    <div class="card-body">
+      <div class="phc-card">
+        <div class="phc-header">
+          <div class="phc-badge">✓</div>
+          <div>
+            <p class="phc-title">Policy Health Check</p>
+            <p class="phc-hook">Answer a few quick questions to spot common coverage gaps (general info only; agent review required).</p>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field" style="grid-column:1 / -1;">
+            <label>1) Any life changes in the last 12 months? (select all)</label>
+            <div class="hint">Changes are the #1 reason policies stop matching real life.</div>
+            <div class="phc-grid" id="phcChanges">
+              <label class="phc-chip"><input type="checkbox" value="Moved/bought home">Moved/bought home</label>
+              <label class="phc-chip"><input type="checkbox" value="New driver/teen driver">New driver/teen driver</label>
+              <label class="phc-chip"><input type="checkbox" value="New vehicle/financed/leased">New vehicle/financed/leased</label>
+              <label class="phc-chip"><input type="checkbox" value="Marriage/divorce/new baby">Marriage/divorce/new baby</label>
+              <label class="phc-chip"><input type="checkbox" value="Work from home/home business">Work from home/home business</label>
+              <label class="phc-chip"><input type="checkbox" value="Major remodel/new roof/solar">Major remodel/new roof/solar</label>
+              <label class="phc-chip"><input type="checkbox" value="None">None</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="phcProperty">2) Property situation *</label>
+            <select id="phcProperty">
+              <option value="">Select…</option>
+              <option>Own a home</option>
+              <option>Rent</option>
+              <option>Condo/Townhome</option>
+              <option>Landlord/Rental property</option>
+              <option>Not sure</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="phcDeductible">3) Comfortable out-of-pocket if a claim happened tomorrow? *</label>
+            <select id="phcDeductible">
+              <option value="">Select…</option>
+              <option>$500–$1,000</option>
+              <option>$1,000–$2,500</option>
+              <option>$2,500–$5,000+</option>
+              <option>Not sure</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="phcLiability">4) If you were sued after an accident/injury, how protected do you feel? *</label>
+            <select id="phcLiability">
+              <option value="">Select…</option>
+              <option>Very protected (high liability / umbrella)</option>
+              <option>Somewhat protected</option>
+              <option>Not protected / Not sure</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="phcReview">5) Last full policy review with a licensed agent? *</label>
+            <select id="phcReview">
+              <option value="">Select…</option>
+              <option>Within 12 months</option>
+              <option>1–3 years ago</option>
+              <option>3+ years ago / never</option>
+              <option>Not sure</option>
+            </select>
+          </div>
+
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Optional: Any property risk flags? (select all)</label>
+            <div class="phc-grid" id="phcRisks">
+              <label class="phc-chip"><input type="checkbox" value="Wildfire/brush nearby">Wildfire/brush nearby</label>
+              <label class="phc-chip"><input type="checkbox" value="Hail-prone / roof 10+ yrs">Hail-prone / roof 10+ yrs</label>
+              <label class="phc-chip"><input type="checkbox" value="Basement/sump pump">Basement/sump pump</label>
+              <label class="phc-chip"><input type="checkbox" value="Pool/trampoline/dog">Pool/trampoline/dog</label>
+              <label class="phc-chip"><input type="checkbox" value="Not sure">Not sure</label>
+              <label class="phc-chip"><input type="checkbox" value="None">None</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="phc-result" id="phcResult" aria-live="polite">
+          <div class="phc-result-top">
+            <div class="phc-result-left">
+              <span class="phc-dot" id="phcDot" aria-hidden="true"></span>
+              <div><div class="phc-result-label" id="phcLabel">Green</div></div>
+            </div>
+            <button class="btn" id="phcRun" type="button">Show my result</button>
+          </div>
+
+          <div class="phc-result-copy" id="phcCopy"></div>
+          <div class="phc-subhead" id="phcSubhead">
+            Most people don't switch because they're happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.
+          </div>
+          <ul class="phc-result-why" id="phcWhy"></ul>
+
+          <div class="phc-loyalty" id="phcLoyalty" aria-live="polite">
+            <p class="m" id="phcLoyaltyMsg">Loyalty isn't the same as protection.</p>
+            <button class="btn btn-primary" id="phcLeadCta" type="button">Check My Options</button>
+          </div>
+
+          <div class="phc-result-actions">
+            <button class="btn btn-primary" id="phcCta" type="button">Continue to Options</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================
+     LEAD MODAL (fallback if CLICKFUNNEL_URL is blank)
+     ===================== -->
 <div class="modal-overlay" id="modalOverlay"></div>
 <div class="modal" id="modal">
   <div class="card" role="dialog" aria-label="Options pre-check form">
@@ -1150,9 +765,10 @@
       </div>
       <button class="icon-btn" id="closeModal" type="button">✕</button>
     </div>
+
     <div class="card-body">
       <form id="leadForm">
-        <!-- Stepper (mobile-first) -->
+
         <div class="stepper" id="stepper" aria-label="Form progress">
           <div class="stepper-top">
             <div class="stepper-kicker" id="stepperKicker">Step 1 of 4</div>
@@ -1227,198 +843,8 @@
             </div>
           </section>
 
-          <!-- STEP 3: Policy Health Check -->
+          <!-- STEP 3 -->
           <section class="step" data-step="2" aria-label="Step 3">
-            <!-- Option A: desktop collapsed PHC to reduce clutter/height -->
-            <div class="phc-collapse collapsed" id="phcCollapse">
-              <div class="phc-collapse-head">
-                <div class="phc-collapse-title">
-                  <div class="t">Policy Health Check</div>
-                  <div class="s">Answer a few quick questions to spot common coverage gaps (general info only; agent review required). <span style="white-space:nowrap;">Takes ~30 seconds</span></div>
-                </div>
-                <button class="phc-toggle" id="phcToggle" type="button" aria-expanded="false" aria-controls="phcCollapsible">Show</button>
-              </div>
-              <div class="phc-collapsible" id="phcCollapsible">
-                <div class="phc-collapsible-inner">
-            <div class="grid phc-desktop-grid">
-              <div class="field" style="grid-column:1 / -1;">
-                <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-                  <span>Policy Health Check</span>
-                  <span class="hint" style="margin:0;">Takes ~30 seconds</span>
-                </label>
-                <div class="hint">Answer a few simple questions so we can spot common coverage gaps (general info; agent review required).</div>
-              </div>
-
-              <div class="field" style="grid-column:1 / -1;">
-                <label>1) Any life changes in the last 12 months? (select all)</label>
-                <div class="hint">Changes are the #1 reason policies stop matching real life.</div>
-                <div class="phc-grid" id="phcChanges">
-                  <label class="phc-chip"><input type="checkbox" value="Moved/bought home">Moved/bought home</label>
-                  <label class="phc-chip"><input type="checkbox" value="New driver/teen driver">New driver/teen driver</label>
-                  <label class="phc-chip"><input type="checkbox" value="New vehicle/financed/leased">New vehicle/financed/leased</label>
-                  <label class="phc-chip"><input type="checkbox" value="Marriage/divorce/new baby">Marriage/divorce/new baby</label>
-                  <label class="phc-chip"><input type="checkbox" value="Work from home/home business">Work from home/home business</label>
-                  <label class="phc-chip"><input type="checkbox" value="Major remodel/new roof/solar">Major remodel/new roof/solar</label>
-                  <label class="phc-chip"><input type="checkbox" value="None">None</label>
-                </div>
-              </div>
-
-              <div class="field">
-                <label for="phcProperty">2) Property situation *</label>
-                <select id="phcProperty" name="phcProperty" data-phc-required="true">
-                  <option value="">Select…</option>
-                  <option>Own a home</option>
-                  <option>Rent</option>
-                  <option>Condo/Townhome</option>
-                  <option>Landlord/Rental property</option>
-                  <option>Not sure</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="phcDeductible">3) Comfortable out-of-pocket if a claim happened tomorrow? *</label>
-                <select id="phcDeductible" name="phcDeductible" data-phc-required="true">
-                  <option value="">Select…</option>
-                  <option>$500–$1,000</option>
-                  <option>$1,000–$2,500</option>
-                  <option>$2,500–$5,000+</option>
-                  <option>Not sure</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="phcLiability">4) If you were sued after an accident/injury, how protected do you feel? *</label>
-                <select id="phcLiability" name="phcLiability" data-phc-required="true">
-                  <option value="">Select…</option>
-                  <option>Very protected (high liability / umbrella)</option>
-                  <option>Somewhat protected</option>
-                  <option>Not protected / Not sure</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="phcReview">5) Last full policy review with a licensed agent? *</label>
-                <select id="phcReview" name="phcReview" data-phc-required="true">
-                  <option value="">Select…</option>
-                  <option>Within 12 months</option>
-                  <option>1–3 years ago</option>
-                  <option>3+ years ago / never</option>
-                  <option>Not sure</option>
-                </select>
-              </div>
-
-              <div class="field" style="grid-column:1 / -1;">
-                <label>Optional: Any property risk flags? (select all)</label>
-                <div class="phc-grid" id="phcRisks">
-                  <label class="phc-chip"><input type="checkbox" value="Wildfire/brush nearby">Wildfire/brush nearby</label>
-                  <label class="phc-chip"><input type="checkbox" value="Hail-prone / roof 10+ yrs">Hail-prone / roof 10+ yrs</label>
-                  <label class="phc-chip"><input type="checkbox" value="Basement/sump pump">Basement/sump pump</label>
-                  <label class="phc-chip"><input type="checkbox" value="Pool/trampoline/dog">Pool/trampoline/dog</label>
-                  <label class="phc-chip"><input type="checkbox" value="Not sure">Not sure</label>
-                  <label class="phc-chip"><input type="checkbox" value="None">None</label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Desktop: result + CTA (stays inside modal; proceeds to Options step) -->
-            <div class="phc-result" id="phcResult" aria-live="polite">
-              <div class="phc-result-top">
-                <div class="phc-result-left">
-                  <span class="phc-dot" id="phcDot" aria-hidden="true"></span>
-                  <div>
-                    <div class="phc-result-label" id="phcLabel">Green</div>
-                  </div>
-                </div>
-                <button class="btn phc-run" id="phcRun" type="button">Show my result</button>
-              </div>
-              <div class="phc-result-copy" id="phcCopy"></div>
-              <div class="phc-subhead" id="phcSubhead">Most people don't switch because they're happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.</div>
-              <ul class="phc-result-why" id="phcWhy"></ul>
-
-              <!-- Red-result interstitial: message + lead CTA -->
-              <div class="phc-loyalty" id="phcLoyalty" aria-live="polite">
-                <p class="m" id="phcLoyaltyMsg">Loyalty isn't the same as protection.</p>
-                <button class="btn btn-primary" id="phcLeadCta" type="button">Check My Options</button>
-              </div>
-              <div class="phc-summary" id="phcSummary" style="display:none;"></div>
-              <div class="phc-result-actions">
-                <button class="btn btn-primary phc-continue" id="phcCta" type="button" style="display:none;">Continue to Options</button>
-              </div>
-            </div>
-
-            <!-- Mobile: tap-to-advance flow (keeps the same underlying fields for submission) -->
-            <div class="phc-mobile-flow" id="phcMobileFlow" aria-label="Policy Health Check mobile flow">
-              <div class="phc-q" id="phcQ0">
-                <p class="phc-q-title">1) Any life changes in the last 12 months?</p>
-                <p class="phc-q-hint">Tap any that apply (you can choose multiple). Then continue.</p>
-                <div class="phc-answers" id="phcMobileChanges"></div>
-                <div class="phc-mobile-nav">
-                  <button class="btn" type="button" id="phcBack0" disabled>Back</button>
-                  <button class="btn btn-primary" type="button" id="phcNext0">Continue</button>
-                </div>
-              </div>
-
-              <div class="phc-q" id="phcQ1" style="display:none;">
-                <p class="phc-q-title">2) Property situation *</p>
-                <p class="phc-q-hint">Tap one option.</p>
-                <div class="phc-answers" id="phcMobileProperty"></div>
-                <div class="phc-mobile-nav">
-                  <button class="btn" type="button" id="phcBack1">Back</button>
-                  <button class="btn btn-primary" type="button" id="phcNext1">Continue</button>
-                </div>
-              </div>
-
-              <div class="phc-q" id="phcQ2" style="display:none;">
-                <p class="phc-q-title">3) Comfortable out-of-pocket if a claim happened tomorrow? *</p>
-                <p class="phc-q-hint">Tap one option.</p>
-                <div class="phc-answers" id="phcMobileDeductible"></div>
-                <div class="phc-mobile-nav">
-                  <button class="btn" type="button" id="phcBack2">Back</button>
-                  <button class="btn btn-primary" type="button" id="phcNext2">Continue</button>
-                </div>
-              </div>
-
-              <div class="phc-q" id="phcQ3" style="display:none;">
-                <p class="phc-q-title">4) If you were sued after an accident/injury, how protected do you feel? *</p>
-                <p class="phc-q-hint">Tap one option.</p>
-                <div class="phc-answers" id="phcMobileLiability"></div>
-                <div class="phc-mobile-nav">
-                  <button class="btn" type="button" id="phcBack3">Back</button>
-                  <button class="btn btn-primary" type="button" id="phcNext3">Continue</button>
-                </div>
-              </div>
-
-              <div class="phc-q" id="phcQ4" style="display:none;">
-                <p class="phc-q-title">5) Last full policy review with a licensed agent? *</p>
-                <p class="phc-q-hint">Tap one option.</p>
-                <div class="phc-answers" id="phcMobileReview"></div>
-                <div class="phc-mobile-nav">
-                  <button class="btn" type="button" id="phcBack4">Back</button>
-                  <button class="btn btn-primary" type="button" id="phcNext4">Continue</button>
-                </div>
-              </div>
-
-              <div class="phc-q" id="phcQ5" style="display:none;">
-                <p class="phc-q-title">Optional: Any property risk flags?</p>
-                <p class="phc-q-hint">Tap any that apply (you can choose multiple). Then finish.</p>
-                <div class="phc-answers" id="phcMobileRisks"></div>
-                <div class="phc-mobile-nav">
-                  <button class="btn" type="button" id="phcBack5">Back</button>
-                  <button class="btn btn-primary" type="button" id="phcFinish">Finish</button>
-                </div>
-              </div>
-
-              <div class="phc-q" id="phcQDone" style="display:none;">
-                <p class="phc-q-title">✅ Policy Health Check complete</p>
-                <p class="phc-q-hint">Based on your answers:</p>
-                <div class="phc-result show" id="phcResultMobile"></div>
-              </div>
-            </div>
-
-          </section>
-
-          <!-- STEP 4 -->
-          <section class="step" data-step="3" aria-label="Step 4">
             <div class="grid">
               <div class="field" style="grid-column:1 / -1;">
                 <label for="roofAge">Roof age</label>
@@ -1431,6 +857,12 @@
                 <label for="notes">Notes (optional)</label>
                 <textarea id="notes" name="notes" placeholder="Any details that help (hail claim history, wildfire concerns, bundling, etc.)"></textarea>
               </div>
+            </div>
+          </section>
+
+          <!-- STEP 4 -->
+          <section class="step" data-step="3" aria-label="Step 4">
+            <div class="grid">
               <div class="field" style="grid-column:1 / -1;">
                 <label style="display:flex;gap:10px;align-items:flex-start;font-weight:800;color:#0f172a;">
                   <input id="consent" name="consent" type="checkbox" required style="margin-top:2px;" />
@@ -1477,6 +909,7 @@
       </div>
       <button class="disc-close" id="discClose" type="button" aria-label="Close disclaimer">Close ✕</button>
     </div>
+
     <div class="disc-body">
       <div class="disc-sections">
         <section class="disc-section">
@@ -1558,7 +991,7 @@
   </div>
 </div>
 
-<!-- Channel.io-style launcher -->
+<!-- Chat launcher -->
 <div class="chat-launcher" id="chatBtn" aria-label="Open PolicyPro chat" title="Ask PolicyPro™ a question">
   <div class="chat-peek" aria-hidden="true">
     <div class="chat-label" data-i18n="chat_peek_label">Need help?</div>
@@ -1578,7 +1011,6 @@
     </div>
 
     <div class="pp-body">
-      <!-- HOME -->
       <div class="pp-screen active" id="ppScreenHome">
         <div class="pp-home-card">
           <div class="pp-home-row">
@@ -1590,10 +1022,8 @@
           </div>
           <button class="pp-primary" id="ppStartChat" type="button"><span data-i18n="pp_start_chat">Start a chat</span> <span aria-hidden="true">➤</span></button>
         </div>
-        <div class="pp-footer-note" data-i18n="pp_powered">Powered by PolicyPro</div>
       </div>
 
-      <!-- MESSAGES -->
       <div class="pp-screen" id="ppScreenMessages">
         <div class="pp-messages-wrap">
           <div class="chat-main">
@@ -1607,7 +1037,6 @@
         </div>
       </div>
 
-      <!-- SETTINGS -->
       <div class="pp-screen" id="ppScreenSettings">
         <div class="pp-settings">
           <h3 data-i18n="settings_title">Settings</h3>
@@ -1641,7 +1070,7 @@
         <span data-i18n="tab_messages">Messages</span>
       </button>
       <button class="pp-tab" id="ppTabSettings" type="button" role="tab" aria-selected="false" aria-controls="ppScreenSettings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7 1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7 1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 a2 2 0 0 1-3.8 0"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7"/></svg>
         <span data-i18n="tab_settings">Settings</span>
       </button>
     </div>
@@ -1651,30 +1080,77 @@
 </div>
 
 <script>
-  // =====================
-  // CHECK MY OPTIONS (CTA)
-  // Ensures the CTA opens on mobile.
-  // - If CLICKFUNNEL_URL is set -> open it in a new tab
-  // - Else -> open the built-in modal form
-  // =====================
   (function(){
     function onReady(fn){
       if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
       else fn();
     }
+    function el(id){ return document.getElementById(id); }
+    function safeText(s){ return String(s||'').trim(); }
 
-    onReady(function(){
-      var openBtn = document.getElementById('openFunnel');
-      var modal = document.getElementById('modal');
-      var overlay = document.getElementById('modalOverlay');
-      var closeBtn = document.getElementById('closeModal');
-      var cancelBtn = document.getElementById('cancelBtn');
+    // =====================
+    // HERO ROTATOR
+    // =====================
+    function startHeroRotator(){
+      var imgs = [el('heroImg0'), el('heroImg1'), el('heroImg2')].filter(Boolean);
+      if(imgs.length < 2) return;
 
-      if(!openBtn) return;
+      var header = el('heroHeader');
+      var labels = ['Home Insurance', 'Car Insurance', 'Business Insurance'];
 
-      function openModal(){
-        // Prefer ClickFunnels when configured
-        if(window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== ''){
+      var idx = 0;
+      setInterval(function(){
+        imgs[idx].classList.remove('active');
+        idx = (idx + 1) % imgs.length;
+        imgs[idx].classList.add('active');
+        if(header) header.textContent = labels[idx] || 'Home Insurance';
+      }, 5200);
+    }
+
+    // =====================
+    // CTA REVEAL (mobile shows immediately)
+    // =====================
+    function wireRevealCTA(){
+      var cta = el('openFunnel');
+      var hcBtn = el('openHealthCheck');
+      if(!cta) return;
+
+      function reveal(){
+        cta.classList.add('visible');
+        cta.removeAttribute('aria-hidden');
+      }
+
+      // mobile: show immediately
+      if(window.matchMedia && window.matchMedia('(max-width: 900px)').matches){
+        reveal();
+      } else {
+        function onScroll(){
+          if(window.scrollY > window.innerHeight * 0.15){
+            reveal();
+            window.removeEventListener('scroll', onScroll);
+          }
+        }
+        window.addEventListener('scroll', onScroll, {passive:true});
+      }
+
+      if(hcBtn){
+        hcBtn.addEventListener('click', reveal);
+        hcBtn.addEventListener('touchend', function(){ reveal(); }, {passive:true});
+      }
+    }
+
+    // =====================
+    // CHECK MY OPTIONS open
+    // =====================
+    function wireLeadModal(){
+      var openBtn = el('openFunnel');
+      var modal = el('modal');
+      var overlay = el('modalOverlay');
+      var closeBtn = el('closeModal');
+      var cancelBtn = el('cancelBtn');
+
+      function openLead(){
+        if(window.CLICKFUNNEL_URL && safeText(window.CLICKFUNNEL_URL) !== ''){
           window.open(window.CLICKFUNNEL_URL, '_blank', 'noopener');
           return;
         }
@@ -1682,83 +1158,91 @@
         if(modal) modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
       }
-
-      function closeModal(){
+      function closeLead(){
         if(overlay) overlay.style.display = 'none';
         if(modal) modal.style.display = 'none';
         document.body.style.overflow = '';
       }
 
-      // Mobile Safari sometimes delays click — listen to both
-      openBtn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
-      openBtn.addEventListener('touchend', function(e){ e.preventDefault(); openModal(); }, { passive:false });
+      window.__openLeadModal = openLead;
 
-      if(overlay) overlay.addEventListener('click', closeModal);
-      if(closeBtn) closeBtn.addEventListener('click', closeModal);
-      if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
-
-      // Esc to close (desktop)
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape') closeModal();
-      });
-
-      // If a deep-link hash is present, open the modal
-      if(location.hash === '#options'){
-        openModal();
+      if(openBtn){
+        openBtn.addEventListener('click', function(e){ e.preventDefault(); openLead(); });
+        openBtn.addEventListener('touchend', function(e){ e.preventDefault(); openLead(); }, {passive:false});
       }
-
-      // Make sure CTA is never inert
-      openBtn.style.pointerEvents = 'auto';
-    });
-  })();
-</script>
-
-<script>
-  // =====================
-  // LEAD FORM SUBMIT (DESKTOP + MOBILE)
-  // Fixes desktop submit failing when PHC fields are hidden/collapsed.
-  // - PHC is optional unless the user opens it.
-  // - Sends lead to Google Apps Script (GAS_WEBAPP_URL)
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
+      if(overlay) overlay.addEventListener('click', closeLead);
+      if(closeBtn) closeBtn.addEventListener('click', closeLead);
+      if(cancelBtn) cancelBtn.addEventListener('click', closeLead);
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeLead(); });
     }
 
-    onReady(function(){
-      var form = document.getElementById('leadForm');
-      var statusEl = document.getElementById('formStatus');
-      var submitBtn = document.getElementById('submitBtn');
-      var stepSubmitBtn = document.getElementById('stepSubmit');
+    // =====================
+    // Lead stepper (mobile)
+    // =====================
+    function wireStepper(){
+      var stepsWrap = el('steps');
+      var steps = stepsWrap ? Array.prototype.slice.call(stepsWrap.querySelectorAll('.step')) : [];
+      if(!steps.length) return;
 
-      // PHC is optional unless user opens it
-      var phcCollapse = document.getElementById('phcCollapse');
-      var phcToggle = document.getElementById('phcToggle');
-      var phcFields = Array.prototype.slice.call(document.querySelectorAll('[data-phc-required="true"]'));
+      var stepperKicker = el('stepperKicker');
+      var bar = el('stepperBarFill');
+      var dots = Array.prototype.slice.call(document.querySelectorAll('.dotx'));
 
-      function setPhcRequired(isRequired){
-        phcFields.forEach(function(el){
-          if(!el) return;
-          if(isRequired){
-            el.setAttribute('required','required');
-          } else {
-            el.removeAttribute('required');
+      var back = el('stepBack');
+      var next = el('stepNext');
+      var submit = el('stepSubmit');
+
+      var idx = 0;
+
+      function setStep(n){
+        idx = Math.max(0, Math.min(steps.length - 1, n));
+        steps.forEach(function(s,i){ s.classList.toggle('active', i === idx); });
+
+        dots.forEach(function(d,i){ d.classList.toggle('active', i === idx); });
+
+        if(stepperKicker) stepperKicker.textContent = 'Step ' + (idx+1) + ' of ' + steps.length;
+        if(bar) bar.style.width = ((idx+1)/steps.length * 100) + '%';
+
+        if(back) back.disabled = (idx === 0);
+        if(next) next.style.display = (idx === steps.length-1 ? 'none' : 'inline-flex');
+        if(submit) submit.style.display = (idx === steps.length-1 ? 'inline-flex' : 'none');
+      }
+
+      function validateCurrentStep(){
+        var current = steps[idx];
+        if(!current) return true;
+        var required = Array.prototype.slice.call(current.querySelectorAll('[required]'));
+        for(var i=0;i<required.length;i++){
+          var node = required[i];
+          if(node.type === 'checkbox' && !node.checked){
+            node.focus(); alert('Please agree to consent to continue.');
+            return false;
           }
-        });
+          if(node.value === ''){
+            node.focus(); node.reportValidity && node.reportValidity();
+            return false;
+          }
+        }
+        return true;
       }
 
-      // Default: NOT required so desktop can submit even if PHC stays collapsed.
-      setPhcRequired(false);
+      if(back) back.addEventListener('click', function(){ setStep(idx-1); });
+      if(next) next.addEventListener('click', function(){
+        if(!validateCurrentStep()) return;
+        setStep(idx+1);
+      });
 
-      if(phcToggle && phcCollapse){
-        phcToggle.addEventListener('click', function(){
-          var isCollapsed = phcCollapse.classList.contains('collapsed');
-          // After this click, the panel will toggle.
-          // If it is currently collapsed, user is opening -> make required.
-          setPhcRequired(isCollapsed);
-        });
-      }
+      setStep(0);
+    }
+
+    // =====================
+    // Lead submit
+    // =====================
+    function wireLeadSubmit(){
+      var form = el('leadForm');
+      var statusEl = el('formStatus');
+      var submitBtn = el('submitBtn');
+      var stepSubmitBtn = el('stepSubmit');
 
       function showStatus(msg, kind){
         if(!statusEl) return;
@@ -1766,7 +1250,6 @@
         statusEl.style.display = 'block';
         statusEl.textContent = msg;
       }
-
       function disableSubmit(disabled){
         if(submitBtn) submitBtn.disabled = disabled;
         if(stepSubmitBtn) stepSubmitBtn.disabled = disabled;
@@ -1777,20 +1260,13 @@
       form.addEventListener('submit', async function(e){
         e.preventDefault();
 
-        // If PHC is still collapsed, ensure PHC fields don't block constraint validation
-        if(phcCollapse && phcCollapse.classList.contains('collapsed')){
-          setPhcRequired(false);
-        }
-
-        // Native constraint validation
         if(!form.checkValidity()){
-          // Let the browser show which field is missing
           form.reportValidity();
           showStatus('Please complete the required fields highlighted above.', 'err');
           return;
         }
 
-        if(!window.GAS_WEBAPP_URL || String(window.GAS_WEBAPP_URL).trim() === ''){
+        if(!window.GAS_WEBAPP_URL || safeText(window.GAS_WEBAPP_URL) === ''){
           showStatus('Missing GAS_WEBAPP_URL. Paste your Google Apps Script Web App URL in the header script.', 'err');
           return;
         }
@@ -1800,19 +1276,9 @@
 
         try{
           var fd = new FormData(form);
-
-          // Add a couple of helpful fields for tracking
           fd.append('source', 'landing');
           fd.append('submittedAt', new Date().toISOString());
           fd.append('page', location.href);
-
-          // If PHC collapsed, blank PHC fields so they don’t confuse your sheet
-          if(phcCollapse && phcCollapse.classList.contains('collapsed')){
-            fd.set('phcProperty','');
-            fd.set('phcDeductible','');
-            fd.set('phcLiability','');
-            fd.set('phcReview','');
-          }
 
           var res = await fetch(window.GAS_WEBAPP_URL, {
             method: 'POST',
@@ -1822,827 +1288,366 @@
           });
 
           var text = await res.text();
-          if(!res.ok){
-            throw new Error('HTTP ' + res.status + ': ' + text);
-          }
+          if(!res.ok) throw new Error('HTTP ' + res.status + ': ' + text);
 
           showStatus('✅ Submitted. We’ll follow up shortly.', 'ok');
           form.reset();
 
-          // Close modal if present
-          var modal = document.getElementById('modal');
-          var overlay = document.getElementById('modalOverlay');
-          if(modal && overlay){
-            overlay.style.display = 'none';
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
-          }
+          // Close lead modal
+          var modal = el('modal');
+          var overlay = el('modalOverlay');
+          if(overlay) overlay.style.display = 'none';
+          if(modal) modal.style.display = 'none';
+          document.body.style.overflow = '';
 
         } catch(err){
           console.error(err);
-          showStatus('Submission failed. Please try again — or text/call instead. (' + (err && err.message ? err.message : 'error') + ')', 'err');
+          showStatus('Submission failed. Please try again. (' + (err && err.message ? err.message : 'error') + ')', 'err');
         } finally {
           disableSubmit(false);
         }
       });
-    });
-  })();
-</script>
-
-<script>
-  // =====================
-  // POLICY HEALTH CHECK (OPEN + COLLAPSE TOGGLE)
-  // - Hero button "30-Second Policy Health Check" opens the modal and jumps to PHC section.
-  // - "Show" button inside PHC section expands/collapses the PHC questions.
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
     }
 
-    function openBuiltInModal(){
-      var modal = document.getElementById('modal');
-      var overlay = document.getElementById('modalOverlay');
-      if(overlay) overlay.style.display = 'block';
-      if(modal) modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
+    // =====================
+    // Disclaimer modal
+    // =====================
+    function wireDisclaimer(){
+      var open = el('openDisclaimer');
+      var ov = el('discOverlay');
+      var modal = el('discModal');
+      var c1 = el('discClose');
+      var c2 = el('discClose2');
+      var acc = el('discAccept');
 
-    function scrollToPHC(){
-      var phc = document.getElementById('phcCollapse');
-      if(!phc) return;
-      // Ensure expanded so user sees content
-      phc.classList.remove('collapsed');
-      var toggle = document.getElementById('phcToggle');
-      if(toggle){
-        toggle.setAttribute('aria-expanded','true');
-        toggle.textContent = 'Hide';
-        toggle.classList.add('alt');
+      function openD(){
+        if(ov) ov.style.display = 'block';
+        if(modal) modal.style.display = 'flex';
       }
-      // Scroll the modal body to PHC
-      var body = document.querySelector('#modal .card-body');
-      if(body){
-        // Wait a tick so layout is correct
-        setTimeout(function(){
-          var top = phc.getBoundingClientRect().top;
-          var bodyTop = body.getBoundingClientRect().top;
-          body.scrollTop += (top - bodyTop) - 10;
-        }, 50);
-      } else {
-        phc.scrollIntoView({ behavior:'smooth', block:'start' });
+      function closeD(){
+        if(ov) ov.style.display = 'none';
+        if(modal) modal.style.display = 'none';
       }
+      if(open) open.addEventListener('click', openD);
+      if(ov) ov.addEventListener('click', closeD);
+      if(c1) c1.addEventListener('click', closeD);
+      if(c2) c2.addEventListener('click', closeD);
+      if(acc) acc.addEventListener('click', closeD);
     }
 
-    function togglePHCCollapse(){
-      var phcCollapse = document.getElementById('phcCollapse');
-      var phcToggle = document.getElementById('phcToggle');
-      if(!phcCollapse || !phcToggle) return;
+    // =====================
+    // PHC modal + scoring
+    // =====================
+    function wirePHC(){
+      var openBtn = el('openHealthCheck');
+      var overlay = el('phcModalOverlay');
+      var modal = el('phcModal');
+      var closeBtn = el('phcCloseModal');
 
-      var willOpen = phcCollapse.classList.contains('collapsed');
-      phcCollapse.classList.toggle('collapsed');
-      phcToggle.setAttribute('aria-expanded', String(willOpen));
-      phcToggle.textContent = willOpen ? 'Hide' : 'Show';
-      phcToggle.classList.toggle('alt', willOpen);
-
-      // If user opened PHC, make PHC selects required (submit handler already respects this)
-      var phcFields = Array.prototype.slice.call(document.querySelectorAll('[data-phc-required="true"]'));
-      phcFields.forEach(function(el){
-        if(!el) return;
-        if(willOpen) el.setAttribute('required','required');
-        else el.removeAttribute('required');
-      });
-    }
-
-    onReady(function(){
-      // HERO: open the modal and jump to PHC
-      var heroPHC = document.getElementById('openHealthCheck');
-      if(heroPHC){
-        heroPHC.addEventListener('click', function(e){
-          e.preventDefault();
-          // If ClickFunnels is configured, still open the built-in modal for PHC
-          openBuiltInModal();
-          scrollToPHC();
-        });
-        heroPHC.addEventListener('touchend', function(e){
-          e.preventDefault();
-          openBuiltInModal();
-          scrollToPHC();
-        }, { passive:false });
+      function openPHC(){
+        if(overlay) overlay.style.display = 'block';
+        if(modal) modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+      function closePHC(){
+        if(overlay) overlay.style.display = 'none';
+        if(modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
       }
 
-      // INSIDE MODAL: expand/collapse toggle
-      var phcToggle = document.getElementById('phcToggle');
-      if(phcToggle){
-        phcToggle.addEventListener('click', function(e){
-          e.preventDefault();
-          togglePHCCollapse();
+      window.__closePHCModal = closePHC;
+
+      if(openBtn){
+        openBtn.addEventListener('click', function(e){ e.preventDefault(); openPHC(); });
+        openBtn.addEventListener('touchend', function(e){ e.preventDefault(); openPHC(); }, {passive:false});
+      }
+      if(closeBtn) closeBtn.addEventListener('click', closePHC);
+      if(overlay) overlay.addEventListener('click', closePHC);
+
+      // Chip active styling
+      function wireChipGroup(rootId){
+        var root = el(rootId);
+        if(!root) return;
+        Array.prototype.slice.call(root.querySelectorAll('.phc-chip')).forEach(function(label){
+          var input = label.querySelector('input');
+          if(!input) return;
+
+          function sync(){
+            label.classList.toggle('active', !!input.checked);
+          }
+          sync();
+
+          label.addEventListener('click', function(){
+            // default checkbox toggles automatically
+            setTimeout(sync, 0);
+
+            // "None" clears others
+            if(input.checked && input.value === 'None'){
+              Array.prototype.slice.call(root.querySelectorAll('input[type="checkbox"]')).forEach(function(i){
+                if(i !== input){ i.checked = false; }
+              });
+              Array.prototype.slice.call(root.querySelectorAll('.phc-chip')).forEach(function(l){
+                var ii = l.querySelector('input');
+                l.classList.toggle('active', !!(ii && ii.checked));
+              });
+            } else if(input.checked && input.value !== 'None'){
+              // if any other selected, uncheck None
+              Array.prototype.slice.call(root.querySelectorAll('input[type="checkbox"]')).forEach(function(i){
+                if(i.value === 'None'){ i.checked = false; }
+              });
+              Array.prototype.slice.call(root.querySelectorAll('.phc-chip')).forEach(function(l){
+                var ii = l.querySelector('input');
+                l.classList.toggle('active', !!(ii && ii.checked));
+              });
+            }
+          });
         });
       }
-    });
-  })();
-</script>
+      wireChipGroup('phcChanges');
+      wireChipGroup('phcRisks');
 
-<script>
-  // =====================
-  // POLICY HEALTH CHECK (MOBILE FLOW + RESULTS)
-  // - Builds the mobile PHC screens from the desktop fields (single source of truth)
-  // - Wires Back/Continue/Finish buttons so mobile can advance
-  // - Syncs mobile answers into the hidden desktop PHC inputs so submission works
-  // - Computes Green/Yellow/Red result and shows the correct CTA + message
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
-    }
+      function compute(){
+        var changes = Array.prototype.slice.call(document.querySelectorAll('#phcChanges input[type="checkbox"]:checked')).map(function(i){return i.value;});
+        var risks = Array.prototype.slice.call(document.querySelectorAll('#phcRisks input[type="checkbox"]:checked')).map(function(i){return i.value;});
 
-    function isMobile(){
-      return !!(window.matchMedia && window.matchMedia('(max-width: 600px)').matches);
-    }
+        var property = safeText(el('phcProperty') && el('phcProperty').value);
+        var deductible = safeText(el('phcDeductible') && el('phcDeductible').value);
+        var liability = safeText(el('phcLiability') && el('phcLiability').value);
+        var review = safeText(el('phcReview') && el('phcReview').value);
 
-    function el(id){ return document.getElementById(id); }
+        var score = 0;
 
-    function qs(sel, root){ return (root || document).querySelector(sel); }
-    function qsa(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+        var changeCount = (changes.indexOf('None') !== -1) ? 0 : changes.length;
+        if(changeCount >= 1) score += 1;
+        if(changeCount >= 3) score += 1;
 
-    function safeText(s){ return String(s || '').trim(); }
+        if(/Landlord|Rental property/i.test(property)) score += 1;
+        if(/Not sure/i.test(property)) score += 1;
 
-    function ensureHiddenInput(name){
-      var form = el('leadForm');
-      if(!form) return null;
-      var existing = form.querySelector('input[name="' + name + '"]');
-      if(existing) return existing;
-      var h = document.createElement('input');
-      h.type = 'hidden';
-      h.name = name;
-      form.appendChild(h);
-      return h;
-    }
+        if(/\$2,500–\$5,000\+|\$2,500–\$5,000\+/i.test(deductible)) score += 1;
+        if(/Not sure/i.test(deductible)) score += 1;
 
-    function setHiddenMulti(name, arr){
-      var h = ensureHiddenInput(name);
-      if(!h) return;
-      h.value = (arr || []).join(', ');
-    }
+        if(/Not protected|Not sure/i.test(liability)) score += 2;
+        else if(/Somewhat/i.test(liability)) score += 1;
 
-    // Extract visible label text from a PHC chip label
-    function chipLabelText(labelEl){
-      if(!labelEl) return '';
-      // label text includes the input; use textContent then trim
-      return safeText(labelEl.textContent);
-    }
+        if(/3\+ years/i.test(review)) score += 2;
+        else if(/1–3/i.test(review)) score += 1;
+        else if(/Not sure/i.test(review)) score += 1;
 
-    function getChipValue(labelEl){
-      var input = labelEl ? labelEl.querySelector('input') : null;
-      return safeText(input && input.value ? input.value : chipLabelText(labelEl));
-    }
+        var riskCount = (risks.indexOf('None') !== -1) ? 0 : risks.length;
+        if(riskCount >= 1) score += 1;
+        if(riskCount >= 3) score += 1;
 
-    function setChipActive(labelEl, active){
-      if(!labelEl) return;
-      if(active) labelEl.classList.add('active');
-      else labelEl.classList.remove('active');
-    }
+        var label = 'Green';
+        if(score >= 6) label = 'Red';
+        else if(score >= 3) label = 'Yellow';
 
-    function setCheckbox(labelEl, checked){
-      if(!labelEl) return;
-      var input = labelEl.querySelector('input[type="checkbox"]');
-      if(input) input.checked = !!checked;
-      setChipActive(labelEl, !!checked);
-    }
+        var why = [];
+        if(changeCount >= 1) why.push('Life changes are a top reason policies stop matching reality — a quick review can prevent surprise gaps.');
+        if(/Not protected|Not sure/i.test(liability)) why.push('Liability uncertainty is a major “silent risk” — it’s what protects your savings if you’re sued.');
+        if(/3\+ years/i.test(review)) why.push('If it’s been 3+ years since a full review, you may be missing newer discounts and coverage improvements.');
+        if(/\$2,500–\$5,000\+|Not sure/i.test(deductible)) why.push('Aligning deductibles helps avoid claim out-of-pocket sticker shock.');
+        if(riskCount >= 1) why.push('Property risk flags can change what carriers require — confirming now avoids last-minute issues.');
+        if(why.length === 0) why.push('Your answers look stable. An annual check still helps confirm you’re not overpaying.');
 
-    function setSelectValue(selectEl, value){
-      if(!selectEl) return;
-      selectEl.value = value;
-      // Trigger change for any listeners
-      try{ selectEl.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){ }
-    }
+        var copy = (label === 'Green')
+          ? 'Coverage looks generally stable — a quick review can still confirm you’re not overpaying.'
+          : (label === 'Yellow')
+            ? 'There are a few signals your coverage may not match your life today — worth a quick review.'
+            : 'Multiple signals suggest potential gaps or misalignment — a review is strongly recommended.';
 
-    function buildMultiButtons(container, options, onToggle){
-      if(!container) return;
-      container.innerHTML = '';
-      options.forEach(function(opt){
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'phc-answer-btn';
-        btn.dataset.value = opt.value;
-        btn.textContent = opt.label;
-        btn.addEventListener('click', function(){
-          var isActive = btn.classList.contains('active');
-          onToggle(opt.value, !isActive, btn);
+        return {label:label, copy:copy, why:why};
+      }
+
+      function render(result){
+        var box = el('phcResult');
+        var dot = el('phcDot');
+        var lab = el('phcLabel');
+        var copy = el('phcCopy');
+        var why = el('phcWhy');
+        var sub = el('phcSubhead');
+        var loyalty = el('phcLoyalty');
+
+        if(!box) return;
+        box.classList.add('show');
+
+        if(dot){
+          dot.className = 'phc-dot' + (result.label === 'Yellow' ? ' yellow' : result.label === 'Red' ? ' red' : '');
+        }
+        if(lab) lab.textContent = result.label;
+        if(copy) copy.textContent = result.copy;
+
+        if(sub){
+          sub.classList.remove('green','red');
+          sub.classList.add(result.label === 'Red' ? 'red' : 'green');
+        }
+
+        if(why){
+          why.innerHTML = '';
+          result.why.slice(0,4).forEach(function(line){
+            var li = document.createElement('li');
+            li.textContent = line;
+            why.appendChild(li);
+          });
+        }
+
+        if(loyalty){
+          if(result.label === 'Red') loyalty.classList.add('show');
+          else loyalty.classList.remove('show');
+        }
+      }
+
+      var run = el('phcRun');
+      if(run){
+        run.addEventListener('click', function(){
+          var res = compute();
+          render(res);
         });
-        // Better mobile tap
-        btn.addEventListener('touchend', function(e){ e.preventDefault(); btn.click(); }, { passive:false });
-        container.appendChild(btn);
-      });
-    }
+      }
 
-    function buildSingleButtons(container, options, onSelect){
-      if(!container) return;
-      container.innerHTML = '';
-      options.forEach(function(opt){
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'phc-answer-btn';
-        btn.dataset.value = opt.value;
-        btn.textContent = opt.label;
-        btn.addEventListener('click', function(){
-          // Clear siblings
-          qsa('.phc-answer-btn', container).forEach(function(b){ b.classList.remove('active'); });
-          btn.classList.add('active');
-          onSelect(opt.value);
-        });
-        btn.addEventListener('touchend', function(e){ e.preventDefault(); btn.click(); }, { passive:false });
-        container.appendChild(btn);
-      });
-    }
-
-    // Compute result from the canonical desktop inputs
-    function computePHCResult(){
-      // Desktop sources (single truth)
-      var changesLabels = qsa('#phcChanges .phc-chip');
-      var risksLabels   = qsa('#phcRisks .phc-chip');
-      var selProperty   = el('phcProperty');
-      var selDed        = el('phcDeductible');
-      var selLia        = el('phcLiability');
-      var selReview     = el('phcReview');
-
-      var changes = changesLabels
-        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
-        .map(function(l){ return getChipValue(l); });
-      var risks = risksLabels
-        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
-        .map(function(l){ return getChipValue(l); });
-
-      var property = safeText(selProperty && selProperty.value);
-      var deductible = safeText(selDed && selDed.value);
-      var liability = safeText(selLia && selLia.value);
-      var review = safeText(selReview && selReview.value);
-
-      var score = 0;
-
-      // Changes
-      var hasNoneChange = changes.indexOf('None') !== -1;
-      var changeCount = hasNoneChange ? 0 : changes.length;
-      if(changeCount >= 1) score += 1;
-      if(changeCount >= 3) score += 1;
-
-      // Property
-      if(/Landlord|Rental property/i.test(property)) score += 1;
-      if(/Not sure/i.test(property)) score += 1;
-
-      // Deductible / out-of-pocket
-      if(/\$2,500–\$5,000\+|\$2,500–\$5,000\+/i.test(deductible)) score += 1;
-      if(/Not sure/i.test(deductible)) score += 1;
-
-      // Liability
-      if(/Not protected|Not sure/i.test(liability)) score += 2;
-      else if(/Somewhat/i.test(liability)) score += 1;
-
-      // Review recency
-      if(/3\+ years/i.test(review)) score += 2;
-      else if(/1–3/i.test(review)) score += 1;
-      else if(/Not sure/i.test(review)) score += 1;
-
-      // Risks
-      var hasNoneRisk = risks.indexOf('None') !== -1;
-      var riskCount = hasNoneRisk ? 0 : risks.length;
-      if(riskCount >= 1) score += 1;
-      if(riskCount >= 3) score += 1;
-
-      // Decide label
-      var label = 'Green';
-      if(score >= 6) label = 'Red';
-      else if(score >= 3) label = 'Yellow';
-
-      // Build why bullets (short and punchy)
-      var why = [];
-      if(changeCount >= 1) why.push('Life changes are a top reason policies stop matching reality — a quick review can prevent surprise gaps.');
-      if(/Not protected|Not sure/i.test(liability)) why.push('Liability uncertainty is the biggest “silent risk” — it’s what protects your savings if you’re sued.');
-      if(/3\+ years/i.test(review)) why.push('If it’s been 3+ years since a full review, you may be missing newer discounts and coverage improvements.');
-      if(/\$2,500–\$5,000\+|Not sure/i.test(deductible)) why.push('Your claim out-of-pocket matters most on hail/wildfire seasons — aligning deductibles avoids sticker shock.');
-      if(riskCount >= 1) why.push('Property risk flags often change what carriers require — confirming now avoids last-minute issues.');
-      if(why.length === 0) why.push('Your answers look stable. A quick annual check still helps confirm you’re not overpaying.');
-
-      // Copy line
-      var copy = '';
-      if(label === 'Green') copy = 'Coverage looks generally stable — a quick review can still confirm you’re not overpaying.';
-      if(label === 'Yellow') copy = 'There are a few signals your coverage may not match your life today — worth a quick review.';
-      if(label === 'Red') copy = 'Multiple signals suggest potential gaps or misalignment — a review is strongly recommended.';
-
-      return {
-        label: label,
-        score: score,
-        copy: copy,
-        why: why
-      };
-    }
-
-    function renderDesktopResult(result){
-      var box = el('phcResult');
-      if(!box) return;
-
-      var dot = el('phcDot');
-      var labelEl = el('phcLabel');
-      var copyEl = el('phcCopy');
-      var whyEl = el('phcWhy');
-      var subhead = el('phcSubhead');
-      var loyalty = el('phcLoyalty');
-      var loyaltyMsg = el('phcLoyaltyMsg');
-      var leadCta = el('phcLeadCta');
+      var leadBtn = el('phcLeadCta');
       var contBtn = el('phcCta');
-
-      box.classList.add('show');
-
-      if(dot){
-        dot.className = 'phc-dot' + (result.label === 'Yellow' ? ' yellow' : result.label === 'Red' ? ' red' : '');
+      function goLead(){
+        closePHC();
+        if(window.__openLeadModal) window.__openLeadModal();
       }
-      if(labelEl) labelEl.textContent = result.label;
-      if(copyEl) copyEl.textContent = result.copy;
+      if(leadBtn) leadBtn.addEventListener('click', goLead);
+      if(contBtn) contBtn.addEventListener('click', goLead);
+    }
 
-      if(subhead){
-        subhead.classList.remove('green','red');
-        subhead.classList.add(result.label === 'Red' ? 'red' : 'green');
-        subhead.style.display = 'block';
+    // =====================
+    // PolicyPro chat JS (open + tabs + responder)
+    // =====================
+    function wireChat(){
+      function appendMessage(kind, text){
+        var list = el('chatMessages');
+        if(!list) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'msg ' + (kind === 'user' ? 'user' : 'bot');
+        var bub = document.createElement('div');
+        bub.className = 'bubble ' + (kind === 'user' ? 'user' : 'bot');
+        if(kind === 'bot'){
+          bub.innerHTML = String(text).replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+        } else {
+          bub.textContent = String(text);
+        }
+        wrap.appendChild(bub);
+        list.appendChild(wrap);
+        list.scrollTop = list.scrollHeight;
       }
 
-      if(whyEl){
-        whyEl.innerHTML = '';
-        result.why.slice(0,4).forEach(function(line){
-          var li = document.createElement('li');
-          li.textContent = line;
-          whyEl.appendChild(li);
+      function localAnswer(userText){
+        var t = safeText(userText).toLowerCase();
+        var disclaimer = "\n\nGeneral info only — a licensed agent reviews before any quote, application, binding, or policy change.";
+
+        if(/hail|roof|deductible/.test(t)){
+          return "Hail claims often come down to **your deductible type and amount** (flat vs %), roof age, and carrier rules. A quick review can confirm: (1) your hail deductible, (2) roof/ACV limitations, and (3) whether bundling unlocks better options." + disclaimer;
+        }
+        if(/wildfire|fire|brush/.test(t)){
+          return "Wildfire eligibility is usually driven by **location risk score**, defensible space, roof type, and mitigation. Even if a carrier renews, options can change year-to-year — reviewing now avoids last-minute surprises." + disclaimer;
+        }
+        if(/bundle|bundling|multi\s*policy/.test(t)){
+          return "Bundling home + auto can help with pricing and eligibility, but it depends on claim history, driver record, and property details. If you share your ZIP and current carrier, we can tell you what info is worth gathering before a review." + disclaimer;
+        }
+        if(/claim|claims|cancel|nonrenew|non-renew/.test(t)){
+          return "If you’ve had recent claims or a non-renewal notice, timing matters. The main levers are: claim type, date, paid amount, roof age, and mitigation. A quick options check can show which carriers are still competitive." + disclaimer;
+        }
+        if(/umbrella|liability|sued|lawsuit/.test(t)){
+          return "Liability is what protects your savings if you’re sued. Many households benefit from higher liability limits or an umbrella, especially with teen drivers, rental property, pools/trampolines, or higher net worth." + disclaimer;
+        }
+        return "I can help you sanity-check deductibles, liability, bundling, and common gaps. What are you optimizing for — **lowest monthly**, **best protection**, or **avoid surprise claim costs**?" + disclaimer;
+      }
+
+      function setScreen(screenId){
+        ['ppScreenHome','ppScreenMessages','ppScreenSettings'].forEach(function(id){
+          var s = el(id);
+          if(s) s.classList.toggle('active', id === screenId);
+        });
+        [['ppTabHome','ppScreenHome'],['ppTabMessages','ppScreenMessages'],['ppTabSettings','ppScreenSettings']].forEach(function(pair){
+          var tab = el(pair[0]);
+          if(!tab) return;
+          var active = (pair[1] === screenId);
+          tab.classList.toggle('active', active);
+          tab.setAttribute('aria-selected', active ? 'true' : 'false');
         });
       }
 
-      // Loyalty message + CTA only on Red
-      if(loyalty){
-        if(result.label === 'Red'){
-          loyalty.classList.add('show');
-          if(loyaltyMsg) loyaltyMsg.textContent = "Loyalty isn't the same as protection.";
-          if(leadCta){
-            leadCta.onclick = function(){
-              var openBtn = el('openFunnel');
-              if(openBtn) openBtn.click();
-            };
+      function openChat(){ var w = el('chatWindow'); if(w) w.style.display = 'block'; setScreen('ppScreenHome'); }
+      function closeChat(){ var w = el('chatWindow'); if(w) w.style.display = 'none'; }
+
+      var launcher = el('chatBtn');
+      var closeBtn = el('closeChat');
+      var startBtn = el('ppStartChat');
+      var form = el('chatForm');
+      var input = el('chatInput');
+      var sendBtn = el('chatSend');
+
+      var agentEl = el('ppAgentEmail');
+      if(agentEl && window.AGENT_EMAIL) agentEl.textContent = window.AGENT_EMAIL;
+
+      var openDisc = el('ppOpenDisclaimerLink');
+      if(openDisc){
+        openDisc.addEventListener('click', function(e){
+          e.preventDefault();
+          var btn = el('openDisclaimer');
+          if(btn) btn.click();
+        });
+      }
+
+      if(launcher){
+        launcher.addEventListener('click', function(e){ e.preventDefault(); openChat(); });
+        launcher.addEventListener('touchend', function(e){ e.preventDefault(); openChat(); }, {passive:false});
+      }
+      if(closeBtn) closeBtn.addEventListener('click', function(e){ e.preventDefault(); closeChat(); });
+
+      var tabHome = el('ppTabHome');
+      var tabMsg  = el('ppTabMessages');
+      var tabSet  = el('ppTabSettings');
+      if(tabHome) tabHome.addEventListener('click', function(){ setScreen('ppScreenHome'); });
+      if(tabMsg)  tabMsg.addEventListener('click', function(){ setScreen('ppScreenMessages'); });
+      if(tabSet)  tabSet.addEventListener('click', function(){ setScreen('ppScreenSettings'); });
+
+      if(startBtn){
+        startBtn.addEventListener('click', function(){
+          setScreen('ppScreenMessages');
+          var list = el('chatMessages');
+          if(list && list.children.length === 0){
+            appendMessage('bot', "Hi — I’m PolicyPro™. Ask me a question, or tap **Check My Options** to request an agent review.");
           }
-        } else {
-          loyalty.classList.remove('show');
-        }
+          try{ input && input.focus(); }catch(_){}
+        });
       }
 
-      // Always show continue button once results exist
-      if(contBtn){
-        contBtn.style.display = 'inline-flex';
-        contBtn.onclick = function(){
-          // Move to next modal step (Step 4 in the lead form)
-          // We trigger the main stepper Next button if present
-          var next = el('stepNext');
-          if(next) next.click();
-          // If desktop (no stepper), scroll down a bit
-          var body = qs('#modal .card-body');
-          if(body) body.scrollTop += 250;
-        };
+      if(form){
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          var msg = safeText(input && input.value);
+          if(!msg) return;
+
+          appendMessage('user', msg);
+          if(input) input.value = '';
+
+          if(sendBtn) sendBtn.disabled = true;
+
+          var reply = localAnswer(msg);
+          appendMessage('bot', reply);
+
+          appendMessage('bot', "Want an agent to check options? Tap **Check My Options**.");
+
+          if(sendBtn) sendBtn.disabled = false;
+        });
       }
-    }
-
-    function renderMobileResult(result){
-      var box = el('phcResultMobile');
-      if(!box) return;
-
-      // Simple, readable card using existing styles
-      box.innerHTML = '';
-      box.className = 'phc-result show';
-
-      var top = document.createElement('div');
-      top.className = 'phc-result-top';
-
-      var left = document.createElement('div');
-      left.className = 'phc-result-left';
-
-      var dot = document.createElement('span');
-      dot.className = 'phc-dot' + (result.label === 'Yellow' ? ' yellow' : result.label === 'Red' ? ' red' : '');
-
-      var labelWrap = document.createElement('div');
-      var lab = document.createElement('div');
-      lab.className = 'phc-result-label';
-      lab.textContent = result.label;
-      labelWrap.appendChild(lab);
-
-      left.appendChild(dot);
-      left.appendChild(labelWrap);
-
-      top.appendChild(left);
-      box.appendChild(top);
-
-      var copy = document.createElement('div');
-      copy.className = 'phc-result-copy';
-      copy.textContent = result.copy;
-      box.appendChild(copy);
-
-      var sub = document.createElement('div');
-      sub.className = 'phc-subhead ' + (result.label === 'Red' ? 'red' : 'green');
-      sub.textContent = "Most people don't switch because they're happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.";
-      box.appendChild(sub);
-
-      var ul = document.createElement('ul');
-      ul.className = 'phc-result-why';
-      result.why.slice(0,4).forEach(function(line){
-        var li = document.createElement('li');
-        li.textContent = line;
-        ul.appendChild(li);
-      });
-      box.appendChild(ul);
-
-      // Red interstitial CTA
-      if(result.label === 'Red'){
-        var loyalty = document.createElement('div');
-        loyalty.className = 'phc-loyalty show';
-
-        var msg = document.createElement('p');
-        msg.className = 'm';
-        msg.textContent = "Loyalty isn't the same as protection.";
-
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn btn-primary btn';
-        btn.textContent = 'Check My Options';
-        btn.onclick = function(){
-          var openBtn = el('openFunnel');
-          if(openBtn) openBtn.click();
-        };
-
-        loyalty.appendChild(msg);
-        loyalty.appendChild(btn);
-        box.appendChild(loyalty);
-      }
-
-      // Continue button
-      var actions = document.createElement('div');
-      actions.className = 'phc-result-actions';
-      var cont = document.createElement('button');
-      cont.type = 'button';
-      cont.className = 'btn btn-primary';
-      cont.textContent = 'Continue to Options';
-      cont.onclick = function(){
-        var next = el('stepNext');
-        if(next) next.click();
-      };
-      actions.appendChild(cont);
-      box.appendChild(actions);
     }
 
     onReady(function(){
-      // Build mobile flow from desktop controls
-      var flow = el('phcMobileFlow');
-      if(!flow) return;
-
-      // Only wire once
-      if(flow.dataset.wired === '1') return;
-      flow.dataset.wired = '1';
-
-      // Ensure hidden inputs exist for submission
-      ensureHiddenInput('phcChanges');
-      ensureHiddenInput('phcRisks');
-
-      // Canonical desktop sources
-      var changesLabels = qsa('#phcChanges .phc-chip');
-      var risksLabels   = qsa('#phcRisks .phc-chip');
-      var selProperty   = el('phcProperty');
-      var selDed        = el('phcDeductible');
-      var selLia        = el('phcLiability');
-      var selReview     = el('phcReview');
-
-      // Mobile containers
-      var mChanges = el('phcMobileChanges');
-      var mProperty = el('phcMobileProperty');
-      var mDed = el('phcMobileDeductible');
-      var mLia = el('phcMobileLiability');
-      var mReview = el('phcMobileReview');
-      var mRisks = el('phcMobileRisks');
-
-      // State
-      var step = 0;
-      var selected = {
-        changes: new Set(),
-        risks: new Set(),
-        property: '',
-        deductible: '',
-        liability: '',
-        review: ''
-      };
-
-      // Seed from any existing desktop selections
-      changesLabels.forEach(function(l){
-        var v = getChipValue(l);
-        var i = l.querySelector('input');
-        if(i && i.checked) selected.changes.add(v);
-      });
-      risksLabels.forEach(function(l){
-        var v = getChipValue(l);
-        var i = l.querySelector('input');
-        if(i && i.checked) selected.risks.add(v);
-      });
-      selected.property = safeText(selProperty && selProperty.value);
-      selected.deductible = safeText(selDed && selDed.value);
-      selected.liability = safeText(selLia && selLia.value);
-      selected.review = safeText(selReview && selReview.value);
-
-      function syncChangesToDesktop(){
-        // Special rule: If "None" selected, clear others
-        if(selected.changes.has('None')){
-          selected.changes.forEach(function(v){ if(v !== 'None') selected.changes.delete(v); });
-        }
-        changesLabels.forEach(function(l){
-          var v = getChipValue(l);
-          setCheckbox(l, selected.changes.has(v));
-        });
-        setHiddenMulti('phcChanges', Array.from(selected.changes));
-      }
-
-      function syncRisksToDesktop(){
-        if(selected.risks.has('None')){
-          selected.risks.forEach(function(v){ if(v !== 'None') selected.risks.delete(v); });
-        }
-        risksLabels.forEach(function(l){
-          var v = getChipValue(l);
-          setCheckbox(l, selected.risks.has(v));
-        });
-        setHiddenMulti('phcRisks', Array.from(selected.risks));
-      }
-
-      function syncSinglesToDesktop(){
-        setSelectValue(selProperty, selected.property);
-        setSelectValue(selDed, selected.deductible);
-        setSelectValue(selLia, selected.liability);
-        setSelectValue(selReview, selected.review);
-      }
-
-      function showStep(n){
-        step = n;
-        for(var i=0;i<=5;i++){
-          var q = el('phcQ'+i);
-          if(q) q.style.display = (i===step ? 'block' : 'none');
-        }
-        var done = el('phcQDone');
-        if(done) done.style.display = 'none';
-
-        // Back button enabling
-        var back0 = el('phcBack0');
-        if(back0) back0.disabled = (step===0);
-      }
-
-      function requireSingle(value, message){
-        if(safeText(value) === ''){
-          alert(message);
-          return false;
-        }
-        return true;
-      }
-
-      // Build mobile options from desktop
-      var changeOpts = changesLabels.map(function(l){
-        var v = getChipValue(l);
-        return { value: v, label: v };
-      });
-      var riskOpts = risksLabels.map(function(l){
-        var v = getChipValue(l);
-        return { value: v, label: v };
-      });
-
-      function selectOptionsFromSelect(selectEl){
-        if(!selectEl) return [];
-        return Array.prototype.slice.call(selectEl.options)
-          .map(function(o){ return { value: safeText(o.value || o.textContent), label: safeText(o.textContent) }; })
-          .filter(function(o){ return o.value !== '' && o.label.toLowerCase() !== 'select…' && o.label.toLowerCase() !== 'select...' });
-      }
-
-      var propertyOpts = selectOptionsFromSelect(selProperty);
-      var dedOpts = selectOptionsFromSelect(selDed);
-      var liaOpts = selectOptionsFromSelect(selLia);
-      var reviewOpts = selectOptionsFromSelect(selReview);
-
-      buildMultiButtons(mChanges, changeOpts, function(value, willSelect, btn){
-        if(willSelect){
-          // None clears others
-          if(value === 'None'){
-            selected.changes.clear();
-            selected.changes.add('None');
-            // reset UI
-            qsa('.phc-answer-btn', mChanges).forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
-          } else {
-            selected.changes.delete('None');
-            selected.changes.add(value);
-            btn.classList.add('active');
-          }
-        } else {
-          selected.changes.delete(value);
-          btn.classList.remove('active');
-        }
-        syncChangesToDesktop();
-      });
-
-      buildSingleButtons(mProperty, propertyOpts, function(value){
-        selected.property = value;
-        syncSinglesToDesktop();
-      });
-
-      buildSingleButtons(mDed, dedOpts, function(value){
-        selected.deductible = value;
-        syncSinglesToDesktop();
-      });
-
-      buildSingleButtons(mLia, liaOpts, function(value){
-        selected.liability = value;
-        syncSinglesToDesktop();
-      });
-
-      buildSingleButtons(mReview, reviewOpts, function(value){
-        selected.review = value;
-        syncSinglesToDesktop();
-      });
-
-      buildMultiButtons(mRisks, riskOpts, function(value, willSelect, btn){
-        if(willSelect){
-          if(value === 'None'){
-            selected.risks.clear();
-            selected.risks.add('None');
-            qsa('.phc-answer-btn', mRisks).forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
-          } else {
-            selected.risks.delete('None');
-            selected.risks.add(value);
-            btn.classList.add('active');
-          }
-        } else {
-          selected.risks.delete(value);
-          btn.classList.remove('active');
-        }
-        syncRisksToDesktop();
-      });
-
-      // Reflect initial state in mobile UI
-      function markMulti(container, set){
-        qsa('.phc-answer-btn', container).forEach(function(b){
-          if(set.has(b.dataset.value)) b.classList.add('active');
-        });
-      }
-      function markSingle(container, value){
-        qsa('.phc-answer-btn', container).forEach(function(b){
-          if(b.dataset.value === value) b.classList.add('active');
-        });
-      }
-      markMulti(mChanges, selected.changes);
-      markMulti(mRisks, selected.risks);
-      markSingle(mProperty, selected.property);
-      markSingle(mDed, selected.deductible);
-      markSingle(mLia, selected.liability);
-      markSingle(mReview, selected.review);
-
-      // Buttons wiring
-      function bindNav(btnId, fn){
-        var b = el(btnId);
-        if(!b) return;
-        b.addEventListener('click', fn);
-        b.addEventListener('touchend', function(e){ e.preventDefault(); fn(); }, { passive:false });
-      }
-
-      bindNav('phcBack0', function(){ /* no-op */ });
-      bindNav('phcNext0', function(){ showStep(1); });
-
-      bindNav('phcBack1', function(){ showStep(0); });
-      bindNav('phcNext1', function(){
-        if(!requireSingle(selected.property, 'Please choose your property situation.')) return;
-        showStep(2);
-      });
-
-      bindNav('phcBack2', function(){ showStep(1); });
-      bindNav('phcNext2', function(){
-        if(!requireSingle(selected.deductible, 'Please choose an out-of-pocket comfort level.')) return;
-        showStep(3);
-      });
-
-      bindNav('phcBack3', function(){ showStep(2); });
-      bindNav('phcNext3', function(){
-        if(!requireSingle(selected.liability, 'Please choose how protected you feel for liability.')) return;
-        showStep(4);
-      });
-
-      bindNav('phcBack4', function(){ showStep(3); });
-      bindNav('phcNext4', function(){
-        if(!requireSingle(selected.review, 'Please choose when your last full review was.')) return;
-        showStep(5);
-      });
-
-      bindNav('phcBack5', function(){ showStep(4); });
-      bindNav('phcFinish', function(){
-        // Ensure all desktop inputs are synced
-        syncChangesToDesktop();
-        syncRisksToDesktop();
-        syncSinglesToDesktop();
-
-        var result = computePHCResult();
-        renderDesktopResult(result);
-        renderMobileResult(result);
-
-        // Show done screen
-        for(var i=0;i<=5;i++){
-          var q = el('phcQ'+i);
-          if(q) q.style.display = 'none';
-        }
-        var done = el('phcQDone');
-        if(done) done.style.display = 'block';
-
-        // Ensure PHC panel is open so the desktop result is visible too
-        var phcCollapse = el('phcCollapse');
-        if(phcCollapse) phcCollapse.classList.remove('collapsed');
-
-        // Nudge: reveal the hero CTA (if not already)
-        try{ var openBtn = el('openFunnel'); if(openBtn) openBtn.classList.add('visible'); }catch(_){ }
-      });
-
-      // Desktop "Show my result" button + live result updates
-      function refreshDesktopResultIfReady(force){
-        // Only compute when PHC panel is open OR force is true
-        var phcCollapse = el('phcCollapse');
-        var isOpen = phcCollapse && !phcCollapse.classList.contains('collapsed');
-        if(!force && !isOpen) return;
-
-        // If required selects are empty, don't show a misleading score
-        var missing = [];
-        if(!selected.property) missing.push('property');
-        if(!selected.deductible) missing.push('deductible');
-        if(!selected.liability) missing.push('liability');
-        if(!selected.review) missing.push('review');
-
-        // If user hasn't opened PHC on desktop, keep hidden
-        if(!force && missing.length) return;
-
-        var result = computePHCResult();
-        renderDesktopResult(result);
-      }
-
-      var phcRun = el('phcRun');
-      if(phcRun){
-        phcRun.addEventListener('click', function(){
-          // Force a result even if a couple selects are missing
-          // (still encourages them to complete PHC, but shows where they stand)
-          var result = computePHCResult();
-          renderDesktopResult(result);
-        });
-      }
-
-      // Desktop: update the Green/Yellow/Red diagnostic as answers change
-      // so users don't get stuck hunting for a result.
-      function wireDesktopChangeListeners(){
-        // Chips
-        qsa('#phcChanges input[type="checkbox"], #phcRisks input[type="checkbox"]').forEach(function(inp){
-          inp.addEventListener('change', function(){
-            // keep hidden inputs in sync too
-            syncChangesToDesktop();
-            syncRisksToDesktop();
-            refreshDesktopResultIfReady(false);
-          });
-        });
-        // Selects
-        [selProperty, selDed, selLia, selReview].forEach(function(s){
-          if(!s) return;
-          s.addEventListener('change', function(){
-            // mirror into selected state so mobile/desktop stay consistent
-            selected.property = safeText(selProperty && selProperty.value);
-            selected.deductible = safeText(selDed && selDed.value);
-            selected.liability = safeText(selLia && selLia.value);
-            selected.review = safeText(selReview && selReview.value);
-            refreshDesktopResultIfReady(false);
-          });
-        });
-
-        // When PHC is expanded (desktop), immediately compute if already complete
-        var toggle = el('phcToggle');
-        if(toggle){
-          toggle.addEventListener('click', function(){
-            setTimeout(function(){ refreshDesktopResultIfReady(false); }, 60);
-          });
-        }
-      }
-
-      wireDesktopChangeListeners();
-
-      // When the modal opens on mobile, start at step 0
-      // (Only affects mobile; desktop keeps the full grid)
-      var modal = el('modal');
-      if(modal){
-        var observer = new MutationObserver(function(){
-          if(modal.style.display === 'flex' && isMobile()){
-            showStep(0);
-          }
-        });
-        observer.observe(modal, { attributes:true, attributeFilter:['style'] });
-      }
-
-      // Initialize view
-      showStep(0);
+      startHeroRotator();
+      wireRevealCTA();
+      wireLeadModal();
+      wireStepper();
+      wireLeadSubmit();
+      wireDisclaimer();
+      wirePHC();
+      wireChat();
     });
   })();
 </script>
