@@ -782,80 +782,85 @@
             </div>
           </div>
 
-          <!-- Desktop grid (shows on desktop/tablet) -->
-          <div class="grid phc-desktop-grid">
-            <div class="field" style="grid-column:1 / -1;">
-              <label>1) Any life changes in the last 12 months? (select all)</label>
-              <div class="hint">Changes are the #1 reason policies stop matching real life.</div>
+          <!-- Desktop question grid (required for desktop scoring) -->
+          <div class="phc-desktop-grid" id="phcDesktopGrid">
+            <div class="phc-question">
+              <p class="phc-q-title" style="margin:0 0 8px;">1) Any life changes in the last 12 months?</p>
               <div class="phc-grid" id="phcChanges">
-                <label class="phc-chip"><input type="checkbox" value="Moved/bought home">Moved/bought home</label>
-                <label class="phc-chip"><input type="checkbox" value="New driver/teen driver">New driver/teen driver</label>
-                <label class="phc-chip"><input type="checkbox" value="New vehicle/financed/leased">New vehicle/financed/leased</label>
-                <label class="phc-chip"><input type="checkbox" value="Marriage/divorce/new baby">Marriage/divorce/new baby</label>
-                <label class="phc-chip"><input type="checkbox" value="Work from home/home business">Work from home/home business</label>
-                <label class="phc-chip"><input type="checkbox" value="Major remodel/new roof/solar">Major remodel/new roof/solar</label>
-                <label class="phc-chip"><input type="checkbox" value="None">None</label>
+                <label class="phc-chip"><input type="checkbox" value="Moved" /> Moved</label>
+                <label class="phc-chip"><input type="checkbox" value="New vehicle" /> New vehicle</label>
+                <label class="phc-chip"><input type="checkbox" value="New drivers" /> New drivers</label>
+                <label class="phc-chip"><input type="checkbox" value="Home upgrades" /> Home upgrades</label>
+                <label class="phc-chip"><input type="checkbox" value="Business use" /> Business use</label>
+                <label class="phc-chip"><input type="checkbox" value="Claims" /> Claims</label>
+                <label class="phc-chip"><input type="checkbox" value="None" /> None</label>
+              </div>
+              <div class="hint" style="margin-top:6px;">Choose any that apply. (General info only.)</div>
+            </div>
+
+            <div class="phc-question">
+              <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="field">
+                  <label for="phcProperty">2) Property situation *</label>
+                  <select id="phcProperty" aria-label="Property situation" required>
+                    <option value="">Select…</option>
+                    <option>Primary home</option>
+                    <option>Condo / Townhome</option>
+                    <option>Landlord / Rental property</option>
+                    <option>Renters policy</option>
+                    <option>Not sure</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="phcDeductible">3) Comfortable out-of-pocket if a claim happened tomorrow? *</label>
+                  <select id="phcDeductible" aria-label="Deductible comfort" required>
+                    <option value="">Select…</option>
+                    <option>$500–$1,000</option>
+                    <option>$1,500–$2,500</option>
+                    <option>$2,500–$5,000+</option>
+                    <option>Not sure</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="phcLiability">4) If you were sued after an accident/injury, how protected do you feel? *</label>
+                  <select id="phcLiability" aria-label="Liability confidence" required>
+                    <option value="">Select…</option>
+                    <option>Very protected</option>
+                    <option>Somewhat protected</option>
+                    <option>Not protected</option>
+                    <option>Not sure</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="phcReview">5) Last full policy review with a licensed agent? *</label>
+                  <select id="phcReview" aria-label="Last review" required>
+                    <option value="">Select…</option>
+                    <option>Within 12 months</option>
+                    <option>1–3 years</option>
+                    <option>3+ years</option>
+                    <option>Not sure</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div class="field">
-              <label for="phcProperty">2) Property situation *</label>
-              <select id="phcProperty">
-                <option value="">Select…</option>
-                <option>Own a home</option>
-                <option>Rent</option>
-                <option>Condo/Townhome</option>
-                <option>Landlord/Rental property</option>
-                <option>Not sure</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="phcDeductible">3) Comfortable out-of-pocket if a claim happened tomorrow? *</label>
-              <select id="phcDeductible">
-                <option value="">Select…</option>
-                <option>$500–$1,000</option>
-                <option>$1,000–$2,500</option>
-                <option>$2,500–$5,000+</option>
-                <option>Not sure</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="phcLiability">4) If you were sued after an accident/injury, how protected do you feel? *</label>
-              <select id="phcLiability">
-                <option value="">Select…</option>
-                <option>Very protected (high liability / umbrella)</option>
-                <option>Somewhat protected</option>
-                <option>Not protected / Not sure</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="phcReview">5) Last full policy review with a licensed agent? *</label>
-              <select id="phcReview">
-                <option value="">Select…</option>
-                <option>Within 12 months</option>
-                <option>1–3 years ago</option>
-                <option>3+ years ago / never</option>
-                <option>Not sure</option>
-              </select>
-            </div>
-
-            <div class="field" style="grid-column:1 / -1;">
-              <label>Optional: Any property risk flags? (select all)</label>
+            <div class="phc-question">
+              <p class="phc-q-title" style="margin:0 0 8px;">Optional: Any property risk flags?</p>
               <div class="phc-grid" id="phcRisks">
-                <label class="phc-chip"><input type="checkbox" value="Wildfire/brush nearby">Wildfire/brush nearby</label>
-                <label class="phc-chip"><input type="checkbox" value="Hail-prone / roof 10+ yrs">Hail-prone / roof 10+ yrs</label>
-                <label class="phc-chip"><input type="checkbox" value="Basement/sump pump">Basement/sump pump</label>
-                <label class="phc-chip"><input type="checkbox" value="Pool/trampoline/dog">Pool/trampoline/dog</label>
-                <label class="phc-chip"><input type="checkbox" value="Not sure">Not sure</label>
-                <label class="phc-chip"><input type="checkbox" value="None">None</label>
+                <label class="phc-chip"><input type="checkbox" value="Wildfire area" /> Wildfire area</label>
+                <label class="phc-chip"><input type="checkbox" value="Older roof" /> Older roof</label>
+                <label class="phc-chip"><input type="checkbox" value="Prior claims" /> Prior claims</label>
+                <label class="phc-chip"><input type="checkbox" value="Rental" /> Rental</label>
+                <label class="phc-chip"><input type="checkbox" value="Not sure" /> Not sure</label>
+                <label class="phc-chip"><input type="checkbox" value="None" /> None</label>
               </div>
+              <div class="hint" style="margin-top:6px;">Optional — helps identify common underwriting friction points.</div>
             </div>
           </div>
 
-          <!-- Result (Green/Yellow/Red) -->
           <div class="phc-result" id="phcResult" aria-live="polite">
             <div class="phc-result-top">
               <div class="phc-result-left">
@@ -2025,6 +2030,74 @@
         });
       }
 
+      // Desktop "Finish" button (desktop users otherwise have no way to advance)
+      function validateDesktopRequired(){
+        // Required selects: property, deductible, liability, review
+        if(!safeText(selProperty && selProperty.value)) { alert('Please select your property situation.'); if(selProperty) selProperty.focus(); return false; }
+        if(!safeText(selDed && selDed.value)) { alert('Please select your out-of-pocket comfort level.'); if(selDed) selDed.focus(); return false; }
+        if(!safeText(selLia && selLia.value)) { alert('Please select how protected you feel for liability.'); if(selLia) selLia.focus(); return false; }
+        if(!safeText(selReview && selReview.value)) { alert('Please select when your last full policy review was.'); if(selReview) selReview.focus(); return false; }
+        return true;
+      }
+
+      function resetDesktopPHC(){
+        // Clear checkboxes + styles
+        qsa('#phcChanges input[type="checkbox"]').forEach(function(i){ i.checked = false; });
+        qsa('#phcRisks input[type="checkbox"]').forEach(function(i){ i.checked = false; });
+        qsa('#phcChanges .phc-chip, #phcRisks .phc-chip').forEach(function(l){ l.classList.remove('active'); });
+
+        // Clear selects
+        if(selProperty) selProperty.value = '';
+        if(selDed) selDed.value = '';
+        if(selLia) selLia.value = '';
+        if(selReview) selReview.value = '';
+
+        // Clear internal state + hidden inputs
+        selected.changes = new Set();
+        selected.risks = new Set();
+        selected.property = '';
+        selected.deductible = '';
+        selected.liability = '';
+        selected.review = '';
+        setHiddenMulti('phcChanges', []);
+        setHiddenMulti('phcRisks', []);
+
+        // Hide result box
+        var box = el('phcResult');
+        if(box) box.classList.remove('show');
+        var loyalty = el('phcLoyalty');
+        if(loyalty) loyalty.classList.remove('show');
+      }
+
+      var finishDesktop = el('phcFinishDesktop');
+      if(finishDesktop){
+        finishDesktop.addEventListener('click', function(){
+          updateDesktopMulti('changes');
+          updateDesktopMulti('risks');
+          if(!validateDesktopRequired()) return;
+
+          var result = computePHCResult();
+          renderDesktopResult(result);
+
+          var box = el('phcResult');
+          if(box && box.scrollIntoView) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+          // "All 3": show result → close PHC → open Check My Options
+          var delay = (result && result.label === 'Red') ? 650 : 450;
+          setTimeout(function(){
+            if(window.__closePHCModal) window.__closePHCModal();
+            if(window.__openLeadModal) window.__openLeadModal();
+          }, delay);
+        });
+      }
+
+      var resetBtn = el('phcReset');
+      if(resetBtn){
+        resetBtn.addEventListener('click', function(){
+          resetDesktopPHC();
+        });
+      }
+
       function updateDesktopMulti(kind){
         var rootId = kind === 'risks' ? '#phcRisks' : '#phcChanges';
         var labels = qsa(rootId + ' .phc-chip');
@@ -2086,6 +2159,8 @@
       // === Basic inline tests (adds coverage; safe in production) ===
       var r0 = computePHCResult();
       assert(r0 && (r0.label === 'Green' || r0.label === 'Yellow' || r0.label === 'Red'), 'PHC result returns a valid label');
+      assert(typeof validateDesktopRequired === 'function', 'validateDesktopRequired exists');
+      assert(typeof resetDesktopPHC === 'function', 'resetDesktopPHC exists');
     });
   })();
 </script>
