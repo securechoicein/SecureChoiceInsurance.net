@@ -745,8 +745,12 @@
 
       .chat-window{left:12px;right:12px;width:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:78vh;}
 
-      .disc-btn{left:14px;right:auto;bottom:calc(14px + env(safe-area-inset-bottom));padding:8px 12px;font-size:11px;z-index:26000;opacity:.92;}
+      /* Keep Disclaimer accessible but out of the way of bottom-sheet modals */
+      .disc-btn{left:14px;right:auto;bottom:calc(86px + env(safe-area-inset-bottom));padding:8px 12px;font-size:11px;z-index:26000;opacity:.92;}
     }
+
+    /* Hide the floating Disclaimer button while any modal is open (prevents overlap on mobile) */
+    body.modal-open .disc-btn{display:none !important;}
   </style>
 </head>
 
@@ -1340,12 +1344,14 @@
         if(overlay) overlay.style.display = 'block';
         if(modal) modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
       }
 
       function closeModal(){
         if(overlay) overlay.style.display = 'none';
         if(modal) modal.style.display = 'none';
         document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
       }
 
       openBtn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
@@ -1476,6 +1482,7 @@
     }
 
     function openPHCModal(){
+      document.body.classList.add('modal-open');
       var modal = document.getElementById('phcModal');
       var overlay = document.getElementById('phcModalOverlay');
       if(overlay) overlay.style.display = 'block';
@@ -1491,6 +1498,7 @@
     }
 
     function closePHCModal(){
+      document.body.classList.remove('modal-open');
       var modal = document.getElementById('phcModal');
       var overlay = document.getElementById('phcModalOverlay');
       if(overlay) overlay.style.display = 'none';
@@ -2263,10 +2271,12 @@
       function open(){
         if(overlay) overlay.style.display = 'block';
         if(modal) modal.style.display = 'flex';
+        document.body.classList.add('modal-open');
       }
       function close(){
         if(overlay) overlay.style.display = 'none';
         if(modal) modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
       }
 
       if(openBtn){
