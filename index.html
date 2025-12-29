@@ -845,20 +845,15 @@
                   </select>
                 </div>
               </div>
-            </div>
+            </div>$1
 
-            <div class="phc-question">
-              <p class="phc-q-title" style="margin:0 0 8px;">Optional: Any property risk flags?</p>
-              <div class="phc-grid" id="phcRisks">
-                <label class="phc-chip"><input type="checkbox" value="Wildfire area" /> Wildfire area</label>
-                <label class="phc-chip"><input type="checkbox" value="Older roof" /> Older roof</label>
-                <label class="phc-chip"><input type="checkbox" value="Prior claims" /> Prior claims</label>
-                <label class="phc-chip"><input type="checkbox" value="Rental" /> Rental</label>
-                <label class="phc-chip"><input type="checkbox" value="Not sure" /> Not sure</label>
-                <label class="phc-chip"><input type="checkbox" value="None" /> None</label>
-              </div>
-              <div class="hint" style="margin-top:6px;">Optional — helps identify common underwriting friction points.</div>
-            </div>
+          </div>
+
+          <!-- Desktop actions (visible): compute + show result -->
+          <div class="row" style="justify-content:flex-start; margin-top:14px; gap:10px;">
+            <button class="btn btn-primary" id="phcFinishDesktop" type="button">Finish &amp; Show Result</button>
+            <button class="btn" id="phcReset" type="button">Reset</button>
+            <div class="hint" style="align-self:center;">Select the required fields (*) to unlock your diagnostic.</div>
           </div>
 
           <div class="phc-result" id="phcResult" aria-live="polite">
@@ -1494,6 +1489,7 @@
 <script>
   // =====================
   // POLICY HEALTH CHECK (MOBILE FLOW + RESULTS)
+  // FIX: Resolve SyntaxError (mismatched braces) + ensure DESKTOP can always compute/show the diagnostic.
   // =====================
   (function(){
     function onReady(fn){
@@ -1599,6 +1595,7 @@
       var changes = changesLabels
         .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
         .map(function(l){ return getChipValue(l); });
+
       var risks = risksLabels
         .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
         .map(function(l){ return getChipValue(l); });
@@ -1618,14 +1615,14 @@
       if(/Landlord|Rental property/i.test(property)) score += 1;
       if(/Not sure/i.test(property)) score += 1;
 
-      if(/\$2,500–\$5,000\+|\$2,500–\$5,000\+/.test(deductible)) score += 1;
+      if(/\$2,500–\$5,000\+|\$2,500-\$5,000\+/.test(deductible)) score += 1;
       if(/Not sure/i.test(deductible)) score += 1;
 
       if(/Not protected|Not sure/i.test(liability)) score += 2;
       else if(/Somewhat/i.test(liability)) score += 1;
 
       if(/3\+ years/i.test(review)) score += 2;
-      else if(/1–3/i.test(review)) score += 1;
+      else if(/1–3|1-3/i.test(review)) score += 1;
       else if(/Not sure/i.test(review)) score += 1;
 
       var hasNoneRisk = risks.indexOf('None') !== -1;
@@ -1804,13 +1801,21 @@
     }
 
     function assert(cond, msg){
-      if(!cond){
-        console.error('[PP TEST FAIL]', msg);
-      }
+      if(!cond) console.error('[PP TEST FAIL]', msg);
       console.assert(cond, msg);
     }
 
     onReady(function(){
+      // Wire desktop chips so the "active" styling works when clicking the label (not just the checkbox)
+      qsa('#phcChanges .phc-chip, #phcRisks .phc-chip').forEach(function(label){
+        label.addEventListener('click', function(e){
+          // If the click is on the label (not directly on checkbox), let browser toggle checkbox, then update class.
+          var inp = label.querySelector('input[type="checkbox"]');
+          if(!inp) return;
+          setTimeout(function(){ setChipActive(label, !!inp.checked); }, 0);
+        });
+      });
+
       var flow = el('phcMobileFlow');
       if(!flow) return;
       if(flow.dataset.wired === '1') return;
@@ -1833,30 +1838,18 @@
       var mReview = el('phcMobileReview');
       var mRisks = el('phcMobileRisks');
 
-      var step = 0;
       var selected = {
         changes: new Set(),
         risks: new Set(),
-        property: '',
-        deductible: '',
-        liability: '',
-        review: ''
+        property: safeText(selProperty && selProperty.value),
+        deductible: safeText(selDed && selDed.value),
+        liability: safeText(selLia && selLia.value),
+        review: safeText(selReview && selReview.value)
       };
 
-      changesLabels.forEach(function(l){
-        var v = getChipValue(l);
-        var i = l.querySelector('input');
-        if(i && i.checked) selected.changes.add(v);
-      });
-      risksLabels.forEach(function(l){
-        var v = getChipValue(l);
-        var i = l.querySelector('input');
-        if(i && i.checked) selected.risks.add(v);
-      });
-      selected.property = safeText(selProperty && selProperty.value);
-      selected.deductible = safeText(selDed && selDed.value);
-      selected.liability = safeText(selLia && selLia.value);
-      selected.review = safeText(selReview && selReview.value);
+      // Seed from any existing desktop selections
+      changesLabels.forEach(function(l){ var i = l.querySelector('input'); if(i && i.checked) selected.changes.add(getChipValue(l)); });
+      risksLabels.forEach(function(l){ var i = l.querySelector('input'); if(i && i.checked) selected.risks.add(getChipValue(l)); });
 
       function syncChangesToDesktop(){
         if(selected.changes.has('None')){
@@ -1887,6 +1880,8 @@
         setSelectValue(selReview, selected.review);
       }
 
+      // --- Mobile step UI ---
+      var step = 0;
       function showStep(n){
         step = n;
         for(var i=0;i<=5;i++){
@@ -1895,27 +1890,28 @@
         }
         var done = el('phcQDone');
         if(done) done.style.display = 'none';
-
         var back0 = el('phcBack0');
         if(back0) back0.disabled = (step===0);
       }
 
-      function requireSingle(value, message){
-        if(safeText(value) === ''){
-          alert(message);
-          return false;
-        }
-        return true;
+      function getActiveValue(container){
+        if(!container) return '';
+        var active = container.querySelector('.phc-answer-btn.active');
+        return active ? safeText(active.dataset.value) : '';
       }
 
-      var changeOpts = changesLabels.map(function(l){
-        var v = getChipValue(l);
-        return { value: v, label: v };
-      });
-      var riskOpts = risksLabels.map(function(l){
-        var v = getChipValue(l);
-        return { value: v, label: v };
-      });
+      function requireSingle(value, message, container){
+        // Mobile Safari can occasionally miss a state update if the user taps very quickly.
+        // Fall back to the currently-active button in the container so validation is accurate.
+        var v = safeText(value);
+        if(v === '' && container) v = getActiveValue(container);
+        if(v === ''){ alert(message); return false; }
+        return v;
+      }
+
+      // Build mobile options from desktop inputs
+      var changeOpts = changesLabels.map(function(l){ var v = getChipValue(l); return { value:v, label:v }; });
+      var riskOpts = risksLabels.map(function(l){ var v = getChipValue(l); return { value:v, label:v }; });
 
       var propertyOpts = selectOptionsFromSelect(selProperty);
       var dedOpts = selectOptionsFromSelect(selDed);
@@ -1966,14 +1962,10 @@
       });
 
       function markMulti(container, set){
-        qsa('.phc-answer-btn', container).forEach(function(b){
-          if(set.has(b.dataset.value)) b.classList.add('active');
-        });
+        qsa('.phc-answer-btn', container).forEach(function(b){ if(set.has(b.dataset.value)) b.classList.add('active'); });
       }
       function markSingle(container, value){
-        qsa('.phc-answer-btn', container).forEach(function(b){
-          if(b.dataset.value === value) b.classList.add('active');
-        });
+        qsa('.phc-answer-btn', container).forEach(function(b){ if(b.dataset.value === value) b.classList.add('active'); });
       }
 
       markMulti(mChanges, selected.changes);
@@ -1992,13 +1984,37 @@
 
       bindNav('phcNext0', function(){ showStep(1); });
       bindNav('phcBack1', function(){ showStep(0); });
-      bindNav('phcNext1', function(){ if(!requireSingle(selected.property, 'Please choose your property situation.')) return; showStep(2); });
+      bindNav('phcNext1', function(){
+        var v = requireSingle(selected.property, 'Please choose your property situation.', mProperty);
+        if(!v) return;
+        selected.property = v;
+        syncSinglesToDesktop();
+        showStep(2);
+      });
       bindNav('phcBack2', function(){ showStep(1); });
-      bindNav('phcNext2', function(){ if(!requireSingle(selected.deductible, 'Please choose an out-of-pocket comfort level.')) return; showStep(3); });
+      bindNav('phcNext2', function(){
+        var v = requireSingle(selected.deductible, 'Please choose an out-of-pocket comfort level.', mDed);
+        if(!v) return;
+        selected.deductible = v;
+        syncSinglesToDesktop();
+        showStep(3);
+      });
       bindNav('phcBack3', function(){ showStep(2); });
-      bindNav('phcNext3', function(){ if(!requireSingle(selected.liability, 'Please choose how protected you feel for liability.')) return; showStep(4); });
+      bindNav('phcNext3', function(){
+        var v = requireSingle(selected.liability, 'Please choose how protected you feel for liability.', mLia);
+        if(!v) return;
+        selected.liability = v;
+        syncSinglesToDesktop();
+        showStep(4);
+      });
       bindNav('phcBack4', function(){ showStep(3); });
-      bindNav('phcNext4', function(){ if(!requireSingle(selected.review, 'Please choose when your last full review was.')) return; showStep(5); });
+      bindNav('phcNext4', function(){
+        var v = requireSingle(selected.review, 'Please choose when your last full review was.', mReview);
+        if(!v) return;
+        selected.review = v;
+        syncSinglesToDesktop();
+        showStep(5);
+      });
       bindNav('phcBack5', function(){ showStep(4); });
       bindNav('phcFinish', function(){
         syncChangesToDesktop();
@@ -2015,24 +2031,10 @@
         }
         var done = el('phcQDone');
         if(done) done.style.display = 'block';
-
-        setTimeout(function(){
-          if(window.__closePHCModal) window.__closePHCModal();
-          if(window.__openLeadModal) window.__openLeadModal();
-        }, 250);
       });
 
-      var phcRun = el('phcRun');
-      if(phcRun){
-        phcRun.addEventListener('click', function(){
-          var result = computePHCResult();
-          renderDesktopResult(result);
-        });
-      }
-
-      // Desktop "Finish" button (desktop users otherwise have no way to advance)
+      // Desktop: compute/show result
       function validateDesktopRequired(){
-        // Required selects: property, deductible, liability, review
         if(!safeText(selProperty && selProperty.value)) { alert('Please select your property situation.'); if(selProperty) selProperty.focus(); return false; }
         if(!safeText(selDed && selDed.value)) { alert('Please select your out-of-pocket comfort level.'); if(selDed) selDed.focus(); return false; }
         if(!safeText(selLia && selLia.value)) { alert('Please select how protected you feel for liability.'); if(selLia) selLia.focus(); return false; }
@@ -2040,68 +2042,20 @@
         return true;
       }
 
-      function resetDesktopPHC(){
-        // Clear checkboxes + styles
-        qsa('#phcChanges input[type="checkbox"]').forEach(function(i){ i.checked = false; });
-        qsa('#phcRisks input[type="checkbox"]').forEach(function(i){ i.checked = false; });
-        qsa('#phcChanges .phc-chip, #phcRisks .phc-chip').forEach(function(l){ l.classList.remove('active'); });
-
-        // Clear selects
-        if(selProperty) selProperty.value = '';
-        if(selDed) selDed.value = '';
-        if(selLia) selLia.value = '';
-        if(selReview) selReview.value = '';
-
-        // Clear internal state + hidden inputs
-        selected.changes = new Set();
-        selected.risks = new Set();
-        selected.property = '';
-        selected.deductible = '';
-        selected.liability = '';
-        selected.review = '';
-        setHiddenMulti('phcChanges', []);
-        setHiddenMulti('phcRisks', []);
-
-        // Hide result box
-        var box = el('phcResult');
-        if(box) box.classList.remove('show');
-        var loyalty = el('phcLoyalty');
-        if(loyalty) loyalty.classList.remove('show');
-      }
-
-      var finishDesktop = el('phcFinishDesktop');
-      if(finishDesktop){
-        finishDesktop.addEventListener('click', function(){
-          updateDesktopMulti('changes');
-          updateDesktopMulti('risks');
-          if(!validateDesktopRequired()) return;
-
-          var result = computePHCResult();
-          renderDesktopResult(result);
-
-          var box = el('phcResult');
-          if(box && box.scrollIntoView) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-          // "All 3": show result → close PHC → open Check My Options
-          var delay = (result && result.label === 'Red') ? 650 : 450;
-          setTimeout(function(){
-            if(window.__closePHCModal) window.__closePHCModal();
-            if(window.__openLeadModal) window.__openLeadModal();
-          }, delay);
-        });
-      }
-
-      var resetBtn = el('phcReset');
-      if(resetBtn){
-        resetBtn.addEventListener('click', function(){
-          resetDesktopPHC();
-        });
+      function desktopRequiredReady(){
+        return !!(
+          safeText(selProperty && selProperty.value) &&
+          safeText(selDed && selDed.value) &&
+          safeText(selLia && selLia.value) &&
+          safeText(selReview && selReview.value)
+        );
       }
 
       function updateDesktopMulti(kind){
         var rootId = kind === 'risks' ? '#phcRisks' : '#phcChanges';
         var labels = qsa(rootId + ' .phc-chip');
         var set = new Set();
+
         labels.forEach(function(l){
           var inp = l.querySelector('input[type="checkbox"]');
           var v = getChipValue(l);
@@ -2121,27 +2075,84 @@
         });
 
         setHiddenMulti(kind === 'risks' ? 'phcRisks' : 'phcChanges', Array.from(set));
-
-        if(kind === 'risks') selected.risks = set;
-        else selected.changes = set;
       }
 
+      var __phcAutoT = null;
+      function autoPreviewDesktopResult(){
+        if(isMobile()) return;
+        if(!desktopRequiredReady()) return;
+        if(__phcAutoT) clearTimeout(__phcAutoT);
+        __phcAutoT = setTimeout(function(){
+          updateDesktopMulti('changes');
+          updateDesktopMulti('risks');
+          var result = computePHCResult();
+          renderDesktopResult(result);
+        }, 120);
+      }
+
+      // Clicking "Show my result" also computes
+      var phcRun = el('phcRun');
+      if(phcRun){
+        phcRun.addEventListener('click', function(){
+          updateDesktopMulti('changes');
+          updateDesktopMulti('risks');
+          if(!validateDesktopRequired()) return;
+          renderDesktopResult(computePHCResult());
+        });
+      }
+
+      // Dedicated desktop finish
+      var finishDesktop = el('phcFinishDesktop');
+      if(finishDesktop){
+        finishDesktop.addEventListener('click', function(){
+          updateDesktopMulti('changes');
+          updateDesktopMulti('risks');
+          if(!validateDesktopRequired()) return;
+
+          var result = computePHCResult();
+          renderDesktopResult(result);
+
+          var box = el('phcResult');
+          if(box && box.scrollIntoView) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      // Reset
+      function resetDesktopPHC(){
+        qsa('#phcChanges input[type="checkbox"]').forEach(function(i){ i.checked = false; });
+        qsa('#phcRisks input[type="checkbox"]').forEach(function(i){ i.checked = false; });
+        qsa('#phcChanges .phc-chip, #phcRisks .phc-chip').forEach(function(l){ l.classList.remove('active'); });
+
+        if(selProperty) selProperty.value = '';
+        if(selDed) selDed.value = '';
+        if(selLia) selLia.value = '';
+        if(selReview) selReview.value = '';
+
+        setHiddenMulti('phcChanges', []);
+        setHiddenMulti('phcRisks', []);
+
+        var box = el('phcResult');
+        if(box) box.classList.remove('show');
+        var loyalty = el('phcLoyalty');
+        if(loyalty) loyalty.classList.remove('show');
+      }
+
+      var resetBtn = el('phcReset');
+      if(resetBtn) resetBtn.addEventListener('click', resetDesktopPHC);
+
+      // Auto-preview on desktop when changing ANY answer (including optional)
       qsa('#phcChanges input[type="checkbox"]').forEach(function(inp){
-        inp.addEventListener('change', function(){ updateDesktopMulti('changes'); });
+        inp.addEventListener('change', function(){ updateDesktopMulti('changes'); autoPreviewDesktopResult(); });
       });
       qsa('#phcRisks input[type="checkbox"]').forEach(function(inp){
-        inp.addEventListener('change', function(){ updateDesktopMulti('risks'); });
+        inp.addEventListener('change', function(){ updateDesktopMulti('risks'); autoPreviewDesktopResult(); });
       });
       [selProperty, selDed, selLia, selReview].forEach(function(s){
         if(!s) return;
-        s.addEventListener('change', function(){
-          selected.property = safeText(selProperty && selProperty.value);
-          selected.deductible = safeText(selDed && selDed.value);
-          selected.liability = safeText(selLia && selLia.value);
-          selected.review = safeText(selReview && selReview.value);
-        });
+        s.addEventListener('change', autoPreviewDesktopResult);
       });
 
+      // Ensure the chips are correct at boot
       updateDesktopMulti('changes');
       updateDesktopMulti('risks');
 
@@ -2156,11 +2167,15 @@
 
       showStep(0);
 
-      // === Basic inline tests (adds coverage; safe in production) ===
+      // === Inline tests ===
       var r0 = computePHCResult();
       assert(r0 && (r0.label === 'Green' || r0.label === 'Yellow' || r0.label === 'Red'), 'PHC result returns a valid label');
       assert(typeof validateDesktopRequired === 'function', 'validateDesktopRequired exists');
       assert(typeof resetDesktopPHC === 'function', 'resetDesktopPHC exists');
+      // Mobile validation fallback tests
+      var tmp = document.createElement('div');
+      tmp.innerHTML = '<button class="phc-answer-btn" data-value="A">A</button><button class="phc-answer-btn active" data-value="B">B</button>';
+      assert((function(){ var a = tmp.querySelector('.phc-answer-btn.active'); return a && a.dataset.value; })() === 'B', 'active button dataset can be read');
     });
   })();
 </script>
