@@ -1927,6 +1927,7 @@
         }
         var done = el('phcQDone');
         if(done) done.style.display = 'none';
+
         var back0 = el('phcBack0');
         if(back0) back0.disabled = (step===0);
 
@@ -1938,11 +1939,6 @@
         }catch(_){ }
 
         updateMobileContinueState();
-      }
-        var done = el('phcQDone');
-        if(done) done.style.display = 'none';
-        var back0 = el('phcBack0');
-        if(back0) back0.disabled = (step===0);
       }
 
       function getActiveValue(container){
