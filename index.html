@@ -758,19 +758,41 @@
 
 <!-- ================= AGENT INFO BAR ================= -->
 <div class="agent-bar">
-  <button class="agent-toggle" id="agentToggle" type="button" aria-expanded="false" aria-controls="agentInfoPanel">
+  <button
+    class="agent-toggle"
+    id="agentToggle"
+    type="button"
+    aria-expanded="false"
+    aria-controls="agentInfoPanel"
+  >
     ☰ <span>Agent info</span>
   </button>
 
   <div class="agent-right">
-    <button class="language-btn" id="topLangBtn" type="button" aria-label="Change language">🌐</button>
+    <button
+      class="language-btn"
+      id="topLangBtn"
+      type="button"
+      aria-label="Change language"
+    >
+      🌐
+    </button>
   </div>
 </div>
 
-<div id="agentInfoPanel" class="agent-info-panel" aria-hidden="true">
+<div
+  id="agentInfoPanel"
+  class="agent-info-panel"
+  aria-hidden="true"
+  hidden
+>
   <div class="agent-info-content">
     <div class="agent-branding">
-      <img src="allstate-logo.png" alt="Allstate Logo" class="agent-logo" />
+      <img
+        src="allstate-logo.png"
+        alt="Allstate Logo"
+        class="agent-logo"
+      />
       <div class="agent-motto">You’re in good hands®</div>
     </div>
 
@@ -783,7 +805,29 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    const toggle = document.getElementById("agentToggle");
+    const panel = document.getElementById("agentInfoPanel");
+
+    if (!toggle || !panel) return;
+
+    // ensure closed on load
+    toggle.setAttribute("aria-expanded", "false");
+    panel.setAttribute("aria-hidden", "true");
+    panel.hidden = true;
+
+    toggle.addEventListener("click", () => {
+      const isOpen = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", String(!isOpen));
+      panel.setAttribute("aria-hidden", String(isOpen));
+      panel.hidden = isOpen;
+    });
+  })();
+</script>
 <!-- =============== END AGENT INFO BAR =============== -->
+
 
 <section class="hero">
 
@@ -2685,4 +2729,5 @@
 
 </body>
 </html>
+
 
