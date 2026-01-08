@@ -2726,8 +2726,135 @@
     });
   })();
 </script>
+<!-- ================= PHC ANSWERS CAPTURE + LEAD SUBMIT (WITH CONFIRMATION EMAIL) ================= -->
+
+<script>
+  // 1) Global PHC store (answers + result summary)
+  window.PHC = window.PHC || {
+    answers: {},   // filled during PHC
+    result: {}     // set when PHC completes
+  };
+
+  // Call this when a user answers a PHC question
+  // Example: setPhcAnswer('roof_age', 'How old is your roof?', '15-20', '15–20 years');
+  function setPhcAnswer(questionId, questionText, answerValue, answerLabel) {
+    window.PHC.answers[questionId] = {
+      q: questionText,
+      v: answerValue,
+      label: answerLabel || String(answerValue),
+      ts: new Date().toISOString()
+    };
+  }
+
+  // Call this when PHC finishes scoring
+  // Example: setPhcResult({ score: 72, label: 'YELLOW', triggers: 'Roof age; Liability gap', ctaText: 'Check my options' });
+  function setPhcResult(resultObj) {
+    window.PHC.result = Object.assign({ ts: new Date().toISOString() }, resultObj || {});
+  }
+
+  // 2) Small UI helper (optional)
+  function showLeadSubmitSuccess(message) {
+    // Replace this with your existing success modal/toast if you have one
+    alert(message || "Thanks! Check your email for confirmation.");
+  }
+
+  // 3) SUBMIT: sends lead + PHC answers to Apps Script
+  async function submitCheckMyOptionsLead(formObj) {
+    const phcAnswers = window.PHC?.answers || {};
+    const phcResult  = window.PHC?.result  || {};
+
+    // IMPORTANT: match the key names your Apps Script expects
+    const payload = {
+      // Lead fields (match your Apps Script mapping)
+      firstName: formObj.firstName || "",
+      lastName: formObj.lastName || "",
+      zip: formObj.zip || "",
+      email: formObj.email || "",
+      phone: formObj.phone || "",
+      homeowner: formObj.homeowner || "",
+      roofAge: formObj.roofAge || "",
+      vehicles: formObj.vehicles || "",
+      timeframe: formObj.timeframe || "",
+      notes: formObj.notes || "",
+
+      // Lead scoring (if you set these on front-end)
+      leadScore: formObj.leadScore || "",
+      leadLabel: formObj.leadLabel || "",
+
+      // PHC summary fields (your backend already stores these)
+      policyHealthScore: phcResult.score ?? "",
+      policyHealthLabel: phcResult.label ?? "",
+      policyHealthTriggers: phcResult.triggers ?? "",
+      policyHealthCtaText: phcResult.ctaText ?? "",
+
+      // PHC answers object (backend will JSON stringify safely)
+      policyHealthAnswers: phcAnswers,
+
+      // Tracking
+      source: formObj.source || "SecureChoiceInsurance.net",
+      channel: formObj.channel || "web",
+      pageUrl: location.href,
+      userAgent: navigator.userAgent,
+      submittedAt: new Date().toISOString()
+    };
+
+    const res = await fetch(window.GAS_WEBAPP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      mode: "cors"
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!json || json.ok !== true) {
+      throw new Error((json && json.error) ? json.error : "Submission failed");
+    }
+
+    return json;
+  }
+
+  // 4) Hook this into your "Check my options" form submit
+  // If your form already exists, just adapt selectors.
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("checkMyOptionsForm"); // <-- set your form ID
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Gather fields (adjust IDs/names to your actual form)
+      const formObj = {
+        firstName: (document.getElementById("firstName")?.value || "").trim(),
+        lastName:  (document.getElementById("lastName")?.value || "").trim(),
+        zip:       (document.getElementById("zip")?.value || "").trim(),
+        email:     (document.getElementById("email")?.value || "").trim(),
+        phone:     (document.getElementById("phone")?.value || "").trim(),
+        homeowner: (document.getElementById("homeowner")?.value || "").trim(),
+        roofAge:   (document.getElementById("roofAge")?.value || "").trim(),
+        vehicles:  (document.getElementById("vehicles")?.value || "").trim(),
+        timeframe: (document.getElementById("timeframe")?.value || "").trim(),
+        notes:     (document.getElementById("notes")?.value || "").trim(),
+
+        // optional
+        source: "SecureChoiceInsurance.net",
+        channel: "web"
+      };
+
+      try {
+        await submitCheckMyOptionsLead(formObj);
+        showLeadSubmitSuccess("Got it — I received your request. You’ll get a confirmation email shortly.");
+        form.reset();
+      } catch (err) {
+        alert("Sorry — something went wrong. Please try again.\n\n" + String(err.message || err));
+      }
+    });
+  });
+</script>
+
+<!-- ================= END PHC ANSWERS + SUBMIT ================= -->
 
 </body>
 </html>
+
 
 
