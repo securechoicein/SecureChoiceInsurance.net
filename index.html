@@ -757,49 +757,220 @@
 <body>
 
 <!-- ================= AGENT INFO BAR ================= -->
+<style>
+  :root{
+    /* Utility (quiet) bar */
+    --agent-bar-bg: rgba(8, 15, 28, 0.32);
+    --agent-bar-border: rgba(255,255,255,0.10);
+    --agent-bar-text: rgba(255,255,255,0.86);
+    --agent-bar-subtext: rgba(255,255,255,0.62);
+    --agent-bar-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    --agent-radius: 12px;
+
+    /* Panel (can be richer) */
+    --agent-panel-bg: rgba(10,18,34,0.92);
+    --agent-panel-border: rgba(255,255,255,0.14);
+    --agent-panel-shadow: 0 12px 34px rgba(0,0,0,0.35);
+
+    /* Layout */
+    --agent-side-gap: clamp(10px, 3vw, 18px);
+    --agent-top-gap: clamp(10px, 2.5vw, 16px);
+    --agent-bar-h: 48px;        /* fallback; updated by JS */
+    --agent-max-w: 980px;
+  }
+
+  /* Make room so the fixed bar never covers hero content */
+  body{
+    padding-top: calc(var(--agent-top-gap) + env(safe-area-inset-top, 0px) + var(--agent-bar-h) + 12px);
+  }
+
+  .agent-bar,
+  .agent-bar button,
+  .agent-info-panel,
+  .agent-info-panel *{
+    font-family: inherit;
+  }
+
+  /* ===== Utility header bar ===== */
+  .agent-bar{
+    position: fixed;
+    top: calc(var(--agent-top-gap) + env(safe-area-inset-top, 0px));
+    left: var(--agent-side-gap);
+    right: var(--agent-side-gap);
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 6px 8px;               /* slightly tighter than “feature” chrome */
+    background: var(--agent-bar-bg);
+    border: 1px solid var(--agent-bar-border);
+    border-radius: var(--agent-radius);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--agent-bar-shadow);
+  }
+
+  @media (min-width: 900px){
+    .agent-bar{
+      max-width: var(--agent-max-w);
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
+  }
+
+  /* Touch-friendly targets (but not loud) */
+  .agent-toggle,
+  .language-btn{
+    min-height: 40px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Utility toggle — no “button chrome” */
+  .agent-toggle{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--agent-bar-text);
+
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 650;
+    letter-spacing: 0.1px;
+
+    transition: background .12s ease;
+  }
+  .agent-toggle:hover{ background: rgba(255,255,255,0.06); }
+
+  .agent-toggle .icon{
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    font-size: 12px;
+    flex: 0 0 auto;
+  }
+
+  .agent-toggle .label{
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+    text-align: left;
+  }
+  .agent-toggle .title{ font-size: 12.5px; }
+  .agent-toggle .hint{ font-size: 11px; color: var(--agent-bar-subtext); }
+
+  .language-btn{
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+
+    border: 1px solid rgba(255,255,255,0.10);
+    background: transparent;
+    color: var(--agent-bar-text);
+    cursor: pointer;
+
+    display: grid;
+    place-items: center;
+
+    transition: background .12s ease;
+  }
+  .language-btn:hover{ background: rgba(255,255,255,0.06); }
+
+  /* ===== Panel (on-demand credibility) ===== */
+  .agent-info-panel[hidden]{ display:none !important; }
+
+  .agent-info-panel{
+    position: fixed;
+    top: calc(var(--agent-top-gap) + env(safe-area-inset-top, 0px) + var(--agent-bar-h) + 10px);
+    left: var(--agent-side-gap);
+    right: var(--agent-side-gap);
+    z-index: 9998;
+
+    background: var(--agent-panel-bg);
+    border: 1px solid var(--agent-panel-border);
+    border-radius: 16px;
+    box-shadow: var(--agent-panel-shadow);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+
+  @media (min-width: 900px){
+    .agent-info-panel{
+      max-width: var(--agent-max-w);
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
+  }
+
+  .agent-info-content{
+    display: grid;
+    grid-template-columns: 120px 1fr; /* logo stays secondary */
+    gap: 16px;
+    padding: 16px;
+    align-items: start;
+  }
+
+  .agent-logo{
+    width: 110px;         /* secondary size */
+    max-width: 100%;
+    height: auto;
+    opacity: 0.95;
+
+    /* subtle depth WITHOUT distorting the mark */
+    filter: drop-shadow(0 1px 1px rgba(255,255,255,0.16))
+            drop-shadow(0 4px 8px rgba(0,0,0,0.34));
+    transform: translateZ(0);
+  }
+
+  .agent-motto{ font-size: 12px; color: rgba(255,255,255,0.70); }
+  .agent-details{ font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.90); }
+  .agent-name{ font-size: 15px; font-weight: 800; margin-bottom: 6px; }
+
+  @media (max-width: 560px){
+    .agent-info-content{ grid-template-columns: 1fr; gap: 12px; }
+    .agent-logo{ width: 120px; }
+    .agent-toggle .hint{ display: none; } /* less noise on small screens */
+  }
+</style>
+
 <div class="agent-bar">
-  <button
-    class="agent-toggle"
-    id="agentToggle"
-    type="button"
-    aria-expanded="false"
-    aria-controls="agentInfoPanel"
-  >
-    ☰ <span>Agent info</span>
+  <button class="agent-toggle" id="agentToggle" type="button" aria-expanded="false" aria-controls="agentInfoPanel">
+    <span class="icon">ⓘ</span>
+    <span class="label">
+      <span class="title">Agent info</span>
+      <span class="hint">Tap to view details</span>
+    </span>
   </button>
 
   <div class="agent-right">
-    <button
-      class="language-btn"
-      id="topLangBtn"
-      type="button"
-      aria-label="Change language"
-    >
-      🌐
-    </button>
+    <button class="language-btn" id="topLangBtn" type="button" aria-label="Change language">🌐</button>
   </div>
 </div>
 
-<div
-  id="agentInfoPanel"
-  class="agent-info-panel"
-  aria-hidden="true"
-  hidden
->
+<div id="agentInfoPanel" class="agent-info-panel" aria-hidden="true" hidden>
   <div class="agent-info-content">
     <div class="agent-branding">
-      <img
-        src="allstate-logo.png"
-        alt="Allstate Logo"
-        class="agent-logo"
-      />
+      <img src="allstate-logo.png" alt="Allstate Logo" class="agent-logo" />
       <div class="agent-motto">You’re in good hands®</div>
     </div>
 
     <div class="agent-details">
       <div class="agent-name">Gilbert Noel Jr.</div>
       <div><strong>License #</strong> 776994</div>
-      <div><strong>Address:</strong></div>
+      <div style="margin-top:6px;"><strong>Address:</strong></div>
       <div>106 N Circle Dr.</div>
       <div>Colorado Springs, CO 80909</div>
     </div>
@@ -809,24 +980,59 @@
 <script>
   (function () {
     const toggle = document.getElementById("agentToggle");
-    const panel = document.getElementById("agentInfoPanel");
+    const panel  = document.getElementById("agentInfoPanel");
+    const bar    = document.querySelector(".agent-bar");
+    if (!toggle || !panel || !bar) return;
 
-    if (!toggle || !panel) return;
+    function syncBarHeight(){
+      const h = Math.round(bar.getBoundingClientRect().height);
+      document.documentElement.style.setProperty("--agent-bar-h", h + "px");
+    }
 
-    // ensure closed on load
+    // Ensure closed on load
     toggle.setAttribute("aria-expanded", "false");
     panel.setAttribute("aria-hidden", "true");
     panel.hidden = true;
 
-    toggle.addEventListener("click", () => {
+    // Measure bar height for correct panel placement + body padding
+    syncBarHeight();
+    window.addEventListener("resize", syncBarHeight, { passive: true });
+
+    function openPanel(){
+      toggle.setAttribute("aria-expanded", "true");
+      panel.setAttribute("aria-hidden", "false");
+      panel.hidden = false;
+      syncBarHeight();
+    }
+
+    function closePanel(){
+      toggle.setAttribute("aria-expanded", "false");
+      panel.setAttribute("aria-hidden", "true");
+      panel.hidden = true;
+    }
+
+    toggle.addEventListener("click", (e) => {
+      e.stopPropagation();
       const isOpen = toggle.getAttribute("aria-expanded") === "true";
-      toggle.setAttribute("aria-expanded", String(!isOpen));
-      panel.setAttribute("aria-hidden", String(isOpen));
-      panel.hidden = isOpen;
+      isOpen ? closePanel() : openPanel();
+    });
+
+    // Close when clicking/tapping outside
+    document.addEventListener("click", (e) => {
+      const isOpen = toggle.getAttribute("aria-expanded") === "true";
+      if (!isOpen) return;
+      if (panel.contains(e.target) || bar.contains(e.target)) return;
+      closePanel();
+    });
+
+    // ESC closes
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePanel();
     });
   })();
 </script>
 <!-- =============== END AGENT INFO BAR =============== -->
+
 
 
 <section class="hero">
@@ -2855,6 +3061,7 @@
 
 </body>
 </html>
+
 
 
 
