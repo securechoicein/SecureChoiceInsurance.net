@@ -7,1977 +7,771 @@
   <meta name="description" content="Colorado residents: explore flexible home &amp; auto insurance options designed to protect your budget and peace of mind. Bundle, save, and see if you qualify for custom rate relief or flexible payments." />
 
   <!-- ================= QUICK SETUP =================
-  REQUIRED FILES IN SAME FOLDER:
-  - index.html
-  - hero-house.png
-  - hero-auto.png
-  - hero-business.png
+    REQUIRED FILES IN SAME FOLDER (optional but recommended):
+    - index.html
+    - hero-house.png
+    - hero-auto.png
+    - hero-business.png
+    - allstate-logo.png (optional)
   ================================================== -->
 
   <script>
     // === REQUIRED: paste your deployed Google Apps Script Web App URL here ===
-    window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw5WUyuqjP6HODx88cSVY2ga2jhl7g29fRaqJb7OXneFH96lM0TyEGZxZdQtnD0dbOf4A/exec";
+    window.GAS_WEBAPP_URL = "PASTE_YOUR_GAS_WEBAPP_URL_HERE";
 
-    // Optional separate LLM endpoint (usually leave blank to reuse GAS)
-    window.POLICYPRO_LLM_ENDPOINT = "";
-
-    // ✅ Default: run PolicyPro in LOCAL mode (no API keys required)
-    window.POLICYPRO_MODE = "local"; // "local" or "remote"
-
-    // Tracking (optional)
-    window.GA4_MEASUREMENT_ID = "";
-    window.GOOGLE_ADS_ID = "";
-    window.GOOGLE_ADS_CONVERSION_LABEL = "";
-    window.META_PIXEL_ID = "";
-
-    window.AGENT_EMAIL = "securechoicein@gmail.com";
-
-    // === ClickFunnels (recommended for "Check My Options") ===
+    // Optional: if you want "Check My Options" to open ClickFunnels in a new tab instead of the modal:
+    // window.CLICKFUNNEL_URL = "https://YOUR-FUNNEL-LINK";
     window.CLICKFUNNEL_URL = "";
-
-    // ===== Conditional reveal: Check My Options appears after interaction =====
-    // NOTE: must run AFTER DOM exists (mobile was not wiring the button)
-    window.addEventListener('DOMContentLoaded', function(){
-      var cta = document.getElementById('openFunnel');
-      var hcBtn = document.getElementById('openHealthCheck');
-      if(!cta) return;
-
-      function revealCTA(){
-        cta.classList.add('visible');
-        cta.removeAttribute('aria-hidden');
-        cta.style.opacity = '1';
-        cta.style.pointerEvents = 'auto';
-        cta.style.transform = 'translateY(0)';
-        window.removeEventListener('scroll', onScroll);
-      }
-
-      function onScroll(){
-        if(window.scrollY > window.innerHeight * 0.15){
-          revealCTA();
-        }
-      }
-
-      // On mobile, show it immediately (no dead CTA)
-      if(window.matchMedia && window.matchMedia('(max-width: 900px)').matches){
-        revealCTA();
-      } else {
-        window.addEventListener('scroll', onScroll, { passive:true });
-      }
-
-      if(hcBtn){
-        hcBtn.addEventListener('click', revealCTA);
-        hcBtn.addEventListener('touchend', function(){ revealCTA(); }, { passive:true });
-      }
-    });
   </script>
-
-  <!-- Preload hero images for smoother first paint (PNG only) -->
-  <link rel="preload" as="image" href="hero-house.png">
-  <link rel="preload" as="image" href="hero-auto.png">
-  <link rel="preload" as="image" href="hero-business.png">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --card:#0f172a;
-      --line:rgba(148,196,255,.35);
-      --brand:#38bdf8;
-      --brand2:#0ea5e9;
-      --ok:#22c55e;
-      --warn:#facc15;
-
-      /* Desktop hero fitting:
-        - "contain" shows the full PNG (no cropping)
-        - "cover" fills the hero (may crop)
-      */
-      --hero-fit-desktop: cover;
-      --hero-bg-desktop: #000;
+      --bg:#0b1220;
+      --panel:#0f1b33;
+      --panel2:#0c162b;
+      --text:#eaf1ff;
+      --muted:#b7c3df;
+      --line:rgba(255,255,255,.12);
+      --brand:#2e7cff;
+      --brand2:#66a3ff;
+      --good:#2bd576;
+      --bad:#ff4d4d;
+      --warn:#ffcc00;
+      --shadow: 0 18px 40px rgba(0,0,0,.45);
+      --radius: 18px;
     }
-
     *{box-sizing:border-box}
-
     body{
       margin:0;
-      font-family:Inter,system-ui,sans-serif;
-      background:#0b1323;
-      color:#e5e7eb;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 600px at 25% -10%, rgba(46,124,255,.35), transparent 60%),
+                  radial-gradient(800px 500px at 90% 0%, rgba(102,163,255,.18), transparent 55%),
+                  linear-gradient(180deg, #070d18, #0b1220 35%, #070d18);
+      min-height:100vh;
       overflow-x:hidden;
     }
 
-    /* HERO */
-    .hero{
-      position:relative;
-      min-height:90vh;
+    a{color:inherit}
+    .container{max-width:1100px;margin:0 auto;padding:16px}
+
+    /* ===== Top utility bar (agent + language) ===== */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:100;
+      background: rgba(7,13,24,.78);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar-inner{
       display:flex;
       align-items:center;
-      justify-content:flex-start;
-      padding:48px;
-      overflow:hidden;
-      isolation:isolate;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 16px;
+      max-width:1100px;
+      margin:0 auto;
     }
-
-    /* Make hero content readable + consistent across screen sizes */
-    .hero-content{position:relative;max-width:680px;z-index:2;width:100%;}
-
-    /* Dark overlay so text stays readable on photos */
-    .hero::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(rgba(5,10,25,.55), rgba(5,10,25,.55));
-      z-index:1;
-      pointer-events:none;
-    }
-
-    /* Rotating background slides (mobile-safe): JS-driven crossfade */
-    .hero-rotator{
-      position:absolute;
-      inset:0;
-      height:100%;
-      z-index:0;
-      pointer-events:none;
-      background:transparent;
-    }
-
-    .hero-slide{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      object-position:50% 50%;
-      opacity:0;
-      filter: brightness(1.08) contrast(1.12) saturate(1.12);
-      image-rendering:auto;
-      transition:opacity 900ms ease;
-      will-change:opacity;
-    }
-
-    .hero-slide.active{ opacity:1; }
-
-    /* Desktop hero fitting */
-    @media (min-width: 901px){
-      .hero{ min-height:100vh; padding:72px 72px; }
-      .hero-content{ max-width:760px; }
-      .hero-rotator{ background: var(--hero-bg-desktop); }
-      .hero-slide{
-        object-fit: var(--hero-fit-desktop);
-        object-position: 50% 45%;
-        transform:none;
-        filter: brightness(1.12) contrast(1.15) saturate(1.15);
-      }
-    }
-
-    /* Reduce motion for accessibility */
-    @media (prefers-reduced-motion: reduce){
-      .hero-slide{ transition:none; }
-    }
-
-    .badge{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);font-size:12px;font-weight:700;color:#c7e9ff}
-
-    /* Hero header (uses the same font as the PP mark) */
-    .hero-headline{
-      margin:0 0 18px;
-      font-size:clamp(40px,6vw,72px);
-      line-height:1.02;
-      letter-spacing:.01em;
-      color:#ffffff;
-      font-family:'Playfair Display','Didot','Bodoni MT',serif;
-      font-weight:700;
-      text-shadow:0 18px 70px rgba(0,0,0,.55);
-    }
-
-    /* Primary CTA – ChannelTalk-style (white, PP font) */
-    .hero-cta-wrap{display:flex;flex-direction:column;gap:10px;max-width:520px;}
-    .cta{
-      margin-top:24px;
-      padding:14px 28px;
-      font-size: 16px;
-      line-height: 1.6;
-      opacity: 0;
-      transform: translateY(6px);
-      animation: phcFadeIn 0.6s ease-out forwards;
-      animation-delay: 0.4s;
-      font-weight:700;
-      border-radius:999px;
-      border:1px solid #e5e7eb;
-      cursor:pointer;
-      background:#ffffff;
-      color:#0b1120;
-      font-family:'Playfair Display','Didot','Bodoni MT',serif;
-      box-shadow:0 18px 55px rgba(0,0,0,.25);
-      transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
-    }
-    .cta:hover{
-      transform:translateY(-1px);
-      box-shadow:0 22px 70px rgba(0,0,0,.28);
-      filter:brightness(1.01);
-    }
-    .cta:active{transform:translateY(0);box-shadow:0 14px 40px rgba(0,0,0,.22);}
-
-    /* Secondary CTA (Health Check) */
-    .cta.cta-secondary{
-      margin-top:0;
-      background:rgba(255,255,255,.94);
-      position:relative;
-    }
-    .cta.cta-secondary::before{
-      content:"";
-      position:absolute;
-      inset:-1px;
-      border-radius:999px;
-      background:linear-gradient(90deg, rgba(56,189,248,.75), rgba(34,197,94,.55), rgba(56,189,248,.75));
-      z-index:-1;
-      opacity:.85;
-    }
-    .cta.cta-secondary:hover{ filter:brightness(1.03); }
-
-    /* Policy Health Check hook — match Channelview / ChannelTalk font */
-    .phc-hook-hero{
-      margin:0 0 10px;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size:16px;
-      font-weight:600;
-      line-height:1.5;
-      letter-spacing:-0.01em;
-      color:#ffffff;
-      text-shadow:0 12px 36px rgba(0,0,0,.45);
-      opacity:.98;
-      padding:12px 14px;
-      border-radius:16px;
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-      border:1px solid rgba(148,196,255,.35);
-      box-shadow:0 18px 60px rgba(0,0,0,.26);
-      position:relative;
-      overflow:hidden;
-    }
-    .phc-hook-hero::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:radial-gradient(600px 180px at 18% 0%, rgba(56,189,248,.28), transparent 55%),
-                 radial-gradient(420px 180px at 92% 10%, rgba(34,197,94,.14), transparent 60%);
-      opacity:.95;
-    }
-    .phc-hook-hero.attn{ animation:phcGlow 2.4s ease-in-out 1; }
-    @keyframes phcGlow{
-      0%{opacity:.9;}
-      40%{opacity:1; text-shadow:0 0 0 rgba(56,189,248,0);}
-      70%{text-shadow:0 0 28px rgba(56,189,248,.45);}
-      100%{opacity:.98;}
-    }
-
-    /* Optional: gently guide users to start with the Health Check once per visitor */
-    body.phc-gate #openFunnel{ opacity:.82; filter:saturate(.92) brightness(.98); transform:translateY(0); }
-    body.phc-gate #ctaMicro{ opacity:.92; }
-    body.phc-gate #openHealthCheck{ box-shadow:0 22px 80px rgba(56,189,248,.10), 0 18px 55px rgba(0,0,0,.25); }
-
-    /* Microcopy under CTA */
-    .cta-micro{
-      font-size:12px;
-      font-weight:800;
-      color:rgba(226,232,240,.92);
-      text-shadow:0 10px 30px rgba(0,0,0,.45);
-      letter-spacing:.01em;
-    }
-
-    /* Mobile: make the primary CTA easier to tap */
-    @media (max-width: 900px){
-      .hero{padding:18px;min-height:100vh;align-items:flex-start;padding-top:72px;}
-      .hero-headline{font-size:clamp(34px,9vw,52px);}
-      .hero-content{max-width:100%;padding-bottom:90px;}
-
-      .hero-cta-wrap{max-width:520px;width:100%;}
-      .cta{
-        width:100%;
-        max-width:520px;
-        margin-top:10px;
-        margin-bottom:0;
-        padding:14px 18px;
-        font-size:15px;
-        min-height:50px;
-      }
-      .cta-micro{font-size:12px;opacity:.95;}
-    }
-
-    /* Alert */
-    .alert-box{position:absolute;right:8%;bottom:12%;width:260px;background:rgba(15,23,42,.92);border-radius:14px;padding:14px;border:1px solid rgba(148,196,255,.55);box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:2}
-    .alert-title{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#facc15;margin-bottom:6px}
-    .alert-text{font-size:13px;color:#e5e7eb;line-height:1.35}
-
-    @media (max-width: 1100px){
-      .alert-box{display:none;}
-    }
-
-/* ================== POLICY HEALTH CHECK ================== */
-
-/* ---------- Layout wrappers ---------- */
-.phc-wrap{
-  max-width:960px;
-  margin:32px auto 18px;
-  padding:0 16px;
-}
-
-.phc-card{
-  background:#ffffff;
-  border-radius:20px;
-  border:1px solid #e5e7eb;
-  box-shadow:0 20px 60px rgba(2,6,23,.12);
-  padding:22px 22px 18px;
-  position:relative;
-  z-index:1;
-}
-
-/* ---------- Header ---------- */
-.phc-header{
-  display:flex;
-  gap:14px;
-  align-items:flex-start;
-  margin-bottom:16px;
-}
-
-.phc-badge{
-  flex:0 0 auto;
-  width:36px;
-  height:36px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#0ea5e9;
-  color:#fff;
-  font-weight:900;
-}
-
-.phc-title{
-  font-size:18px;
-  font-weight:900;
-  color:#0b1120;
-  margin:0;
-}
-
-.phc-hook{
-  margin:6px 0 0;
-  font-size:13px;
-  line-height:1.4;
-  color:#475569;
-  font-weight:700;
-}
-
-/* ---------- Desktop questions ---------- */
-.phc-question{
-  margin-bottom:12px;
-}
-
-.phc-grid{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
-
-/* Chips */
-.phc-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  padding:12px 14px;
-  border-radius:16px;
-  border:1px solid #e2e8f0;
-  background:#f8fafc;
-  color:#0b1120;
-  font-weight:900;
-  font-size:12.5px;
-  cursor:pointer;
-  box-shadow:0 12px 26px rgba(2,6,23,.06);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.phc-chip input{ transform:scale(1.05); }
-
-.phc-chip.active{
-  border-color:#0ea5e9 !important;
-  background:rgba(14,165,233,.10) !important;
-}
-
-/* Desktop 2-column answers */
-@media (min-width:1024px){
-  .phc-container{ max-width:720px; margin:0 auto; }
-  .phc-answers{
-    display:grid;
-    grid-template-columns:repeat(2, 1fr);
-    gap:10px;
-  }
-}
-
-/* ---------- Mobile answer buttons ---------- */
-.phc-answers{
-  display:grid;
-  gap:10px;
-}
-
-@media (max-width:1023px){
-  .phc-answers{
-    grid-template-columns:1fr;
-  }
-}
-
-.phc-answer-btn{
-  width:100%;
-  text-align:left;
-  border:1px solid #cbd5e1;
-  background:#ffffff;
-  border-radius:14px;
-  padding:12px;
-  font-weight:900;
-  color:#0b1120;
-  cursor:pointer;
-  box-shadow:0 10px 22px rgba(2,6,23,.05);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.phc-answer-btn:active{
-  transform:translateY(1px);
-}
-
-.phc-answer-btn.active{
-  border-color:#0ea5e9;
-  background:rgba(14,165,233,.10);
-  box-shadow:0 12px 26px rgba(2,6,23,.07);
-}
-
-/* ---------- Mobile step blocks ---------- */
-.phc-mobile-flow{ display:none; }
-
-@media (max-width:600px){
-  .phc-mobile-flow{ display:block; }
-  .phc-desktop-grid{ display:none !important; }
-}
-
-.phc-q{
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:12px 12px 10px;
-  background:#f8fafc;
-}
-
-.phc-q-title{
-  margin:0 0 8px;
-  font-weight:1000;
-  color:#0b1120;
-  font-size:13px;
-  line-height:1.25;
-}
-
-.phc-q-hint{
-  margin:0 0 10px;
-  color:#64748b;
-  font-weight:800;
-  font-size:11.5px;
-  line-height:1.35;
-}
-
-/* ---------- Mobile sticky nav ---------- */
-.phc-mobile-nav{
-  display:flex;
-  gap:10px;
-  margin-top:12px;
-}
-
-@media (max-width:600px){
-  .phc-q{
-    padding-bottom: calc(14px + 72px + env(safe-area-inset-bottom));
-  }
-
-  .phc-mobile-nav{
-    position:sticky;
-    bottom:0;
-    padding-top:10px;
-    padding-bottom:calc(10px + env(safe-area-inset-bottom));
-    background:linear-gradient(180deg, rgba(248,250,252,0), rgba(248,250,252,1) 32%);
-    z-index:10;
-
-    /* KEY FIX: prevent overlay from blocking answers */
-    pointer-events:none;
-  }
-
-  .phc-mobile-nav .btn{
-    flex:1;
-    min-height:48px;
-    pointer-events:auto;
-  }
-}
-
-/* ---------- Result panel ---------- */
-.phc-result{
-  display:none;
-  margin-top:14px;
-  border:1px solid #e5e7eb;
-  border-radius:18px;
-  padding:14px 14px 12px;
-  background:#ffffff;
-  box-shadow:0 14px 40px rgba(2,6,23,.06);
-}
-
-.phc-result.show{ display:block; }
-
-.phc-result-top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-
-.phc-result-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.phc-dot{
-  width:12px;
-  height:12px;
-  border-radius:999px;
-  background:#22c55e;
-  box-shadow:0 0 0 6px rgba(34,197,94,.12);
-}
-
-.phc-dot.yellow{
-  background:#facc15;
-  box-shadow:0 0 0 6px rgba(250,204,21,.16);
-}
-
-.phc-dot.red{
-  background:#ef4444;
-  box-shadow:0 0 0 6px rgba(239,68,68,.14);
-}
-
-.phc-result-label{
-  font-weight:1000;
-  color:#0b1120;
-  font-size:12px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
-
-.phc-result-copy{
-  margin:10px 0 8px;
-  color:#0b1120;
-  font-weight:900;
-  font-size:13px;
-  line-height:1.35;
-}
-
-/* Animated subhead */
-.phc-subhead{
-  margin:10px 0 6px;
-  color:#0b1120;
-  font-weight:700;
-  font-size:13px;
-  line-height:1.45;
-  opacity:0;
-  transform:translateY(6px);
-  animation:phcSubheadIn .55s ease-out forwards;
-}
-
-.phc-subhead.green{ animation-delay:.1s; }
-.phc-subhead.red{ animation-delay:.28s; }
-
-@keyframes phcSubheadIn{
-  to{ opacity:1; transform:translateY(0); }
-}
-
-.phc-result-why{
-  margin:0;
-  padding-left:18px;
-  display:grid;
-  gap:6px;
-}
-
-/* ---------- Loyalty callout ---------- */
-.phc-loyalty{
-  display:none;
-  margin-top:12px;
-  padding:12px;
-  border-radius:16px;
-  border:1px solid rgba(15,23,42,.12);
-  background:linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow:0 12px 26px rgba(2,6,23,.06);
-}
-
-.phc-loyalty.show{ display:block; }
-
-.phc-loyalty .m{
-  font-weight:1000;
-  color:#0b1120;
-  font-size:13px;
-  line-height:1.3;
-  margin:0 0 10px;
-}
-
-.phc-loyalty .btn{ width:100%; }
-
-/* ---------- Result actions ---------- */
-.phc-result-actions{
-  margin-top:12px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  justify-content:flex-end;
-  flex-wrap:wrap;
-}
-
-.phc-run{
-  border:1px solid #cbd5e1;
-  background:#fff;
-  color:#0b1120;
-  font-weight:1000;
-}
-
-.phc-continue{
-  border:1px solid #0b1120;
-  background:#0b1120;
-  color:#fff;
-  font-weight:1000;
-}
-
-@media (max-width:600px){
-  .phc-result-actions .btn{
-    width:100%;
-  }
-}
-
-/* ---------- Modal scroll safety (matches your HTML) ---------- */
-#phcModal .card-body{
-  max-height: calc(100vh - 140px);
-  overflow:auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-    /* ================== PHC RESULT (Green/Yellow/Red) ================== */
-    .phc-result{
-      display:none;
-      margin-top:14px;
-      border:1px solid #e5e7eb;
-      border-radius:18px;
-      padding:14px 14px 12px;
-      background:#ffffff;
-      box-shadow:0 14px 40px rgba(2,6,23,.06);
-    }
-    .phc-result.show{display:block;}
-
-    .phc-result-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-    .phc-result-left{display:flex;align-items:center;gap:10px;}
-    .phc-dot{width:12px;height:12px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.12);} /* green */
-    .phc-dot.yellow{background:#facc15;box-shadow:0 0 0 6px rgba(250,204,21,.16);} /* yellow */
-    .phc-dot.red{background:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.14);} /* red */
-    .phc-result-label{font-weight:1000;color:#0b1120;font-size:12px;letter-spacing:.08em;text-transform:uppercase;}
-
-    .phc-result-copy{margin:10px 0 8px;color:#0b1120;font-weight:900;font-size:13px;line-height:1.35;}
-
-    /* Subhead animation (shown after PHC completes) */
-    .phc-subhead{
-      margin:10px 0 6px;
-      color:#0b1120;
-      font-weight:700;
-      font-size:13px;
-      line-height:1.45;
-      opacity:0;
-      transform:translateY(6px);
-      animation:phcSubheadIn .55s ease-out forwards;
-      animation-delay:.15s;
-    }
-    .phc-subhead.green{animation-delay:.1s;}
-    .phc-subhead.red{animation-delay:.28s;}
-    @keyframes phcSubheadIn{to{opacity:1;transform:translateY(0);}}
-
-    .phc-result-why{margin:0;padding-left:18px;display:grid;gap:6px;}
-
-    /* Loyalty callout (shown on Red results) */
-    .phc-loyalty{display:none;margin-top:12px;padding:12px;border-radius:16px;border:1px solid rgba(15,23,42,.12);background:linear-gradient(180deg, #ffffff, #f8fafc);box-shadow:0 12px 26px rgba(2,6,23,.06);}    
-    .phc-loyalty.show{display:block;}
-    .phc-loyalty .m{font-weight:1000;color:#0b1120;font-size:13px;line-height:1.3;margin:0 0 10px;}
-    .phc-loyalty .btn{width:100%;}
-
-    .phc-result-actions{margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
-    .phc-run{border:1px solid #cbd5e1;background:#fff;color:#0b1120;font-weight:1000;}
-    .phc-continue{border:1px solid #0b1120;background:#0b1120;color:#fff;font-weight:1000;}
-
-    @media (max-width: 600px){
-      .phc-result{border-radius:16px;}
-      .phc-result-actions .btn{width:100%;}
-    }
-
-    /* ================== POLICY HEALTH CHECK CHIPS ================== */
-    .phc-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
-    .phc-chip{display:inline-flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;background:#f8fafc;color:#0b1120;font-weight:900;font-size:12.5px;cursor:pointer;box-shadow:0 12px 26px rgba(2,6,23,.06);}
-    .phc-chip input{transform:scale(1.05);}
-    .phc-chip.active{border-color:#0ea5e9 !important;background:rgba(14,165,233,.10) !important;}
-    @media (max-width: 420px){.phc-chip{width:100%;justify-content:flex-start;}}
-
-    /* ================== PHC MOBILE TAP FLOW ================== */
-    .phc-mobile-flow{display:none;}
-
-    .phc-q{border:1px solid #e5e7eb;border-radius:16px;padding:12px 12px 10px;background:#f8fafc;}
-    .phc-q-title{margin:0 0 8px;font-weight:1000;color:#0b1120;font-size:13px;line-height:1.25;}
-    .phc-q-hint{margin:0 0 10px;color:#64748b;font-weight:800;font-size:11.5px;line-height:1.35;}
-
-    .phc-answers{display:grid;gap:10px;}
-    .phc-answer-btn{
-      width:100%;
-      text-align:left;
-      border:1px solid #cbd5e1;
-      background:#ffffff;
-      border-radius:14px;
-      padding:12px;
-      font-weight:1000;
-      color:#0b1120;
-      cursor:pointer;
-      box-shadow:0 10px 22px rgba(2,6,23,.05);
-      -webkit-tap-highlight-color: transparent;
-    }
-    .phc-answer-btn:active{transform:translateY(1px)}
-    .phc-answer-btn.active{border-color:#0ea5e9;background:rgba(14,165,233,.10);box-shadow:0 12px 26px rgba(2,6,23,.07);}
-
-    .phc-mobile-nav{display:flex;gap:10px;margin-top:12px;}
-
-    /* Mobile: keep Back/Continue visible while scrolling inside the PHC modal */
-    @media (max-width: 600px){
-      .phc-q{padding-bottom:14px;}
-      .phc-mobile-nav{
-        position:sticky;
-        bottom:0;
-        padding-top:10px;
-        padding-bottom:calc(10px + env(safe-area-inset-bottom));
-        background:linear-gradient(180deg, rgba(248,250,252,0), rgba(248,250,252,1) 32%);
-        z-index:5;
-      }
-    }
-    .phc-mobile-nav .btn{flex:1;}
-
-    @media (max-width: 600px){
-      .phc-mobile-flow{display:block;}
-      .phc-desktop-grid{display:none !important;}
-      .phc-grid{gap:8px;}
-      .phc-chip{width:100%;justify-content:flex-start;}
-    }
-
-    /* ================== CHAT: Channel.io-like launcher ================== */
-    .chat-launcher{
-      position:fixed;
-      right:20px;
-      bottom:22px;
-      z-index:26000;
+    .brand-left{
       display:flex;
       align-items:center;
       gap:10px;
-      cursor:pointer;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
+      min-width:0;
     }
-
-    .chat-peek{
+    .hamburger{
+      width:42px;height:38px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background: rgba(255,255,255,.06);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+    }
+    .hamburger span{
+      display:block;width:18px;height:2px;background:rgba(255,255,255,.8);
+      box-shadow: 0 6px 0 rgba(255,255,255,.8), 0 -6px 0 rgba(255,255,255,.8);
+      border-radius:2px;
+    }
+    .agent-title{
       display:flex;
       flex-direction:column;
-      gap:2px;
-      padding:10px 12px;
-      border-radius:14px;
-      background:#ffffff;
-      border:1px solid #e5e7eb;
-      backdrop-filter:blur(10px);
-      box-shadow:0 18px 55px rgba(0,0,0,.25);
+      line-height:1.15;
+      min-width:0;
     }
-    .chat-peek .chat-label{
-      font-size:11px;
-      opacity:.85;
-      font-weight:700;
-      color:#0b1120;
-      letter-spacing:.01em;
-      font-family:'Playfair Display','Didot','Bodoni MT',serif;
-    }
-    .chat-peek .chat-name{
-      font-weight:700;
-      font-size:13px;
-      letter-spacing:.01em;
-      color:#0b1120;
-      font-family:'Playfair Display','Didot','Bodoni MT',serif;
-    }
-
-    .chat-bubble{
-      width:56px;height:56px;
-      border-radius:999px;
-      display:flex;align-items:center;justify-content:center;
-      background:#ffffff;
-      border:1px solid #e5e7eb;
-      box-shadow:0 22px 70px rgba(0,0,0,.25);
-      position:relative;
-      transition:transform .18s ease, filter .18s ease;
-      animation: chatPulse 2.6s ease-in-out infinite;
-    }
-    .chat-bubble:hover{transform:translateY(-2px) scale(1.03);filter:brightness(1.06)}
-    .chat-bubble:active{transform:translateY(0) scale(0.99)}
-
-    .chat-avatar{
-      width:44px;height:44px;
-      border-radius:999px;
-      display:flex;align-items:center;justify-content:center;
-      font-family:'Playfair Display', 'Didot', 'Bodoni MT', serif;
-      font-weight:600;
-      font-size:22px;
-      color:#020617;
-      background:#ffffff;
-    }
-
-    @keyframes chatPulse{
-      0%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,.15); }
-      50%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 12px rgba(2,6,23,0); }
-      100%{ box-shadow:0 22px 70px rgba(0,0,0,.25), 0 0 0 0 rgba(2,6,23,0); }
-    }
-
-    /* ================== CHAT WIDGET (ChannelTalk-like) ================== */
-    .chat-window{
-      display:none;
-      position:fixed;
-      right:20px;
-      bottom:96px;
-      width:360px;
-      max-height:78vh;
-      z-index:25000;
-    }
-
-    .pp-widget{
-      width:100%;
-      background:#fff;
-      color:#0b1120;
-      border-radius:22px;
-      overflow:hidden;
-      border:1px solid rgba(15,23,42,.10);
-      box-shadow:0 40px 120px rgba(0,0,0,.42);
-    }
-
-    .pp-top{
-      position:relative;
-      height:150px;
-      background:
-        linear-gradient(180deg, rgba(2,6,23,0) 40%, rgba(2,6,23,.45) 100%),
-        url('hero-house.png') center/cover no-repeat;
-    }
-
-    .pp-topbar{
-      position:absolute;
-      left:0; right:0; bottom:0;
-      padding:14px 14px 12px;
+    .agent-title strong{font-size:14px}
+    .agent-title small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .topbar-actions{
       display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
+      align-items:center;
       gap:10px;
     }
+    .iconbtn{
+      width:42px;height:38px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background: rgba(255,255,255,.06);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+    }
+    .iconbtn svg{width:20px;height:20px;opacity:.9}
 
-    .pp-brand{color:#fff;font-weight:900;letter-spacing:.01em;font-size:18px;text-shadow:0 8px 30px rgba(0,0,0,.55);}
-
-    .pp-body{padding:12px 14px 10px;background:#fff;}
-
-    .pp-screen{ display:none; }
-    .pp-screen.active{ display:block; }
-
-    .pp-home-card{border:1px solid #eef2f7;border-radius:18px;padding:12px;background:#fff;box-shadow:0 14px 40px rgba(2,6,23,.06);}
-    .pp-home-row{display:flex;gap:10px;align-items:flex-start}
-    .pp-avatar{width:38px;height:38px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;font-family:'Playfair Display','Didot','Bodoni MT',serif;font-weight:700;color:#0b1120;flex:0 0 auto;}
-    .pp-home-title{margin:0;font-weight:900;font-size:13.5px;line-height:1.25}
-    .pp-home-sub{margin:6px 0 0;color:#475569;font-weight:700;font-size:12px;line-height:1.35}
-
-    .pp-primary{width:100%;margin-top:12px;padding:12px;border-radius:999px;border:1px solid #eef2f7;background:#f3f4f6;color:#0b1120;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
-    .pp-primary:hover{filter:brightness(1.01)}
-
-    .pp-footer-note{margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:#94a3b8;font-weight:800;font-size:11px;}
-
-    .pp-messages-wrap{border:1px solid #eef2f7;border-radius:18px;overflow:hidden;background:#fff;}
-
-    .chat-main{display:flex;flex-direction:column;height:360px;min-height:320px;}
-    .chat-messages{padding:12px;overflow:auto;flex:1;background:#ffffff;}
-
-    .msg{display:flex;margin:10px 0}
-    .msg.user{justify-content:flex-end}
-    .msg.bot{justify-content:flex-start}
-    .bubble{max-width:86%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;box-shadow:0 10px 26px rgba(0,0,0,.06)}
-    .bubble.user{background:#0b1120;color:#e5e7eb;border-top-right-radius:6px}
-    .bubble.bot{background:#ffffff;color:#0f172a;border:1px solid #e5e7eb;border-top-left-radius:6px}
-
-    .chat-inputbar{padding:10px;border-top:1px solid #eef2f7;background:#fff;display:flex;gap:10px;align-items:center}
-    .chat-input{flex:1;padding:12px 12px;border-radius:14px;border:1px solid #cbd5e1;font-size:14px;outline:none}
-    .chat-input:focus{border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
-    .send-btn{padding:12px 14px;border-radius:14px;border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;font-weight:1000;cursor:pointer}
-    .send-btn:disabled{opacity:.55;cursor:not-allowed}
-
-    .typing{display:inline-flex;gap:4px;align-items:center}
-    .dot{width:6px;height:6px;border-radius:999px;background:#94a3b8;animation:bounce 1.1s infinite}
-    .dot:nth-child(2){animation-delay:.15s}
-    .dot:nth-child(3){animation-delay:.3s}
-    @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-4px);opacity:1}}
-
-    .pp-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #eef2f7;background:#fff;padding:8px 6px;}
-    .pp-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px 6px;border-radius:14px;border:0;background:transparent;cursor:pointer;color:#64748b;font-weight:900;font-size:11px;}
-    .pp-tab svg{width:18px;height:18px;opacity:.75;transition:transform .15s ease, opacity .15s ease}
-    .pp-tab#ppTabSettings svg{width:19px;height:19px;stroke-width:1.8;}
-    .pp-tab#ppTabSettings:hover svg{opacity:.95;transform:rotate(20deg)}
-    .pp-tab#ppTabSettings.active svg{opacity:1;transform:rotate(0deg)}
-    .pp-tab.active{color:#0b1120;background:#f8fafc;}
-    .pp-tab:hover{color:#0b1120;background:#f8fafc}
-
-    .pp-close-fab{position:absolute;right:10px;bottom:-62px;width:48px;height:48px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:#0b1120;box-shadow:0 18px 60px rgba(0,0,0,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;}
-    .pp-close-fab:hover{filter:brightness(1.02)}
-
-    .pp-settings{border:1px solid #eef2f7;border-radius:18px;padding:12px;background:#fff;}
-    .pp-settings h3{margin:0 0 10px;font-size:13.5px;font-weight:1000;color:#0b1120}
-    .pp-setting-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #eef2f7;border-radius:14px;background:#fff;margin-bottom:10px}
-    .pp-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;border:1px solid #e2e8f0;background:#f8fafc;color:#0b1120;font-weight:900;font-size:12px;border-radius:12px;padding:10px 34px 10px 12px;cursor:pointer;line-height:1;box-shadow:0 10px 22px rgba(2,6,23,.05);
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23647569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat:no-repeat;background-position:right 10px center;background-size:18px 18px;}
-    .pp-select:focus{outline:none;border-color:rgba(56,189,248,.9);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
-    .pp-select:hover{filter:brightness(1.01)}
-    .pp-setting-item .k{font-weight:900;color:#0b1120;font-size:12px}
-    .pp-setting-item .v{font-weight:900;color:#64748b;font-size:12px}
-    .pp-setting-link{display:block;text-align:center;margin-top:6px;color:#0ea5e9;font-weight:1000;text-decoration:none}
-
-    /* Funnel modal */
-    .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:20000;}
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:21000;}
-    .card{width:min(760px,96vw);background:#ffffff;color:#0b1323;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.8);overflow:hidden;border:1px solid #e5e7eb;max-height:86vh;}
-
-    /* Desktop: keep modal usable by scrolling inside the card (not the page) */
-    @media (min-width: 601px){
-      .card-head{position:sticky;top:0;z-index:3;}
-      .card-body{max-height:calc(86vh - 64px);overflow:auto;-webkit-overflow-scrolling:touch;}
-      .row.row-desktop{position:sticky;bottom:0;left:0;right:0;background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 32%);padding-top:12px;margin-top:12px;}
+    .agent-panel{
+      display:none;
+      border-top:1px solid var(--line);
+      background: rgba(10,18,34,.94);
+    }
+    .agent-panel-inner{
+      max-width:1100px;margin:0 auto;padding:14px 16px;
+      display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;
+    }
+    .agent-card{
+      flex: 1 1 340px;
+      background: rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      padding:12px 14px;
+    }
+    .agent-card .row{display:flex;align-items:center;gap:12px}
+    .agent-logo{
+      width:54px;height:54px;border-radius:14px;
+      background: rgba(255,255,255,.07);
+      border:1px solid var(--line);
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;
+    }
+    .agent-logo img{width:100%;height:100%;object-fit:contain;padding:8px}
+    .agent-meta{line-height:1.25}
+    .agent-meta div{font-size:13px;color:var(--muted)}
+    .agent-meta strong{font-size:14px;color:var(--text)}
+    .agent-disclosure{
+      flex: 2 1 460px;
+      font-size:13px;
+      color: var(--muted);
+      line-height:1.4;
     }
 
-    /* Mobile-friendly CTA modal (bottom-sheet style) */
-    @media (max-width: 600px){
-      .modal{align-items:flex-end;}
-      .card{width:100%;max-width:100%;max-height:85vh;border-radius:18px 18px 0 0;}
-      .card-head{position:sticky;top:0;z-index:2;}
-      .card-body{overflow:auto;-webkit-overflow-scrolling:touch;}
+    /* ===== Hero ===== */
+    .hero{
+      margin-top:18px;
+      border:1px solid var(--line);
+      border-radius: 26px;
+      overflow:hidden;
+      background:
+        radial-gradient(900px 350px at 30% 0%, rgba(46,124,255,.25), transparent 65%),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
     }
-
-    /* Stepper (used mainly on mobile) */
-    .stepper{display:none;padding:12px 2px 10px;margin:0 0 8px;}
-    .stepper-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
-    .stepper-kicker{font-size:11px;font-weight:900;color:#64748b;letter-spacing:.02em;}
-    .stepper-title{font-size:12px;font-weight:1000;color:#0b1120;}
-    .stepper-dots{display:flex;gap:8px;margin-top:10px;}
-    .dotx{width:10px;height:10px;border-radius:999px;background:#e2e8f0;}
-    .dotx.active{background:#0b1120;}
-    .stepper-bar{height:6px;border-radius:999px;background:#eef2f7;margin-top:10px;overflow:hidden;}
-    .stepper-bar-fill{display:block;height:100%;width:25%;background:#0b1120;transition:width .2s ease;}
-
-    .steps{margin-top:6px;}
-    .step{display:none;}
-    .step.active{display:block;}
-
-    /* Desktop keeps the original all-sections view */
-    @media (min-width: 601px){
-      .stepper{display:none;}
-      .step{display:block;}
-      .row-mobile{display:none !important;}
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:0;
     }
-
-    /* Mobile: one step at a time + sticky step controls */
-    @media (max-width: 600px){
-      .stepper{display:block;}
-      .grid{grid-template-columns:1fr !important;}
-      .row-desktop{display:none !important;}
-      .row-mobile{position:sticky;bottom:0;left:0;right:0;padding:12px 0 0;background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 28%);gap:10px;justify-content:space-between;}
-      .row-mobile .btn{flex:1;}
-
-      /* PHC: hide the desktop Finish/Reset row on mobile (mobile uses step flow) */
-      #phcDesktopActions{display:none !important;}
-    }
-
-    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;}
-    .card-head h2{margin:0;font-size:16px;font-weight:900;}
-    .card-head p{margin:2px 0 0;font-size:12px;color:#475569;max-width:none;}
-    .icon-btn{background:transparent;border:none;font-size:18px;cursor:pointer;color:#475569;}
-    .card-body{padding:14px 16px;}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-    @media(max-width:740px){.grid{grid-template-columns:1fr;}}
-    .field{display:grid;gap:6px;}
-    .field label{font-size:12px;font-weight:900;color:#0f172a;}
-    .field input,.field select,.field textarea{padding:12px;border-radius:12px;border:1px solid #cbd5e1;font-size:14px;}
-    .field textarea{resize:vertical;min-height:90px;}
-    .hint{font-size:11px;color:#64748b;font-weight:700;}
-    .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px;}
-    .btn{padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-weight:900;}
-    .btn-primary{border:1px solid #0b1120;background:#0b1120;color:#e5e7eb;}
-    .status{display:none;margin-top:10px;font-size:12px;font-weight:800;}
-    .status.ok{color:#166534;}
-    .status.err{color:#b91c1c;}
-
-    /* Disclaimer button */
-    .disc-btn{position:fixed;left:18px;bottom:18px;z-index:15000;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);border:1px solid rgba(148,196,255,.45);color:#e5e7eb;padding:10px 14px;border-radius:999px;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 16px 50px rgba(0,0,0,.6)}
-    .disc-btn:hover{filter:brightness(1.06)}
-
-    /* Disclaimer modal */
-    .disc-overlay{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(6px);display:none;z-index:30000;}
-    .disc-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:31000;overflow:auto;}
-    .disc-card{width:min(880px,96vw);max-height:86vh;background:#ffffff;color:#0b1323;border-radius:22px;box-shadow:0 50px 130px rgba(0,0,0,.85);overflow:hidden;border:1px solid rgba(148,196,255,.35);position:relative;}
-    .disc-card::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(1200px 500px at 20% -10%, rgba(56,189,248,.18), transparent 55%),radial-gradient(900px 500px at 90% 10%, rgba(34,197,94,.14), transparent 55%);}
-    .disc-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;background:linear-gradient(180deg,#0b1120,#0f172a);border-bottom:1px solid rgba(148,196,255,.25);color:#e5e7eb;}
-    .disc-head h2{margin:0;font-size:16px;font-weight:900;letter-spacing:.01em;}
-    .disc-kicker{margin:4px 0 0;font-size:12px;color:rgba(226,232,240,.9);font-weight:800;max-width:66ch;line-height:1.35;}
-    .disc-icon{width:34px;height:34px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(148,196,255,.45);background:rgba(15,23,42,.5);box-shadow:0 10px 30px rgba(0,0,0,.35);font-weight:900;}
-    .disc-head-left{display:flex;gap:12px;align-items:flex-start;}
-    .disc-close{background:rgba(248,250,252,.06);border:1px solid rgba(148,196,255,.35);color:#e5e7eb;border-radius:12px;padding:8px 10px;font-weight:900;cursor:pointer;}
-    .disc-close:hover{filter:brightness(1.08)}
-
-    .disc-body{position:relative;padding:14px 16px 12px;font-size:14px;line-height:1.55;color:#0b1120;overflow:auto;max-height:calc(86vh - 62px - 74px);font-weight:700;}
-    .disc-body p{margin:0 0 10px;font-weight:700;color:#0b1120;}
-    .disc-body strong{font-weight:900;color:#020617;}
-    .disc-sections{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-    @media(max-width:860px){.disc-sections{grid-template-columns:1fr;}}
-
-    .disc-section{border:1px solid #e5e7eb;border-radius:16px;background:#ffffff;box-shadow:0 10px 26px rgba(0,0,0,.06);overflow:hidden;}
-    .disc-sec-head{display:flex;gap:10px;align-items:flex-start;padding:12px 12px;background:linear-gradient(180deg,#ffffff,#f8fafc);border-bottom:1px solid #e5e7eb;}
-    .disc-sec-badge{width:30px;height:30px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;color:#0b1120;border:1px solid rgba(56,189,248,.35);background:rgba(56,189,248,.12);}
-    .disc-sec-title{margin:0;font-size:13px;font-weight:900;color:#0b1120;}
-    .disc-sec-sub{margin:2px 0 0;font-size:11px;color:#64748b;font-weight:800;line-height:1.35;}
-    .disc-sec-body{padding:12px 12px 10px;font-size:13px;color:#0b1120;}
-    .disc-sec-body ul{margin:0;padding-left:18px;display:grid;gap:8px;}
-    .disc-sec-body li{margin:0;}
-
-    .disc-footer-note{margin-top:12px;padding:12px;border-radius:16px;border:1px dashed rgba(15,23,42,.25);background:rgba(248,250,252,.9);font-size:12px;color:#0f172a;font-weight:800;}
-
-    .disc-actions{position:relative;display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;background:linear-gradient(180deg,#f8fafc,#ffffff);border-top:1px solid #e5e7eb;}
-    .disc-actions .btn{min-width:140px}
-    .btn-accept{border:1px solid rgba(34,197,94,.35);background:linear-gradient(180deg, rgba(34,197,94,.18), rgba(34,197,94,.08));color:#0b1120;}
-    .btn-accept:hover{filter:brightness(1.03)}
-
-    @keyframes phcFadeIn{to{opacity:1;transform:translateY(0);}}
-
-    .cta-secondary{transition: opacity .35s ease, transform .35s ease;}
-    .cta-secondary.visible{opacity:1 !important;pointer-events:auto !important;transform:translateY(0);}
-
     @media (max-width: 900px){
-      .chat-launcher{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));}
-      .chat-peek{display:none;}
-
-      .chat-window{left:12px;right:12px;width:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:78vh;}
-
-      /* Keep Disclaimer accessible but out of the way of bottom-sheet modals */
-      .disc-btn{left:14px;right:auto;bottom:calc(86px + env(safe-area-inset-bottom));padding:8px 12px;font-size:11px;z-index:26000;opacity:.92;}
+      .hero-grid{grid-template-columns: 1fr}
+    }
+    .hero-copy{
+      padding:26px 22px;
+    }
+    .kicker{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      font-size:12px;
+      color: var(--muted);
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      padding:6px 10px;
+      border-radius: 999px;
+    }
+    h1{
+      margin:14px 0 10px;
+      font-size: 34px;
+      line-height:1.1;
+      letter-spacing: -.4px;
+    }
+    @media (max-width: 520px){
+      h1{font-size: 28px}
+    }
+    .subhead{
+      color: var(--muted);
+      font-size: 15px;
+      line-height:1.5;
+      margin:0 0 16px;
+      max-width: 56ch;
+    }
+    .cta-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .btn{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding:12px 14px;
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 650;
+      letter-spacing:.1px;
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      text-decoration:none;
+      user-select:none;
+    }
+    .btn.primary{
+      background: linear-gradient(180deg, rgba(46,124,255,1), rgba(46,124,255,.72));
+      border-color: rgba(255,255,255,.18);
+    }
+    .btn.primary:hover{filter: brightness(1.05)}
+    .btn.secondary:hover{background: rgba(255,255,255,.09)}
+    .btn small{font-weight:600;opacity:.9}
+    .microcopy{
+      margin-top:10px;
+      color: var(--muted);
+      font-size:12px;
+    }
+    .hero-media{
+      padding:16px;
+      display:flex;
+      align-items:stretch;
+    }
+    .media-card{
+      border:1px solid var(--line);
+      border-radius: 22px;
+      overflow:hidden;
+      background: rgba(0,0,0,.25);
+      width:100%;
+      min-height: 260px;
+      position:relative;
+    }
+    .media-card img{
+      width:100%;height:100%;
+      object-fit:cover;
+      opacity:.92;
+      filter: contrast(1.05) saturate(1.05);
+    }
+    .media-overlay{
+      position:absolute;inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,.00), rgba(0,0,0,.55));
+    }
+    .media-badges{
+      position:absolute;
+      left:14px;bottom:12px;
+      display:flex;gap:8px;flex-wrap:wrap;
+    }
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(10,18,34,.55);
+      backdrop-filter: blur(6px);
+      color: var(--text);
     }
 
-    /* Hide the floating Disclaimer button while any modal is open (prevents overlap on mobile) */
-    body.modal-open .disc-btn{display:none !important;}
+    /* ===== Section cards ===== */
+    .grid2{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 900px){ .grid2{grid-template-columns:1fr} }
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.04);
+      padding:14px 14px;
+    }
+    .card h3{margin:0 0 6px;font-size:16px}
+    .card p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+    .footer{
+      padding:22px 0 60px;
+      color: var(--muted);
+      font-size:12px;
+      text-align:center;
+    }
+
+    /* ===== Floating disclaimer button ===== */
+    .disc-fab{
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 120;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      padding:10px 12px;
+      background: rgba(10,18,34,.76);
+      backdrop-filter: blur(8px);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.4);
+    }
+    .disc-fab span{font-size:12px;color:var(--muted)}
+    .disc-fab strong{font-size:12px}
+
+    /* ===== Modals ===== */
+    .overlay{
+      display:none;
+      position:fixed;inset:0;
+      background: rgba(0,0,0,.62);
+      z-index: 200;
+    }
+    .modal{
+      display:none;
+      position:fixed;
+      inset: 0;
+      z-index: 210;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+    }
+    .modal-card{
+      width:min(920px, 100%);
+      max-height: calc(100vh - 32px);
+      background: rgba(10,18,34,.96);
+      border:1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 14px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      gap:10px;
+    }
+    .modal-head .title{
+      font-weight:800;
+      letter-spacing:.1px;
+      font-size: 14px;
+    }
+    .xbtn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:800;
+    }
+    .modal-body{
+      padding:14px;
+      overflow:auto;
+    }
+
+    /* ===== PHC UI ===== */
+    .phc-wrap{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    .qcard{
+      border:1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.04);
+      padding:12px 12px;
+    }
+    .qhead{
+      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+      margin-bottom:8px;
+    }
+    .qhead strong{font-size:14px}
+    .qhead small{color:var(--muted);font-size:12px}
+    .opts{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .opt{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      border-radius: 999px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:650;
+      font-size:13px;
+      user-select:none;
+    }
+    .opt.selected{
+      border-color: rgba(46,124,255,.85);
+      background: rgba(46,124,255,.22);
+    }
+    .phc-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      padding-top:10px;
+      border-top:1px solid var(--line);
+      margin-top: 6px;
+    }
+    .statusline{
+      display:none;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size:12px;
+    }
+    .statusline.ok{color: rgba(43,213,118,.95); border-color: rgba(43,213,118,.35); background: rgba(43,213,118,.08);}
+    .statusline.err{color: rgba(255,77,77,.95); border-color: rgba(255,77,77,.35); background: rgba(255,77,77,.08);}
+
+    /* ===== Lead form ===== */
+    form .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom:10px;
+    }
+    label{font-size:12px;color:var(--muted)}
+    input, select, textarea{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      outline:none;
+    }
+    textarea{min-height:90px;resize:vertical}
+    .status{
+      display:none;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size:12px;
+    }
+    .status.ok{color: rgba(43,213,118,.95); border-color: rgba(43,213,118,.35); background: rgba(43,213,118,.08);}
+    .status.err{color: rgba(255,77,77,.95); border-color: rgba(255,77,77,.35); background: rgba(255,77,77,.08);}
+
+    /* Prevent background scroll when a modal is open */
+    body.modal-open{overflow:hidden}
   </style>
 </head>
 
 <body>
 
-<!-- ================= AGENT INFO BAR ================= -->
-<style>
-  :root{
-    /* Utility (quiet) bar */
-    --agent-bar-bg: rgba(8, 15, 28, 0.32);
-    --agent-bar-border: rgba(255,255,255,0.10);
-    --agent-bar-text: rgba(255,255,255,0.86);
-    --agent-bar-subtext: rgba(255,255,255,0.62);
-    --agent-bar-shadow: 0 6px 16px rgba(0,0,0,0.18);
-    --agent-radius: 12px;
+  <!-- ===== Top bar ===== -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-left">
+        <button class="hamburger" id="agentToggle" aria-label="Agent info">
+          <span></span>
+        </button>
+        <div class="agent-title">
+          <strong>Agent Info</strong>
+          <small>Allstate Licensed Agent • License #776994 • Colorado Springs</small>
+        </div>
+      </div>
 
-    /* Panel (can be richer) */
-    --agent-panel-bg: rgba(10,18,34,0.92);
-    --agent-panel-border: rgba(255,255,255,0.14);
-    --agent-panel-shadow: 0 12px 34px rgba(0,0,0,0.35);
+      <div class="topbar-actions">
+        <button class="iconbtn" id="langBtn" aria-label="Language">
+          <!-- Globe icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M2 12h20"></path>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
 
-    /* Layout */
-    --agent-side-gap: clamp(10px, 3vw, 18px);
-    --agent-top-gap: clamp(10px, 2.5vw, 16px);
-    --agent-bar-h: 48px;        /* fallback; updated by JS */
-    --agent-max-w: 980px;
-  }
+    <!-- Agent dropdown panel -->
+    <div class="agent-panel" id="agentPanel">
+      <div class="agent-panel-inner">
+        <div class="agent-card">
+          <div class="row">
+            <div class="agent-logo">
+              <img src="allstate-logo.png" alt="Allstate logo" onerror="this.style.display='none'">
+            </div>
+            <div class="agent-meta">
+              <strong>Allstate Licensed Agent</strong>
+              <div>License #776994</div>
+              <div>106 N Circle Dr, Colorado Springs, CO 80909</div>
+            </div>
+          </div>
+        </div>
+        <div class="agent-disclosure">
+          This page is an informational marketing experience and does not provide a quote or bind coverage.
+          Coverage is subject to underwriting approval and policy terms. Submitting your information is a request
+          for an agent follow-up about insurance options.
+        </div>
+      </div>
+    </div>
+  </div>
 
-  /* Make room so the fixed bar never covers hero content */
-  body{
-    padding-top: calc(var(--agent-top-gap) + env(safe-area-inset-top, 0px) + var(--agent-bar-h) + 12px);
-  }
+  <main class="container">
 
-  .agent-bar,
-  .agent-bar button,
-  .agent-info-panel,
-  .agent-info-panel *{
-    font-family: inherit;
-  }
+    <!-- ===== Hero (ONLY ONE hero section — fixed) ===== -->
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="kicker">Colorado • Home + Auto • Relief Options</div>
+          <h1>Check if your coverage still makes sense — before the next surprise.</h1>
+          <p class="subhead">
+            Use a quick Policy Health Check to spot gaps, overpayment, or missed discounts.
+            Then, if you want, request a follow-up to review options that fit your budget.
+          </p>
 
-  /* ===== Utility header bar ===== */
-  .agent-bar{
-    position: fixed;
-    top: calc(var(--agent-top-gap) + env(safe-area-inset-top, 0px));
-    left: var(--agent-side-gap);
-    right: var(--agent-side-gap);
-    z-index: 9999;
+          <div class="cta-row">
+            <a href="#" class="btn primary" id="openHealthCheck">
+              30-Second Policy Health Check
+              <small>→</small>
+            </a>
+            <a href="#" class="btn secondary" id="openOptions">
+              Check My Options
+              <small>↗</small>
+            </a>
+          </div>
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+          <div class="microcopy">
+            2 minutes • Not a quote • No obligation • Agent follow-up if requested
+          </div>
+        </div>
 
-    padding: 6px 8px;               /* slightly tighter than “feature” chrome */
-    background: var(--agent-bar-bg);
-    border: 1px solid var(--agent-bar-border);
-    border-radius: var(--agent-radius);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: var(--agent-bar-shadow);
-  }
+        <div class="hero-media">
+          <div class="media-card">
+            <img src="hero-house.png" alt="Colorado home" onerror="this.src='hero-auto.png'">
+            <div class="media-overlay"></div>
+            <div class="media-badges">
+              <div class="badge">Wildfire</div>
+              <div class="badge">Hail</div>
+              <div class="badge">Severe Weather</div>
+            </div>
+          </div>
+       j>
+        </div>
+      </div>
+    </section>
 
-  @media (min-width: 900px){
-    .agent-bar{
-      max-width: var(--agent-max-w);
-      left: 50%;
-      right: auto;
-      transform: translateX(-50%);
-    }
-  }
+    <div class="grid2">
+      <div class="card">
+        <h3>Why people don’t review</h3>
+        <p>Most people don’t switch because they’re happy — they stay because nothing triggered a review.</p>
+      </div>
+      <div class="card">
+        <h3>What this does</h3>
+        <p>A fast, plain-English check to surface common risk gaps and savings opportunities.</p>
+      </div>
+    </div>
 
-  /* Touch-friendly targets (but not loud) */
-  .agent-toggle,
-  .language-btn{
-    min-height: 40px;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
+    <div class="footer">
+      By continuing you agree to the disclosures and consent options available via the Disclaimer button.
+    </div>
+  </main>
 
-  /* Utility toggle — no “button chrome” */
-  .agent-toggle{
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--agent-bar-text);
-
-    padding: 8px 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 650;
-    letter-spacing: 0.1px;
-
-    transition: background .12s ease;
-  }
-  .agent-toggle:hover{ background: rgba(255,255,255,0.06); }
-
-  .agent-toggle .icon{
-    width: 22px;
-    height: 22px;
-    border-radius: 999px;
-    display: grid;
-    place-items: center;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.10);
-    font-size: 12px;
-    flex: 0 0 auto;
-  }
-
-  .agent-toggle .label{
-    display: flex;
-    flex-direction: column;
-    line-height: 1.05;
-    text-align: left;
-  }
-  .agent-toggle .title{ font-size: 12.5px; }
-  .agent-toggle .hint{ font-size: 11px; color: var(--agent-bar-subtext); }
-
-  .language-btn{
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-
-    border: 1px solid rgba(255,255,255,0.10);
-    background: transparent;
-    color: var(--agent-bar-text);
-    cursor: pointer;
-
-    display: grid;
-    place-items: center;
-
-    transition: background .12s ease;
-  }
-  .language-btn:hover{ background: rgba(255,255,255,0.06); }
-
-  /* ===== Panel (on-demand credibility) ===== */
-  .agent-info-panel[hidden]{ display:none !important; }
-
-  .agent-info-panel{
-    position: fixed;
-    top: calc(var(--agent-top-gap) + env(safe-area-inset-top, 0px) + var(--agent-bar-h) + 10px);
-    left: var(--agent-side-gap);
-    right: var(--agent-side-gap);
-    z-index: 9998;
-
-    background: var(--agent-panel-bg);
-    border: 1px solid var(--agent-panel-border);
-    border-radius: 16px;
-    box-shadow: var(--agent-panel-shadow);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    overflow: hidden;
-  }
-
-  @media (min-width: 900px){
-    .agent-info-panel{
-      max-width: var(--agent-max-w);
-      left: 50%;
-      right: auto;
-      transform: translateX(-50%);
-    }
-  }
-
-  .agent-info-content{
-    display: grid;
-    grid-template-columns: 120px 1fr; /* logo stays secondary */
-    gap: 16px;
-    padding: 16px;
-    align-items: start;
-  }
-
-  .agent-logo{
-    width: 110px;         /* secondary size */
-    max-width: 100%;
-    height: auto;
-    opacity: 0.95;
-
-    /* subtle depth WITHOUT distorting the mark */
-    filter: drop-shadow(0 1px 1px rgba(255,255,255,0.16))
-            drop-shadow(0 4px 8px rgba(0,0,0,0.34));
-    transform: translateZ(0);
-  }
-
-  .agent-motto{ font-size: 12px; color: rgba(255,255,255,0.70); }
-  .agent-details{ font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.90); }
-  .agent-name{ font-size: 15px; font-weight: 800; margin-bottom: 6px; }
-
-  @media (max-width: 560px){
-    .agent-info-content{ grid-template-columns: 1fr; gap: 12px; }
-    .agent-logo{ width: 120px; }
-    .agent-toggle .hint{ display: none; } /* less noise on small screens */
-  }
-</style>
-
-<div class="agent-bar">
-  <button class="agent-toggle" id="agentToggle" type="button" aria-expanded="false" aria-controls="agentInfoPanel">
-    <span class="icon">ⓘ</span>
-    <span class="label">
-      <span class="title">Agent info</span>
-      <span class="hint">Tap to view details</span>
-    </span>
+  <!-- ===== Floating Disclaimer Button ===== -->
+  <button class="disc-fab" id="openDisclaimer" type="button" aria-label="Disclaimer">
+    <strong>Disclaimer</strong>
+    <span>View</span>
   </button>
 
-  <div class="agent-right">
-    <button class="language-btn" id="topLangBtn" type="button" aria-label="Change language">🌐</button>
-  </div>
-</div>
-
-<div id="agentInfoPanel" class="agent-info-panel" aria-hidden="true" hidden>
-  <div class="agent-info-content">
-    <div class="agent-branding">
-      <img src="allstate-logo.png" alt="Allstate Logo" class="agent-logo" />
-      <div class="agent-motto">You’re in good hands®</div>
-    </div>
-
-    <div class="agent-details">
-      <div class="agent-name">Gilbert Noel Jr.</div>
-      <div><strong>License #</strong> 776994</div>
-      <div style="margin-top:6px;"><strong>Address:</strong></div>
-      <div>106 N Circle Dr.</div>
-      <div>Colorado Springs, CO 80909</div>
-    </div>
-  </div>
-</div>
-
-<script>
-  (function () {
-    const toggle = document.getElementById("agentToggle");
-    const panel  = document.getElementById("agentInfoPanel");
-    const bar    = document.querySelector(".agent-bar");
-    if (!toggle || !panel || !bar) return;
-
-    function syncBarHeight(){
-      const h = Math.round(bar.getBoundingClientRect().height);
-      document.documentElement.style.setProperty("--agent-bar-h", h + "px");
-    }
-
-    // Ensure closed on load
-    toggle.setAttribute("aria-expanded", "false");
-    panel.setAttribute("aria-hidden", "true");
-    panel.hidden = true;
-
-    // Measure bar height for correct panel placement + body padding
-    syncBarHeight();
-    window.addEventListener("resize", syncBarHeight, { passive: true });
-
-    function openPanel(){
-      toggle.setAttribute("aria-expanded", "true");
-      panel.setAttribute("aria-hidden", "false");
-      panel.hidden = false;
-      syncBarHeight();
-    }
-
-    function closePanel(){
-      toggle.setAttribute("aria-expanded", "false");
-      panel.setAttribute("aria-hidden", "true");
-      panel.hidden = true;
-    }
-
-    toggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = toggle.getAttribute("aria-expanded") === "true";
-      isOpen ? closePanel() : openPanel();
-    });
-
-    // Close when clicking/tapping outside
-    document.addEventListener("click", (e) => {
-      const isOpen = toggle.getAttribute("aria-expanded") === "true";
-      if (!isOpen) return;
-      if (panel.contains(e.target) || bar.contains(e.target)) return;
-      closePanel();
-    });
-
-    // ESC closes
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closePanel();
-    });
-  })();
-</script>
-<!-- =============== END AGENT INFO BAR =============== -->
-
-
-
-
-
-<section class="hero">
-  <!-- Rotating background images (PNG) -->
-  <div class="hero-rotator" aria-hidden="true">
-    <img class="hero-slide active" id="heroImg0" alt="" loading="eager" decoding="async" src="hero-house.png">
-    <img class="hero-slide" id="heroImg1" alt="" loading="eager" decoding="async" src="hero-auto.png">
-    <img class="hero-slide" id="heroImg2" alt="" loading="eager" decoding="async" src="hero-business.png">
-  </div>
-
-  <div class="hero-content">
-    <h1 class="hero-headline" id="heroHeader" data-i18n="hero_header_home">Home Insurance</h1>
-
-    <div class="hero-cta-wrap">
-      <p class="phc-hook-hero attn" id="phcHook" data-i18n="phc_hook_v1">If your life looks different than when you started your policy, your coverage may not match anymore.</p>
-      <button class="cta cta-secondary" id="openHealthCheck" type="button">30-Second Policy Health Check</button>
-      <button class="cta cta-secondary" id="openFunnel" type="button" data-i18n="cta_check" aria-hidden="true" style="opacity:0;pointer-events:none;">Check My Options</button>
-      <div class="cta-micro" id="ctaMicro">2 minutes • Not a quote • Agent follow-up</div>
-    </div>
-  </div>
-</section>
-
-<!-- =====================
-     POLICY HEALTH CHECK (SEPARATE TOOL)
-     - Separate from the lead form
-     - Finishes into "Check My Options"
-     ===================== -->
-<div class="modal-overlay" id="phcModalOverlay"></div>
-<div class="modal" id="phcModal">
-  <div class="card" role="dialog" aria-label="30-Second Policy Health Check">
-    <div class="card-head">
-      <div>
-        <h2>30-Second Policy Health Check</h2>
-        <p>General info only — a licensed agent reviews before any quote, application, binding, or policy change.</p>
+  <!-- =====================
+    PHC MODAL
+    ===================== -->
+  <div class="overlay" id="phcModalOverlay" aria-hidden="true"></div>
+  <div class="modal" id="phcModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Policy Health Check">
+      <div class="modal-head">
+        <div class="title">Policy Health Check</div>
+        <button class="xbtn" id="phcCloseModal" type="button">Close</button>
       </div>
-      <button class="icon-btn" id="phcCloseModal" type="button">✕</button>
-    </div>
-    <div class="card-body">
-      <div class="phc-wrap" style="margin:0; padding:0; max-width:960px;">
-        <div class="phc-card">
-          <div class="phc-header">
-            <div class="phc-badge">✓</div>
-            <div>
-              <p class="phc-title" style="margin:0;">Policy Health Check</p>
-              <p class="phc-hook" style="margin:6px 0 0;">Answer a few quick questions to spot common coverage gaps (general info only; agent review required).</p>
+
+      <div class="modal-body">
+        <div class="statusline" id="phcStatus"></div>
+
+        <div class="phc-wrap" id="phcQuestions">
+          <!-- Q1 -->
+          <div class="qcard" data-q="q1" data-required="1">
+            <div class="qhead">
+              <strong>1) When was your last full policy review?</strong>
+              <small>Required</small>
+            </div>
+            <div class="opts">
+              <div class="opt" data-v="lt1y">&lt; 1 year</div>
+              <div class="opt" data-v="1to2y">1–2 years</div>
+              <div class="opt" data-v="2plus">2+ years</div>
+              <div class="opt" data-v="unknown">Not sure</div>
             </div>
           </div>
 
-          <!-- Desktop question grid (required for desktop scoring) -->
-          <div class="phc-desktop-grid" id="phcDesktopGrid">
-            <div class="phc-question">
-              <p class="phc-q-title" style="margin:0 0 8px;">1) Any life changes in the last 12 months?</p>
-              <div class="phc-grid" id="phcChanges">
-                <label class="phc-chip"><input type="checkbox" value="Moved" /> Moved</label>
-                <label class="phc-chip"><input type="checkbox" value="New vehicle" /> New vehicle</label>
-                <label class="phc-chip"><input type="checkbox" value="New drivers" /> New drivers</label>
-                <label class="phc-chip"><input type="checkbox" value="Home upgrades" /> Home upgrades</label>
-                <label class="phc-chip"><input type="checkbox" value="Business use" /> Business use</label>
-                <label class="phc-chip"><input type="checkbox" value="Claims" /> Claims</label>
-                <label class="phc-chip"><input type="checkbox" value="None" /> None</label>
-              </div>
-              <div class="hint" style="margin-top:6px;">Choose any that apply. (General info only.)</div>
+          <!-- Q2 -->
+          <div class="qcard" data-q="q2" data-required="1">
+            <div class="qhead">
+              <strong>2) What’s your biggest concern right now?</strong>
+              <small>Required</small>
             </div>
-
-            <div class="phc-question">
-              <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="field">
-                  <label for="phcProperty">2) Property situation *</label>
-                  <select id="phcProperty" aria-label="Property situation" required>
-                    <option value="">Select…</option>
-                    <option>Primary home</option>
-                    <option>Condo / Townhome</option>
-                    <option>Landlord / Rental property</option>
-                    <option>Renters policy</option>
-                    <option>Not sure</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="phcDeductible">3) Comfortable out-of-pocket if a claim happened tomorrow? *</label>
-                  <select id="phcDeductible" aria-label="Deductible comfort" required>
-                    <option value="">Select…</option>
-                    <option>$500–$1,000</option>
-                    <option>$1,500–$2,500</option>
-                    <option>$2,500–$5,000+</option>
-                    <option>Not sure</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="phcLiability">4) If you were sued after an accident/injury, how protected do you feel? *</label>
-                  <select id="phcLiability" aria-label="Liability confidence" required>
-                    <option value="">Select…</option>
-                    <option>Very protected</option>
-                    <option>Somewhat protected</option>
-                    <option>Not protected</option>
-                    <option>Not sure</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="phcReview">5) Last full policy review with a licensed agent? *</label>
-                  <select id="phcReview" aria-label="Last review" required>
-                    <option value="">Select…</option>
-                    <option>Within 12 months</option>
-                    <option>1–3 years</option>
-                    <option>3+ years</option>
-                    <option>Not sure</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="phc-question">
-              <p class="phc-q-title" style="margin:0 0 8px;">Optional: Any property risk flags?</p>
-              <div class="phc-grid" id="phcRisks">
-                <label class="phc-chip"><input type="checkbox" value="Wildfire exposure" /> Wildfire exposure</label>
-                <label class="phc-chip"><input type="checkbox" value="Roof age 15+" /> Roof age 15+</label>
-                <label class="phc-chip"><input type="checkbox" value="Prior hail claims" /> Prior hail claims</label>
-                <label class="phc-chip"><input type="checkbox" value="Vacant / seasonal" /> Vacant / seasonal</label>
-                <label class="phc-chip"><input type="checkbox" value="Trampoline / pool" /> Trampoline / pool</label>
-                <label class="phc-chip"><input type="checkbox" value="Dog liability" /> Dog liability</label>
-                <label class="phc-chip"><input type="checkbox" value="None" /> None</label>
-              </div>
-              <div class="hint" style="margin-top:6px;">Optional — choose any that apply. (General info only.)</div>
-            </div>
-
-          </div>
-
-          <!-- Desktop actions (visible): compute + show result -->
-          <div class="row" id="phcDesktopActions" style="justify-content:flex-start; margin-top:14px; gap:10px;">
-            <button class="btn btn-primary" id="phcFinishDesktop" type="button">Finish &amp; Show Result</button>
-            <button class="btn" id="phcReset" type="button">Reset</button>
-            <div class="hint" style="align-self:center;">Select the required fields (*) to unlock your diagnostic.</div>
-          </div>
-
-          <div class="phc-result" id="phcResult" aria-live="polite">
-            <div class="phc-result-top">
-              <div class="phc-result-left">
-                <span class="phc-dot" id="phcDot" aria-hidden="true"></span>
-                <div>
-                  <div class="phc-result-label" id="phcLabel">Green</div>
-                </div>
-              </div>
-              <button class="btn phc-run" id="phcRun" type="button">Show my result</button>
-            </div>
-            <div class="phc-result-copy" id="phcCopy"></div>
-            <div class="phc-subhead" id="phcSubhead">Most people don't switch because they're happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.</div>
-            <ul class="phc-result-why" id="phcWhy"></ul>
-
-            <!-- Red-result interstitial: message + lead CTA -->
-            <div class="phc-loyalty" id="phcLoyalty" aria-live="polite">
-              <p class="m" id="phcLoyaltyMsg">Loyalty isn't the same as protection.</p>
-              <button class="btn btn-primary" id="phcLeadCta" type="button">Check My Options</button>
-            </div>
-
-            <div class="phc-result-actions">
-              <button class="btn btn-primary phc-continue" id="phcCta" type="button">Continue to Options</button>
+            <div class="opts">
+              <div class="opt" data-v="price">Price keeps rising</div>
+              <div class="opt" data-v="coverage">Coverage gaps</div>
+              <div class="opt" data-v="claims">Claims process</div>
+              <div class="opt" data-v="both">Both</div>
             </div>
           </div>
 
-          <!-- Mobile: tap-to-advance flow -->
-          <div class="phc-mobile-flow" id="phcMobileFlow" aria-label="Policy Health Check mobile flow">
-            <div class="phc-q" id="phcQ0">
-              <p class="phc-q-title">1) Any life changes in the last 12 months?</p>
-              <p class="phc-q-hint">Tap any that apply (you can choose multiple). Then continue.</p>
-              <div class="phc-answers" id="phcMobileChanges"></div>
-              <div class="phc-mobile-nav">
-                <button class="btn" type="button" id="phcBack0" disabled>Back</button>
-                <button class="btn btn-primary" type="button" id="phcNext0">Continue</button>
-              </div>
+          <!-- Q3 -->
+          <div class="qcard" data-q="q3" data-required="1">
+            <div class="qhead">
+              <strong>3) Do you bundle home + auto?</strong>
+              <small>Required</small>
             </div>
-
-            <div class="phc-q" id="phcQ1" style="display:none;">
-              <p class="phc-q-title">2) Property situation *</p>
-              <p class="phc-q-hint">Tap one option.</p>
-              <div class="phc-answers" id="phcMobileProperty"></div>
-              <div class="phc-mobile-nav">
-                <button class="btn" type="button" id="phcBack1">Back</button>
-                <button class="btn btn-primary" type="button" id="phcNext1">Continue</button>
-              </div>
-            </div>
-
-            <div class="phc-q" id="phcQ2" style="display:none;">
-              <p class="phc-q-title">3) Comfortable out-of-pocket if a claim happened tomorrow? *</p>
-              <p class="phc-q-hint">Tap one option.</p>
-              <div class="phc-answers" id="phcMobileDeductible"></div>
-              <div class="phc-mobile-nav">
-                <button class="btn" type="button" id="phcBack2">Back</button>
-                <button class="btn btn-primary" type="button" id="phcNext2">Continue</button>
-              </div>
-            </div>
-
-            <div class="phc-q" id="phcQ3" style="display:none;">
-              <p class="phc-q-title">4) If you were sued after an accident/injury, how protected do you feel? *</p>
-              <p class="phc-q-hint">Tap one option.</p>
-              <div class="phc-answers" id="phcMobileLiability"></div>
-              <div class="phc-mobile-nav">
-                <button class="btn" type="button" id="phcBack3">Back</button>
-                <button class="btn btn-primary" type="button" id="phcNext3">Continue</button>
-              </div>
-            </div>
-
-            <div class="phc-q" id="phcQ4" style="display:none;">
-              <p class="phc-q-title">5) Last full policy review with a licensed agent? *</p>
-              <p class="phc-q-hint">Tap one option.</p>
-              <div class="phc-answers" id="phcMobileReview"></div>
-              <div class="phc-mobile-nav">
-                <button class="btn" type="button" id="phcBack4">Back</button>
-                <button class="btn btn-primary" type="button" id="phcNext4">Continue</button>
-              </div>
-            </div>
-
-            <div class="phc-q" id="phcQ5" style="display:none;">
-              <p class="phc-q-title">Optional: Any property risk flags?</p>
-              <p class="phc-q-hint">Tap any that apply (you can choose multiple). Then finish.</p>
-              <div class="phc-answers" id="phcMobileRisks"></div>
-              <div class="phc-mobile-nav">
-                <button class="btn" type="button" id="phcBack5">Back</button>
-                <button class="btn btn-primary" type="button" id="phcFinish">Finish</button>
-              </div>
-            </div>
-
-            <div class="phc-q" id="phcQDone" style="display:none;">
-              <p class="phc-q-title">✅ Policy Health Check complete</p>
-              <p class="phc-q-hint">Based on your answers:</p>
-              <div class="phc-result show" id="phcResultMobile"></div>
+            <div class="opts">
+              <div class="opt" data-v="yes">Yes</div>
+              <div class="opt" data-v="no">No</div>
+              <div class="opt" data-v="notSure">Not sure</div>
             </div>
           </div>
 
+          <!-- Results area -->
+          <div class="qcard" id="phcResults" style="display:none">
+            <div class="qhead">
+              <strong id="phcHeadline">Your result</strong>
+              <small id="phcLabel">—</small>
+            </div>
+            <p id="phcSummary" style="margin:0;color:var(--muted);line-height:1.45;font-size:13px"></p>
+
+            <div class="phc-actions">
+              <button class="btn secondary" type="button" id="phcBack">Back</button>
+              <button class="btn primary" type="button" id="phcOpenLead">Check My Options</button>
+            </div>
+          </div>
+
+          <div class="phc-actions" id="phcActionRow">
+            <button class="btn secondary" type="button" id="phcReset">Reset</button>
+            <button class="btn primary" type="button" id="phcFinish" disabled>Finish &amp; Show Result</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Lead Funnel Modal (fallback if CLICKFUNNEL_URL is blank) -->
-<div class="modal-overlay" id="modalOverlay"></div>
-<div class="modal" id="modal">
-  <div class="card" role="dialog" aria-label="Options pre-check form">
-    <div class="card-head">
-      <div>
-        <h2>Quick Options Pre-Check</h2>
-        <p>2 minutes. Not a quote. A licensed agent reviews and follows up with carrier-agnostic options.</p>
-      </div>
-      <button class="icon-btn" id="closeModal" type="button">✕</button>
-    </div>
-    <div class="card-body">
-      <form id="leadForm">
-        <!-- Stepper (mobile-first) -->
-        <div class="stepper" id="stepper" aria-label="Form progress">
-          <div class="stepper-top">
-            <div class="stepper-kicker" id="stepperKicker">Step 1 of 4</div>
-            <div class="stepper-title">A quick pre-check</div>
-          </div>
-          <div class="stepper-dots" role="presentation">
-            <span class="dotx active" data-dot="0"></span>
-            <span class="dotx" data-dot="1"></span>
-            <span class="dotx" data-dot="2"></span>
-            <span class="dotx" data-dot="3"></span>
-          </div>
-          <div class="stepper-bar" aria-hidden="true"><span class="stepper-bar-fill" id="stepperBarFill"></span></div>
-        </div>
-
-        <div class="steps" id="steps">
-          <!-- STEP 1 -->
-          <section class="step active" data-step="0" aria-label="Step 1">
-            <div class="grid">
-              <div class="field">
-                <label for="firstName">First name *</label>
-                <input id="firstName" name="firstName" autocomplete="given-name" required />
-              </div>
-              <div class="field">
-                <label for="lastName">Last name *</label>
-                <input id="lastName" name="lastName" autocomplete="family-name" required />
-              </div>
-              <div class="field" style="grid-column:1 / -1;">
-                <label for="zip">ZIP *</label>
-                <input id="zip" name="zip" inputmode="numeric" pattern="[0-9]{5}" placeholder="81501" required />
-                <div class="hint">Example reference ZIP: 81501</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- STEP 2 -->
-          <section class="step" data-step="1" aria-label="Step 2">
-            <div class="grid">
-              <div class="field">
-                <label for="email">Email *</label>
-                <input id="email" name="email" type="email" autocomplete="email" required />
-              </div>
-              <div class="field">
-                <label for="phone">Mobile phone *</label>
-                <input id="phone" name="phone" type="tel" autocomplete="tel" required />
-              </div>
-              <div class="field">
-                <label for="homeowner">Home status *</label>
-                <select id="homeowner" name="homeowner" required>
-                  <option value="">Select…</option>
-                  <option>Own</option>
-                  <option>Rent</option>
-                  <option>Buying soon</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="vehicles">Vehicles insured *</label>
-                <select id="vehicles" name="vehicles" required>
-                  <option value="">Select…</option>
-                  <option>1</option><option>2</option><option>3</option><option>4+</option>
-                </select>
-              </div>
-              <div class="field" style="grid-column:1 / -1;">
-                <label for="timeframe">When do you need this? *</label>
-                <select id="timeframe" name="timeframe" required>
-                  <option value="">Select…</option>
-                  <option>ASAP</option>
-                  <option>Within 7 days</option>
-                  <option>Within 30 days</option>
-                  <option>Just exploring</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          <!-- STEP 3 -->
-          <section class="step" data-step="2" aria-label="Step 3">
-            <div class="grid">
-              <div class="field" style="grid-column:1 / -1;">
-                <label for="roofAge">Roof age</label>
-                <select id="roofAge" name="roofAge">
-                  <option value="">Select…</option>
-                  <option>0-5</option><option>6-10</option><option>11-15</option><option>16-20</option><option>21+</option><option>Not sure</option>
-                </select>
-              </div>
-              <div class="field" style="grid-column:1 / -1;">
-                <label for="notes">Notes (optional)</label>
-                <textarea id="notes" name="notes" placeholder="Any details that help (hail claim history, wildfire concerns, bundling, etc.)"></textarea>
-              </div>
-            </div>
-          </section>
-
-          <!-- STEP 4 -->
-          <section class="step" data-step="3" aria-label="Step 4">
-            <div class="grid">
-              <div class="field" style="grid-column:1 / -1;">
-                <label style="display:flex;gap:10px;align-items:flex-start;font-weight:800;color:#0f172a;">
-                  <input id="consent" name="consent" type="checkbox" required style="margin-top:2px;" />
-                  I agree to be contacted by phone, SMS, and email about insurance options. Msg &amp; data rates may apply.
-                </label>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <!-- Desktop buttons -->
-        <div class="row row-desktop" id="rowDesktop">
-          <button class="btn" id="cancelBtn" type="button">Cancel</button>
-          <button class="btn btn-primary" id="submitBtn" type="submit">Submit</button>
-        </div>
-
-        <!-- Mobile step buttons -->
-        <div class="row row-mobile" id="rowMobile" aria-label="Step controls">
-          <button class="btn" id="stepBack" type="button">Back</button>
-          <button class="btn btn-primary" id="stepNext" type="button">Next</button>
-          <button class="btn btn-primary" id="stepSubmit" type="submit" style="display:none;">Submit</button>
-        </div>
-
-        <div class="status" id="formStatus"></div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Disclaimer launcher -->
-<button class="disc-btn" id="openDisclaimer" type="button" data-i18n="disclaimer_btn">Disclaimer</button>
-
-<!-- Disclaimer modal -->
-<div class="disc-overlay" id="discOverlay"></div>
-<div class="disc-modal" id="discModal" role="dialog" aria-label="Legal disclaimer">
-  <div class="disc-card">
-    <div class="disc-head">
-      <div class="disc-head-left">
-        <div class="disc-icon">⚖</div>
-        <div>
-          <h2>Legal Disclaimer</h2>
-          <div class="disc-kicker">Please review. This site includes AI-assisted information. <b>Human review is required</b> before any quote, application, binding, or policy change.</div>
-        </div>
-      </div>
-      <button class="disc-close" id="discClose" type="button" aria-label="Close disclaimer">Close ✕</button>
-    </div>
-    <div class="disc-body">
-      <div class="disc-sections">
-        <section class="disc-section">
-          <div class="disc-sec-head">
-            <div class="disc-sec-badge">i</div>
-            <div>
-              <p class="disc-sec-title">General information only</p>
-              <p class="disc-sec-sub">Not legal, tax, or financial advice</p>
-            </div>
-          </div>
-          <div class="disc-sec-body">
-            <ul>
-              <li>This page and <strong>PolicyPro™</strong> provide <strong>general educational information</strong> about insurance concepts.</li>
-              <li>Nothing here is legal advice, tax advice, or a substitute for professional guidance.</li>
-              <li>Examples (including ZIP <strong>81501</strong>) are <strong>illustrative only</strong>.</li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="disc-section">
-          <div class="disc-sec-head">
-            <div class="disc-sec-badge">AI</div>
-            <div>
-              <p class="disc-sec-title">AI disclosure</p>
-              <p class="disc-sec-sub">AI output can be wrong or incomplete</p>
-            </div>
-          </div>
-          <div class="disc-sec-body">
-            <ul>
-              <li><strong>PolicyPro™</strong> includes automated and artificial-intelligence–generated responses for general informational purposes.</li>
-              <li>AI output may be incomplete, inaccurate, or outdated and must not be relied upon as a definitive statement of coverage, pricing, underwriting eligibility, or claim outcome.</li>
-              <li>AI responses do <strong>not</strong> replace advice from a licensed insurance producer.</li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="disc-section">
-          <div class="disc-sec-head">
-            <div class="disc-sec-badge">✓</div>
-            <div>
-              <p class="disc-sec-title">Human review required</p>
-              <p class="disc-sec-sub">Before quotes, applications, or changes</p>
-            </div>
-          </div>
-          <div class="disc-sec-body">
-            <ul>
-              <li>Any quote indications, coverage discussions, or next steps require <strong>review and confirmation</strong> by a licensed insurance agent before any application is submitted or coverage is bound.</li>
-              <li>Nothing on this page constitutes an offer to sell insurance or bind coverage.</li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="disc-section">
-          <div class="disc-sec-head">
-            <div class="disc-sec-badge">🛡</div>
-            <div>
-              <p class="disc-sec-title">Coverage &amp; claims limitations</p>
-              <p class="disc-sec-sub">Carrier rules and policy terms control</p>
-            </div>
-          </div>
-          <div class="disc-sec-body">
-            <ul>
-              <li>Coverage, eligibility, rates, discounts, underwriting, and availability vary by carrier and are subject to policy terms, conditions, exclusions, limits, and deductibles.</li>
-              <li>Claim scenario walkthroughs are general and may not apply to your situation. Always follow your policy and carrier instructions. If there is immediate danger, call emergency services.</li>
-            </ul>
-          </div>
-        </section>
+  <!-- =====================
+    LEAD MODAL (Check My Options)
+    ===================== -->
+  <div class="overlay" id="modalOverlay" aria-hidden="true"></div>
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Check My Options">
+      <div class="modal-head">
+        <div class="title">Check My Options</div>
+        <button class="xbtn" id="closeModal" type="button">Close</button>
       </div>
 
-      <div class="disc-footer-note">
-        <strong>Consent &amp; privacy:</strong> By submitting your information, you authorize contact by phone, SMS, and email about insurance options (msg &amp; data rates may apply). Information may be stored in a secure Google Sheet and emailed to the business inbox for follow-up. Do not submit sensitive information you do not want transmitted electronically.
-      </div>
-    </div>
+      <div class="modal-body">
+        <p style="margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.45">
+          Share a few details and we’ll follow up with coverage options that fit your situation.
+        </p>
 
-    <div class="disc-actions">
-      <button class="btn btn-accept" id="discAccept" type="button">I Accept</button>
-      <button class="btn btn-primary" id="discClose2" type="button">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Channel.io-style launcher -->
-<div class="chat-launcher" id="chatBtn" aria-label="Open PolicyPro chat" title="Ask PolicyPro™ a question">
-  <div class="chat-peek" aria-hidden="true">
-    <div class="chat-label" data-i18n="chat_peek_label">Need help?</div>
-    <div class="chat-name" data-i18n="chat_peek_name">Chat with PolicyPro™</div>
-  </div>
-  <div class="chat-bubble" role="button" aria-label="Chat bubble">
-    <div class="chat-avatar">PP</div>
-  </div>
-</div>
-
-<div class="chat-window" id="chatWindow" aria-label="PolicyPro widget" role="dialog">
-  <div class="pp-widget">
-    <div class="pp-top" aria-hidden="true">
-      <div class="pp-topbar">
-        <div class="pp-brand">PolicyPro™</div>
-      </div>
-    </div>
-
-    <div class="pp-body">
-      <!-- HOME -->
-      <div class="pp-screen active" id="ppScreenHome">
-        <div class="pp-home-card">
-          <div class="pp-home-row">
-            <div class="pp-avatar">PP</div>
-            <div>
-              <p class="pp-home-title" data-i18n="pp_home_title">Hi — how can we help?</p>
-              <p class="pp-home-sub" data-i18n="pp_home_sub">Ask a Colorado home or auto insurance question. General info only — a licensed agent reviews before any quote, application, or binding.</p>
-            </div>
+        <form id="leadForm">
+          <div class="field">
+            <label for="firstName">First name *</label>
+            <input id="firstName" name="firstName" autocomplete="given-name" required />
           </div>
-          <button class="pp-primary" id="ppStartChat" type="button"><span data-i18n="pp_start_chat">Start a chat</span> <span aria-hidden="true">➤</span></button>
-        </div>
-        <div class="pp-footer-note" data-i18n="pp_powered">Powered by PolicyPro</div>
-      </div>
 
-      <!-- MESSAGES -->
-      <div class="pp-screen" id="ppScreenMessages">
-        <div class="pp-messages-wrap">
-          <div class="chat-main">
-            <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
-
-            <form class="chat-inputbar" id="chatForm" autocomplete="off">
-              <input class="chat-input" id="chatInput" type="text" placeholder="Ask about hail deductibles, wildfire coverage, bundling…" data-i18n-placeholder="chat_placeholder" />
-              <button class="send-btn" id="chatSend" type="submit" data-i18n="chat_send">Send</button>
-            </form>
+          <div class="field">
+            <label for="lastName">Last name *</label>
+            <input id="lastName" name="lastName" autocomplete="family-name" required />
           </div>
-        </div>
-      </div>
 
-      <!-- SETTINGS -->
-      <div class="pp-screen" id="ppScreenSettings">
-        <div class="pp-settings">
-          <h3 data-i18n="settings_title">Settings</h3>
-          <div class="pp-setting-item"><div class="k" data-i18n="settings_contact">Contact</div><div class="v" id="ppAgentEmail">securechoicein@gmail.com</div></div>
-          <div class="pp-setting-item">
-            <div class="k" data-i18n="settings_language">Language</div>
-            <div class="v">
-              <select id="ppLangSelect" class="pp-select" aria-label="Select language">
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="ja">Japanese</option>
-                <option value="zh">Chinese</option>
-                <option value="fr">French</option>
-                <option value="ru">Russian</option>
-              </select>
-            </div>
+          <div class="field">
+            <label for="zip">ZIP code *</label>
+            <input id="zip" name="zip" inputmode="numeric" autocomplete="postal-code" required />
           </div>
-          <div class="pp-setting-item"><div class="k" data-i18n="settings_disclaimer">Disclaimer</div><div class="v" data-i18n="settings_available">Available</div></div>
-          <a class="pp-setting-link" href="#" id="ppOpenDisclaimerLink" data-i18n="settings_open_disclaimer">Open legal disclaimer</a>
-        </div>
-      </div>
-    </div>
 
-    <div class="pp-tabs" role="tablist" aria-label="Widget tabs">
-      <button class="pp-tab active" id="ppTabHome" type="button" role="tab" aria-selected="true" aria-controls="ppScreenHome">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>
-        <span data-i18n="tab_home">Home</span>
-      </button>
-      <button class="pp-tab" id="ppTabMessages" type="button" role="tab" aria-selected="false" aria-controls="ppScreenMessages">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
-        <span data-i18n="tab_messages">Messages</span>
-      </button>
-      <button class="pp-tab" id="ppTabSettings" type="button" role="tab" aria-selected="false" aria-controls="ppScreenSettings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 2 2 0 0 1-3.8 0 1.8 1.8 0 0 0-1.7-1.3H9a2 2 0 0 1-1.4-3.4l.1-.1A1.7 1.7 0 0 0 8.6 15a1.8 1.8 0 0 0-.7-1.7 2 2 0 0 1 0-3.1 1.8 1.8 0 0 0 .7-1.7 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 0 1 9.6 3h.2a1.8 1.8 0 0 0 1.7-1.3 2 2 0 0 1 3.8 0 1.8 1.8 0 0 0 1.7 1.3h.2a2 2 0 0 1 1.4 3.4l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.8 1.8 0 0 0 .7 1.7 2 2 0 0 1 0 3.1 1.8 1.8 0 0 0-.7 1.7 1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-1.4 3.4h-.2a1.8 1.8 0 0 0-1.7 1.3 a2 2 0 0 1-3.8 0"/></svg>
-        <span data-i18n="tab_settings">Settings</span>
-      </button>
+          <div class="field">
+            <label for="email">Email *</label>
+            <input id="email" name="email" type="email" autocomplete="email" required />
+          </div>
+
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" autocomplete="tel" />
+          </div>
+
+          <div class="field">
+            <label for="notes">Anything we should know?</label>
+            <textarea id="notes" name="notes" placeholder="Example: roof age, vehicles, moving soon, claims, etc."></textarea>
+          </div>
+
+          <button class="btn primary" id="submitBtn" type="submit">Submit</button>
+
+          <div class="status" id="formStatus"></div>
+        </form>
+      </div>
     </div>
   </div>
 
-  <button class="pp-close-fab" id="closeChat" aria-label="Close chat" type="button">✕</button>
-</div>
+  <!-- =====================
+    DISCLAIMER MODAL
+    ===================== -->
+  <div class="overlay" id="discOverlay" aria-hidden="true"></div>
+  <div class="modal" id="discModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Disclaimer">
+      <div class="modal-head">
+        <div class="title">Disclaimer &amp; Consent</div>
+        <button class="xbtn" id="discClose" type="button">Close</button>
+      </div>
 
-<script>
-  // =====================
-  // CHECK MY OPTIONS (CTA)
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
-    }
+      <div class="modal-body">
+        <p style="margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.55">
+          This website provides general information and a policy health self-check. It is not a quote and does not bind coverage.
+          Any insurance coverage is subject to underwriting approval, policy terms, exclusions, and availability.
+        </p>
+        <p style="margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.55">
+          By submitting your information, you request an agent follow-up about insurance options. You may opt out of future
+          communications at any time.
+        </p>
 
-    onReady(function(){
-      var openBtn = document.getElementById('openFunnel');
-      var modal = document.getElementById('modal');
-      var overlay = document.getElementById('modalOverlay');
-      var closeBtn = document.getElementById('closeModal');
-      var cancelBtn = document.getElementById('cancelBtn');
+        <div class="phc-actions" style="justify-content:flex-end">
+          <button class="btn secondary" id="discClose2" type="button">Close</button>
+          <button class="btn primary" id="discAccept" type="button">I Accept</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      if(!openBtn) return;
+  <!-- =====================
+    LANGUAGE MENU (simple placeholder)
+    ===================== -->
+  <div class="overlay" id="langOverlay" aria-hidden="true"></div>
+  <div class="modal" id="langModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Language">
+      <div class="modal-head">
+        <div class="title">Language</div>
+        <button class="xbtn" id="langClose" type="button">Close</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 10px;color:var(--muted);font-size:13px">
+          Language switching can be wired to a translation dictionary next. For now this is a placeholder.
+        </p>
+        <div class="opts">
+          <div class="opt" data-lang="en">English</div>
+          <div class="opt" data-lang="es">Español</div>
+          <div class="opt" data-lang="vi">Tiếng Việt</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      function openModal(){
-        if(window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== ''){
-          window.open(window.CLICKFUNNEL_URL, '_blank', 'noopener');
-          return;
-        }
-        if(overlay) overlay.style.display = 'block';
-        if(modal) modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        document.body.classList.add('modal-open');
-      }
+  <!-- =====================
+    CORE FIXES: NO NESTED <script>, ALL JS INSIDE SCRIPT TAGS ✅
+    ===================== -->
 
-      function closeModal(){
-        if(overlay) overlay.style.display = 'none';
-        if(modal) modal.style.display = 'none';
-        document.body.style.overflow = '';
-        document.body.classList.remove('modal-open');
-      }
-
-      openBtn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
-      openBtn.addEventListener('touchend', function(e){ e.preventDefault(); openModal(); }, { passive:false });
-
-      if(overlay) overlay.addEventListener('click', closeModal);
-      if(closeBtn) closeBtn.addEventListener('click', closeModal);
-      if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
-
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape') closeModal();
-      });
-
-      if(location.hash === '#options') openModal();
-
-      openBtn.style.pointerEvents = 'auto';
-    });
-  })();
-</script>
-  // =====================
-  // LEAD FORM SUBMIT (DESKTOP + MOBILE) — UPDATED
-  // - Sends PHC answers/results (if present)
-  // - Adds channel + confirmation flags
-  // - More reliable modal close
-  // =====================
+  <!-- Lead form submit -->
+  <script>
   (function () {
     function onReady(fn) {
       if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
@@ -1988,7 +782,6 @@
       var form = document.getElementById("leadForm");
       var statusEl = document.getElementById("formStatus");
       var submitBtn = document.getElementById("submitBtn");
-      var stepSubmitBtn = document.getElementById("stepSubmit");
 
       function showStatus(msg, kind) {
         if (!statusEl) return;
@@ -1999,21 +792,13 @@
 
       function disableSubmit(disabled) {
         if (submitBtn) submitBtn.disabled = disabled;
-        if (stepSubmitBtn) stepSubmitBtn.disabled = disabled;
       }
 
       function closeLeadModalIfOpen() {
         var modal = document.getElementById("modal");
         var overlay = document.getElementById("modalOverlay");
-        if (!modal || !overlay) return;
-
-        // Support both "display:none" style and "show" class patterns
-        overlay.style.display = "none";
-        modal.style.display = "none";
-        overlay.classList.remove("show");
-        modal.classList.remove("show");
-
-        document.documentElement.classList.remove("modal-open");
+        if (overlay) overlay.style.display = "none";
+        if (modal) modal.style.display = "none";
         document.body.classList.remove("modal-open");
         document.body.style.overflow = "";
       }
@@ -2025,12 +810,12 @@
 
         if (!form.checkValidity()) {
           form.reportValidity();
-          showStatus("Please complete the required fields highlighted above.", "err");
+          showStatus("Please complete the required fields.", "err");
           return;
         }
 
-        if (!window.GAS_WEBAPP_URL || String(window.GAS_WEBAPP_URL).trim() === "") {
-          showStatus("Missing GAS_WEBAPP_URL. Paste your Google Apps Script Web App URL in the header script.", "err");
+        if (!window.GAS_WEBAPP_URL || String(window.GAS_WEBAPP_URL).trim() === "" || window.GAS_WEBAPP_URL.includes("PASTE_YOUR")) {
+          showStatus("Missing GAS_WEBAPP_URL. Paste your Google Apps Script Web App URL in the header.", "err");
           return;
         }
 
@@ -2040,13 +825,10 @@
         try {
           var fd = new FormData(form);
 
-          // Basic context
           fd.append("source", "landing");
           fd.append("submittedAt", new Date().toISOString());
           fd.append("page", location.href);
 
-          // ---- PHC payload (if they completed / interacted with PHC) ----
-          // Your PHC controller should keep: window.PHC.answers + window.PHC.result
           var hasPhc =
             window.PHC &&
             window.PHC.answers &&
@@ -2054,23 +836,12 @@
             Object.keys(window.PHC.answers).length > 0;
 
           if (hasPhc) {
-            try {
-              fd.append("policyHealthAnswers", JSON.stringify(window.PHC.answers || {}));
-              fd.append("policyHealthScore", window.PHC.result && window.PHC.result.score != null ? String(window.PHC.result.score) : "");
-              fd.append("policyHealthLabel", window.PHC.result && window.PHC.result.label ? String(window.PHC.result.label) : "");
-              fd.append("policyHealthTriggers", window.PHC.result && window.PHC.result.triggers ? String(window.PHC.result.triggers) : "");
-              fd.append("policyHealthCtaText", window.PHC.result && window.PHC.result.ctaText ? String(window.PHC.result.ctaText) : "");
-
-              // Useful tracking fields for your sheet
-              fd.append("channel", "phc->options");
-
-              // Tell backend to send a prospect confirmation email
-              fd.append("sendConfirmation", "1");
-              fd.append("confirmationType", "phc_options");
-            } catch (phcErr) {
-              console.warn("PHC payload attach failed:", phcErr);
-              fd.append("channel", "leadform");
-            }
+            fd.append("policyHealthAnswers", JSON.stringify(window.PHC.answers || {}));
+            fd.append("policyHealthScore", window.PHC.result && window.PHC.result.score != null ? String(window.PHC.result.score) : "");
+            fd.append("policyHealthLabel", window.PHC.result && window.PHC.result.label ? String(window.PHC.result.label) : "");
+            fd.append("policyHealthTriggers", window.PHC.result && window.PHC.result.triggers ? String(window.PHC.result.triggers) : "");
+            fd.append("policyHealthCtaText", window.PHC.result && window.PHC.result.ctaText ? String(window.PHC.result.ctaText) : "");
+            fd.append("channel", "phc->options");
           } else {
             fd.append("channel", "leadform");
           }
@@ -2083,1385 +854,374 @@
           });
 
           var text = await res.text();
-          if (!res.ok) {
-            throw new Error("HTTP " + res.status + ": " + text);
-          }
+          if (!res.ok) throw new Error("HTTP " + res.status + ": " + text);
 
-          // Success
           showStatus("✅ Submitted. We’ll follow up shortly.", "ok");
           form.reset();
-
-          // Clear PHC state after a successful submit (prevents carry-over)
-          if (window.PHC) {
-            window.PHC.answers = {};
-            window.PHC.result = {};
-          }
-
           closeLeadModalIfOpen();
-
         } catch (err) {
           console.error(err);
-          showStatus(
-            "Submission failed. Please try again — or text/call instead. (" +
-              (err && err.message ? err.message : "error") +
-              ")",
-            "err"
-          );
+          showStatus("Submission failed. Please try again. (" + (err && err.message ? err.message : "error") + ")", "err");
         } finally {
           disableSubmit(false);
         }
       });
     });
   })();
-</script>
+  </script>
 
-  // =====================
-  // POLICY HEALTH CHECK MODAL OPEN/CLOSE
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
-    }
-
-    function openLeadModal(){
-      if(window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== ''){
-        window.open(window.CLICKFUNNEL_URL, '_blank', 'noopener');
-        return;
-      }
-      var modal = document.getElementById('modal');
-      var overlay = document.getElementById('modalOverlay');
-      if(overlay) overlay.style.display = 'block';
-      if(modal) modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function openPHCModal(){
-      document.body.classList.add('modal-open');
-      var modal = document.getElementById('phcModal');
-      var overlay = document.getElementById('phcModalOverlay');
-      if(overlay) overlay.style.display = 'block';
-      if(modal) modal.style.display = 'flex';
-
-      // Ensure a clean start on mobile (no half-scrolled modal)
-      try{
-        var body = modal ? modal.querySelector('.card-body') : null;
-        if(body) body.scrollTop = 0;
-      }catch(_){ }
-
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closePHCModal(){
-      document.body.classList.remove('modal-open');
-      var modal = document.getElementById('phcModal');
-      var overlay = document.getElementById('phcModalOverlay');
-      if(overlay) overlay.style.display = 'none';
-      if(modal) modal.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-
-    window.__openLeadModal = openLeadModal;
-    window.__closePHCModal = closePHCModal;
-
-    onReady(function(){
-      var heroPHC = document.getElementById('openHealthCheck');
-      var closeBtn = document.getElementById('phcCloseModal');
-      var overlay = document.getElementById('phcModalOverlay');
-
-      if(heroPHC){
-        heroPHC.addEventListener('click', function(e){ e.preventDefault(); openPHCModal(); });
-        heroPHC.addEventListener('touchend', function(e){ e.preventDefault(); openPHCModal(); }, { passive:false });
-      }
-
-      if(closeBtn) closeBtn.addEventListener('click', closePHCModal);
-      if(overlay) overlay.addEventListener('click', closePHCModal);
-
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape') closePHCModal();
-      });
-
-      if(location.hash === '#phc') openPHCModal();
-    });
-  })();
-</script>
-  // =====================
-  // POLICY HEALTH CHECK (MOBILE FLOW + RESULTS) — FINAL
-  // - Sets window.PHC.answers + window.PHC.result for backend/email
-  // - Adds window.__PHC_SYNC_ON_OPEN() for reliable mobile rendering on open
-  // - Keeps your desktop + mobile flows intact
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
-    }
-
-    function isMobile(){
-      return !!(window.matchMedia && window.matchMedia('(max-width: 600px)').matches);
-    }
-
-    function el(id){ return document.getElementById(id); }
-    function qsa(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
-    function safeText(s){ return String(s || '').trim(); }
-
-    // ---- Global PHC state (used by lead submit) ----
-    window.PHC = window.PHC || { answers:{}, result:{} };
-
-    function ensureHiddenInput(name){
-      var form = el('leadForm');
-      if(!form) return null;
-      var existing = form.querySelector('input[name="' + name + '"]');
-      if(existing) return existing;
-      var h = document.createElement('input');
-      h.type = 'hidden';
-      h.name = name;
-      form.appendChild(h);
-      return h;
-    }
-
-    function setHidden(name, value){
-      var h = ensureHiddenInput(name);
-      if(!h) return;
-      h.value = value == null ? '' : String(value);
-    }
-
-    function setHiddenMulti(name, arr){
-      setHidden(name, (arr || []).join(', '));
-    }
-
-    function getChipValue(labelEl){
-      var input = labelEl ? labelEl.querySelector('input') : null;
-      return safeText(input && input.value ? input.value : (labelEl ? labelEl.textContent : ''));
-    }
-
-    function setChipActive(labelEl, active){
-      if(!labelEl) return;
-      if(active) labelEl.classList.add('active');
-      else labelEl.classList.remove('active');
-    }
-
-    function setCheckbox(labelEl, checked){
-      if(!labelEl) return;
-      var input = labelEl.querySelector('input[type="checkbox"]');
-      if(input) input.checked = !!checked;
-      setChipActive(labelEl, !!checked);
-    }
-
-    function setSelectValue(selectEl, value){
-      if(!selectEl) return;
-      selectEl.value = value;
-      try{ selectEl.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){ }
-    }
-
-    function buildMultiButtons(container, options, onToggle){
-      if(!container) return;
-      container.innerHTML = '';
-      options.forEach(function(opt){
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'phc-answer-btn';
-        btn.dataset.value = opt.value;
-        btn.textContent = opt.label;
-        btn.addEventListener('click', function(){
-          var isActive = btn.classList.contains('active');
-          onToggle(opt.value, !isActive, btn);
-        });
-        btn.addEventListener('touchend', function(e){ e.preventDefault(); btn.click(); }, { passive:false });
-        container.appendChild(btn);
-      });
-    }
-
-    function buildSingleButtons(container, options, onSelect){
-      if(!container) return;
-      container.innerHTML = '';
-      options.forEach(function(opt){
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'phc-answer-btn';
-        btn.dataset.value = opt.value;
-        btn.textContent = opt.label;
-        btn.addEventListener('click', function(){
-          qsa('.phc-answer-btn', container).forEach(function(b){ b.classList.remove('active'); });
-          btn.classList.add('active');
-          onSelect(opt.value);
-        });
-        btn.addEventListener('touchend', function(e){ e.preventDefault(); btn.click(); }, { passive:false });
-        container.appendChild(btn);
-      });
-    }
-
-    function computePHCResult(){
-      var changesLabels = qsa('#phcChanges .phc-chip');
-      var risksLabels   = qsa('#phcRisks .phc-chip');
-      var selProperty   = el('phcProperty');
-      var selDed        = el('phcDeductible');
-      var selLia        = el('phcLiability');
-      var selReview     = el('phcReview');
-
-      var changes = changesLabels
-        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
-        .map(function(l){ return getChipValue(l); });
-
-      var risks = risksLabels
-        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
-        .map(function(l){ return getChipValue(l); });
-
-      var property = safeText(selProperty && selProperty.value);
-      var deductible = safeText(selDed && selDed.value);
-      var liability = safeText(selLia && selLia.value);
-      var review = safeText(selReview && selReview.value);
-
-      var score = 0;
-
-      var hasNoneChange = changes.indexOf('None') !== -1;
-      var changeCount = hasNoneChange ? 0 : changes.length;
-      if(changeCount >= 1) score += 1;
-      if(changeCount >= 3) score += 1;
-
-      if(/Landlord|Rental property/i.test(property)) score += 1;
-      if(/Not sure/i.test(property)) score += 1;
-
-      if(/\$2,500–\$5,000\+|\$2,500-\$5,000\+/.test(deductible)) score += 1;
-      if(/Not sure/i.test(deductible)) score += 1;
-
-      if(/Not protected|Not sure/i.test(liability)) score += 2;
-      else if(/Somewhat/i.test(liability)) score += 1;
-
-      if(/3\+ years/i.test(review)) score += 2;
-      else if(/1–3|1-3/i.test(review)) score += 1;
-      else if(/Not sure/i.test(review)) score += 1;
-
-      var hasNoneRisk = risks.indexOf('None') !== -1;
-      var riskCount = hasNoneRisk ? 0 : risks.length;
-      if(riskCount >= 1) score += 1;
-      if(riskCount >= 3) score += 1;
-
-      var label = 'Green';
-      if(score >= 6) label = 'Red';
-      else if(score >= 3) label = 'Yellow';
-
-      var why = [];
-      if(changeCount >= 1) why.push('Life changes are a top reason policies stop matching reality — a quick review can prevent surprise gaps.');
-      if(/Not protected|Not sure/i.test(liability)) why.push('Liability uncertainty is the biggest “silent risk” — it’s what protects your savings if you’re sued.');
-      if(/3\+ years/i.test(review)) why.push('If it’s been 3+ years since a full review, you may be missing newer discounts and coverage improvements.');
-      if(/\$2,500–\$5,000\+|Not sure/i.test(deductible)) why.push('Your claim out-of-pocket matters most on hail/wildfire seasons — aligning deductibles avoids sticker shock.');
-      if(riskCount >= 1) why.push('Property risk flags often change what carriers require — confirming now avoids last-minute issues.');
-      if(why.length === 0) why.push('Your answers look stable. A quick annual check still helps confirm you’re not overpaying.');
-
-      var copy = '';
-      if(label === 'Green') copy = 'Coverage looks generally stable — a quick review can still confirm you’re not overpaying.';
-      if(label === 'Yellow') copy = 'There are a few signals your coverage may not match your life today — worth a quick review.';
-      if(label === 'Red') copy = 'Multiple signals suggest potential gaps or misalignment — a review is strongly recommended.';
-
-      // Helpful strings for your sheet/email
-      var triggers = why.slice(0,4).join(' | ');
-      var ctaText = (label === 'Red')
-        ? 'Check My Options'
-        : 'Continue to Options';
-
-      return { label: label, score: score, copy: copy, why: why, triggers: triggers, ctaText: ctaText };
-    }
-
-    function writePHCStateToGlobalAndHidden(){
-      // Build a canonical answers object from current desktop fields
-      var changes = qsa('#phcChanges .phc-chip')
-        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
-        .map(function(l){ return getChipValue(l); });
-
-      var risks = qsa('#phcRisks .phc-chip')
-        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
-        .map(function(l){ return getChipValue(l); });
-
-      var answers = {
-        changes: changes,
-        property: safeText(el('phcProperty') && el('phcProperty').value),
-        deductible: safeText(el('phcDeductible') && el('phcDeductible').value),
-        liability: safeText(el('phcLiability') && el('phcLiability').value),
-        review: safeText(el('phcReview') && el('phcReview').value),
-        risks: risks
-      };
-
-      var result = computePHCResult();
-
-      window.PHC = window.PHC || {};
-      window.PHC.answers = answers;
-      window.PHC.result  = result;
-
-      // Optional: helpful hidden fields (debugging + spreadsheet mapping)
-      try{
-        setHidden('policyHealthAnswers', JSON.stringify(answers));
-        setHidden('policyHealthScore', result.score);
-        setHidden('policyHealthLabel', result.label);
-        setHidden('policyHealthTriggers', result.triggers);
-        setHidden('policyHealthCtaText', result.ctaText);
-      }catch(_){}
-    }
-
-    function renderDesktopResult(result){
-      var box = el('phcResult');
-      if(!box) return;
-
-      var dot = el('phcDot');
-      var labelEl = el('phcLabel');
-      var copyEl = el('phcCopy');
-      var whyEl = el('phcWhy');
-      var subhead = el('phcSubhead');
-      var loyalty = el('phcLoyalty');
-      var loyaltyMsg = el('phcLoyaltyMsg');
-      var leadCta = el('phcLeadCta');
-      var contBtn = el('phcCta');
-
-      box.classList.add('show');
-
-      if(dot) dot.className = 'phc-dot' + (result.label === 'Yellow' ? ' yellow' : result.label === 'Red' ? ' red' : '');
-      if(labelEl) labelEl.textContent = result.label;
-      if(copyEl) copyEl.textContent = result.copy;
-
-      if(subhead){
-        subhead.classList.remove('green','red');
-        subhead.classList.add(result.label === 'Red' ? 'red' : 'green');
-        subhead.style.display = 'block';
-      }
-
-      if(whyEl){
-        whyEl.innerHTML = '';
-        result.why.slice(0,4).forEach(function(line){
-          var li = document.createElement('li');
-          li.textContent = line;
-          whyEl.appendChild(li);
-        });
-      }
-
-      if(loyalty){
-        if(result.label === 'Red'){
-          loyalty.classList.add('show');
-          if(loyaltyMsg) loyaltyMsg.textContent = "Loyalty isn't the same as protection.";
-          if(leadCta){
-            leadCta.onclick = function(){
-              writePHCStateToGlobalAndHidden();
-              if(window.__closePHCModal) window.__closePHCModal();
-              if(window.__openLeadModal) window.__openLeadModal();
-            };
-          }
-        } else {
-          loyalty.classList.remove('show');
+  <!-- Global open/close for Lead modal -->
+  <script>
+    (function(){
+      function openLeadModal(){
+        if(window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== ""){
+          window.open(window.CLICKFUNNEL_URL, "_blank", "noopener");
+          return;
         }
+        var modal = document.getElementById("modal");
+        var overlay = document.getElementById("modalOverlay");
+        if(overlay) overlay.style.display = "block";
+        if(modal) modal.style.display = "flex";
+        document.body.classList.add("modal-open");
+        document.body.style.overflow = "hidden";
       }
 
-      if(contBtn){
-        contBtn.onclick = function(){
-          writePHCStateToGlobalAndHidden();
-          if(window.__closePHCModal) window.__closePHCModal();
-          if(window.__openLeadModal) window.__openLeadModal();
-        };
+      function closeLeadModal(){
+        var modal = document.getElementById("modal");
+        var overlay = document.getElementById("modalOverlay");
+        if(overlay) overlay.style.display = "none";
+        if(modal) modal.style.display = "none";
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = "";
       }
 
-      // Always refresh global state when a result is rendered
-      writePHCStateToGlobalAndHidden();
-    }
+      window.__openLeadModal = openLeadModal;
+      window.__closeLeadModal = closeLeadModal;
 
-    function renderMobileResult(result){
-      var box = el('phcResultMobile');
-      if(!box) return;
+      document.addEventListener("DOMContentLoaded", function(){
+        var openBtn = document.getElementById("openOptions");
+        var closeBtn = document.getElementById("closeModal");
+        var overlay = document.getElementById("modalOverlay");
 
-      box.innerHTML = '';
-      box.className = 'phc-result show';
-
-      var top = document.createElement('div');
-      top.className = 'phc-result-top';
-
-      var left = document.createElement('div');
-      left.className = 'phc-result-left';
-
-      var dot = document.createElement('span');
-      dot.className = 'phc-dot' + (result.label === 'Yellow' ? ' yellow' : result.label === 'Red' ? ' red' : '');
-
-      var labelWrap = document.createElement('div');
-      var lab = document.createElement('div');
-      lab.className = 'phc-result-label';
-      lab.textContent = result.label;
-      labelWrap.appendChild(lab);
-
-      left.appendChild(dot);
-      left.appendChild(labelWrap);
-      top.appendChild(left);
-      box.appendChild(top);
-
-      var copy = document.createElement('div');
-      copy.className = 'phc-result-copy';
-      copy.textContent = result.copy;
-      box.appendChild(copy);
-
-      var sub = document.createElement('div');
-      sub.className = 'phc-subhead ' + (result.label === 'Red' ? 'red' : 'green');
-      sub.textContent = "Most people don't switch because they're happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.";
-      box.appendChild(sub);
-
-      var ul = document.createElement('ul');
-      ul.className = 'phc-result-why';
-      result.why.slice(0,4).forEach(function(line){
-        var li = document.createElement('li');
-        li.textContent = line;
-        ul.appendChild(li);
+        if(openBtn){
+          openBtn.addEventListener("click", function(e){ e.preventDefault(); openLeadModal(); });
+          openBtn.addEventListener("touchend", function(e){ e.preventDefault(); openLeadModal(); }, {passive:false});
+        }
+        if(closeBtn) closeBtn.addEventListener("click", closeLeadModal);
+        if(overlay) overlay.addEventListener("click", closeLeadModal);
+        document.addEventListener("keydown", function(e){ if(e.key === "Escape") closeLeadModal(); });
       });
-      box.appendChild(ul);
+    })();
+  </script>
 
-      if(result.label === 'Red'){
-        var loyalty = document.createElement('div');
-        loyalty.className = 'phc-loyalty show';
+  <!-- PHC logic + modal open/close (FIXED so PHC always opens) -->
+  <script>
+    (function(){
+      window.PHC = window.PHC || { answers:{}, result:{} };
 
-        var msg = document.createElement('p');
-        msg.className = 'm';
-        msg.textContent = "Loyalty isn't the same as protection.";
+      function openPHCModal(){
+        var modal = document.getElementById("phcModal");
+        var overlay = document.getElementById("phcModalOverlay");
+        if(overlay) overlay.style.display = "block";
+        if(modal) modal.style.display = "flex";
+        document.body.classList.add("modal-open");
+        document.body.style.overflow = "hidden";
 
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn btn-primary';
-        btn.textContent = 'Check My Options';
-        btn.onclick = function(){
-          writePHCStateToGlobalAndHidden();
-          if(window.__closePHCModal) window.__closePHCModal();
-          if(window.__openLeadModal) window.__openLeadModal();
-        };
-
-        loyalty.appendChild(msg);
-        loyalty.appendChild(btn);
-        box.appendChild(loyalty);
-      }
-
-      var actions = document.createElement('div');
-      actions.className = 'phc-result-actions';
-      var cont = document.createElement('button');
-      cont.type = 'button';
-      cont.className = 'btn btn-primary';
-      cont.textContent = 'Continue to Options';
-      cont.onclick = function(){
-        writePHCStateToGlobalAndHidden();
-        if(window.__closePHCModal) window.__closePHCModal();
-        if(window.__openLeadModal) window.__openLeadModal();
-      };
-      actions.appendChild(cont);
-      box.appendChild(actions);
-
-      // Always refresh global state when a result is rendered
-      writePHCStateToGlobalAndHidden();
-    }
-
-    function selectOptionsFromSelect(selectEl){
-      if(!selectEl) return [];
-      return Array.prototype.slice.call(selectEl.options)
-        .map(function(o){ return { value: safeText(o.value || o.textContent), label: safeText(o.textContent) }; })
-        .filter(function(o){
-          var low = (o.label || '').toLowerCase();
-          return o.value !== '' && low !== 'select…' && low !== 'select...';
-        });
-    }
-
-    onReady(function(){
-      // Wire desktop chips so "active" styling works
-      qsa('#phcChanges .phc-chip, #phcRisks .phc-chip').forEach(function(label){
-        label.addEventListener('click', function(){
-          var inp = label.querySelector('input[type="checkbox"]');
-          if(!inp) return;
-          setTimeout(function(){ setChipActive(label, !!inp.checked); }, 0);
-        });
-      });
-
-      var flow = el('phcMobileFlow');
-      if(!flow) return;
-
-      // Prevent double wiring
-      if(flow.dataset.wired === '1') return;
-      flow.dataset.wired = '1';
-
-      // Ensure hidden fields exist (optional, helps debug/Sheets)
-      ensureHiddenInput('policyHealthAnswers');
-      ensureHiddenInput('policyHealthScore');
-      ensureHiddenInput('policyHealthLabel');
-      ensureHiddenInput('policyHealthTriggers');
-      ensureHiddenInput('policyHealthCtaText');
-
-      var changesLabels = qsa('#phcChanges .phc-chip');
-      var risksLabels   = qsa('#phcRisks .phc-chip');
-      var selProperty   = el('phcProperty');
-      var selDed        = el('phcDeductible');
-      var selLia        = el('phcLiability');
-      var selReview     = el('phcReview');
-
-      var mChanges = el('phcMobileChanges');
-      var mProperty = el('phcMobileProperty');
-      var mDed = el('phcMobileDeductible');
-      var mLia = el('phcMobileLiability');
-      var mReview = el('phcMobileReview');
-      var mRisks = el('phcMobileRisks');
-
-      var selected = {
-        changes: new Set(),
-        risks: new Set(),
-        property: safeText(selProperty && selProperty.value),
-        deductible: safeText(selDed && selDed.value),
-        liability: safeText(selLia && selLia.value),
-        review: safeText(selReview && selReview.value)
-      };
-
-      // Seed selections from desktop (if any)
-      changesLabels.forEach(function(l){ var i=l.querySelector('input'); if(i && i.checked) selected.changes.add(getChipValue(l)); });
-      risksLabels.forEach(function(l){ var i=l.querySelector('input'); if(i && i.checked) selected.risks.add(getChipValue(l)); });
-
-      function syncChangesToDesktop(){
-        if(selected.changes.has('None')){
-          selected.changes.forEach(function(v){ if(v !== 'None') selected.changes.delete(v); });
-        }
-        changesLabels.forEach(function(l){
-          var v = getChipValue(l);
-          setCheckbox(l, selected.changes.has(v));
-        });
-      }
-
-      function syncRisksToDesktop(){
-        if(selected.risks.has('None')){
-          selected.risks.forEach(function(v){ if(v !== 'None') selected.risks.delete(v); });
-        }
-        risksLabels.forEach(function(l){
-          var v = getChipValue(l);
-          setCheckbox(l, selected.risks.has(v));
-        });
-      }
-
-      function syncSinglesToDesktop(){
-        setSelectValue(selProperty, selected.property);
-        setSelectValue(selDed, selected.deductible);
-        setSelectValue(selLia, selected.liability);
-        setSelectValue(selReview, selected.review);
-      }
-
-      // Build mobile option lists from desktop options
-      var changeOpts = changesLabels.map(function(l){ var v = getChipValue(l); return { value:v, label:v }; });
-      var riskOpts = risksLabels.map(function(l){ var v = getChipValue(l); return { value:v, label:v }; });
-
-      var propertyOpts = selectOptionsFromSelect(selProperty);
-      var dedOpts = selectOptionsFromSelect(selDed);
-      var liaOpts = selectOptionsFromSelect(selLia);
-      var reviewOpts = selectOptionsFromSelect(selReview);
-
-      // Multi-select buttons
-      buildMultiButtons(mChanges, changeOpts, function(value, willSelect, btn){
-        if(willSelect){
-          if(value === 'None'){
-            selected.changes.clear();
-            selected.changes.add('None');
-            qsa('.phc-answer-btn', mChanges).forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
-          } else {
-            selected.changes.delete('None');
-            selected.changes.add(value);
-            btn.classList.add('active');
-          }
-        } else {
-          selected.changes.delete(value);
-          btn.classList.remove('active');
-        }
-        syncChangesToDesktop();
-      });
-
-      buildSingleButtons(mProperty, propertyOpts, function(value){ selected.property = value; syncSinglesToDesktop(); updateMobileContinueState(); });
-      buildSingleButtons(mDed, dedOpts, function(value){ selected.deductible = value; syncSinglesToDesktop(); updateMobileContinueState(); });
-      buildSingleButtons(mLia, liaOpts, function(value){ selected.liability = value; syncSinglesToDesktop(); updateMobileContinueState(); });
-      buildSingleButtons(mReview, reviewOpts, function(value){ selected.review = value; syncSinglesToDesktop(); updateMobileContinueState(); });
-
-      buildMultiButtons(mRisks, riskOpts, function(value, willSelect, btn){
-        if(willSelect){
-          if(value === 'None'){
-            selected.risks.clear();
-            selected.risks.add('None');
-            qsa('.phc-answer-btn', mRisks).forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
-          } else {
-            selected.risks.delete('None');
-            selected.risks.add(value);
-            btn.classList.add('active');
-          }
-        } else {
-          selected.risks.delete(value);
-          btn.classList.remove('active');
-        }
-        syncRisksToDesktop();
-      });
-
-      function markMulti(container, set){
-        qsa('.phc-answer-btn', container).forEach(function(b){
-          if(set.has(b.dataset.value)) b.classList.add('active');
-        });
-      }
-      function markSingle(container, value){
-        qsa('.phc-answer-btn', container).forEach(function(b){
-          if(b.dataset.value === value) b.classList.add('active');
-        });
-      }
-
-      function setBtnEnabled(id, on){
-        var b = el(id);
-        if(!b) return;
-        b.disabled = !on;
-        b.style.opacity = on ? '1' : '.6';
-      }
-
-      function getActiveValue(container){
-        if(!container) return '';
-        var active = container.querySelector('.phc-answer-btn.active');
-        return active ? safeText(active.dataset.value) : '';
-      }
-
-      function updateMobileContinueState(){
-        setBtnEnabled('phcNext1', !!safeText(selected.property) || !!safeText(getActiveValue(mProperty)));
-        setBtnEnabled('phcNext2', !!safeText(selected.deductible) || !!safeText(getActiveValue(mDed)));
-        setBtnEnabled('phcNext3', !!safeText(selected.liability) || !!safeText(getActiveValue(mLia)));
-        setBtnEnabled('phcNext4', !!safeText(selected.review) || !!safeText(getActiveValue(mReview)));
-      }
-
-      function requireSingle(value, message, container){
-        var v = safeText(value);
-        if(v === '' && container) v = getActiveValue(container);
-        if(v === ''){ alert(message); return false; }
-        return v;
-      }
-
-      // ---- Mobile steps ----
-      var step = 0;
-
-      function showStep(n){
-        step = n;
-        for(var i=0;i<=5;i++){
-          var q = el('phcQ'+i);
-          if(q) q.style.display = (i===step ? 'block' : 'none');
-        }
-        var done = el('phcQDone');
-        if(done) done.style.display = 'none';
-
-        var back0 = el('phcBack0');
-        if(back0) back0.disabled = (step===0);
-
+        // reset scroll to top of modal body for mobile
         try{
-          var modal = el('phcModal');
-          var body = modal ? modal.querySelector('.card-body') : null;
+          var body = modal ? modal.querySelector(".modal-body") : null;
           if(body) body.scrollTop = 0;
         }catch(_){}
-
-        updateMobileContinueState();
       }
 
-      function bindNav(btnId, fn){
-        var b = el(btnId);
-        if(!b) return;
-        b.addEventListener('click', fn);
-        b.addEventListener('touchend', function(e){ e.preventDefault(); fn(); }, { passive:false });
+      function closePHCModal(){
+        var modal = document.getElementById("phcModal");
+        var overlay = document.getElementById("phcModalOverlay");
+        if(overlay) overlay.style.display = "none";
+        if(modal) modal.style.display = "none";
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = "";
       }
 
-      bindNav('phcNext0', function(){ showStep(1); });
-      bindNav('phcBack1', function(){ showStep(0); });
-
-      bindNav('phcNext1', function(){
-        var v = requireSingle(selected.property, 'Please choose your property situation.', mProperty);
-        if(!v) return;
-        selected.property = v; syncSinglesToDesktop(); showStep(2);
-      });
-      bindNav('phcBack2', function(){ showStep(1); });
-
-      bindNav('phcNext2', function(){
-        var v = requireSingle(selected.deductible, 'Please choose an out-of-pocket comfort level.', mDed);
-        if(!v) return;
-        selected.deductible = v; syncSinglesToDesktop(); showStep(3);
-      });
-      bindNav('phcBack3', function(){ showStep(2); });
-
-      bindNav('phcNext3', function(){
-        var v = requireSingle(selected.liability, 'Please choose how protected you feel for liability.', mLia);
-        if(!v) return;
-        selected.liability = v; syncSinglesToDesktop(); showStep(4);
-      });
-      bindNav('phcBack4', function(){ showStep(3); });
-
-      bindNav('phcNext4', function(){
-        var v = requireSingle(selected.review, 'Please choose when your last full review was.', mReview);
-        if(!v) return;
-        selected.review = v; syncSinglesToDesktop(); showStep(5);
-      });
-      bindNav('phcBack5', function(){ showStep(4); });
-
-      bindNav('phcFinish', function(){
-        syncChangesToDesktop();
-        syncRisksToDesktop();
-        syncSinglesToDesktop();
-
-        var result = computePHCResult();
-        renderDesktopResult(result);
-        renderMobileResult(result);
-
-        for(var i=0;i<=5;i++){
-          var q = el('phcQ'+i);
-          if(q) q.style.display = 'none';
-        }
-        var done = el('phcQDone');
-        if(done) done.style.display = 'block';
-      });
-
-      // ---- Desktop: compute/show result ----
-      function validateDesktopRequired(){
-        if(!safeText(selProperty && selProperty.value)) { alert('Please select your property situation.'); if(selProperty) selProperty.focus(); return false; }
-        if(!safeText(selDed && selDed.value)) { alert('Please select your out-of-pocket comfort level.'); if(selDed) selDed.focus(); return false; }
-        if(!safeText(selLia && selLia.value)) { alert('Please select how protected you feel for liability.'); if(selLia) selLia.focus(); return false; }
-        if(!safeText(selReview && selReview.value)) { alert('Please select when your last full policy review was.'); if(selReview) selReview.focus(); return false; }
-        return true;
+      function setStatus(msg, kind){
+        var el = document.getElementById("phcStatus");
+        if(!el) return;
+        el.className = "statusline " + (kind || "");
+        el.style.display = "block";
+        el.textContent = msg;
       }
 
-      function desktopRequiredReady(){
-        return !!(safeText(selProperty && selProperty.value) && safeText(selDed && selDed.value) && safeText(selLia && selLia.value) && safeText(selReview && selReview.value));
+      function hideStatus(){
+        var el = document.getElementById("phcStatus");
+        if(!el) return;
+        el.style.display = "none";
+        el.textContent = "";
+        el.className = "statusline";
       }
 
-      function updateDesktopMulti(kind){
-        var rootId = kind === 'risks' ? '#phcRisks' : '#phcChanges';
-        var labels = qsa(rootId + ' .phc-chip');
-        var set = new Set();
+      function syncFinishButton(){
+        var finish = document.getElementById("phcFinish");
+        if(!finish) return;
+        var required = ["q1","q2","q3"];
+        var ok = required.every(function(k){ return !!window.PHC.answers[k]; });
+        finish.disabled = !ok;
+      }
 
-        labels.forEach(function(l){
-          var inp = l.querySelector('input[type="checkbox"]');
-          var v = getChipValue(l);
-          if(inp && inp.checked) set.add(v);
-        });
-
-        if(set.has('None')){
-          set.forEach(function(v){ if(v !== 'None') set.delete(v); });
-        }
-
-        labels.forEach(function(l){
-          var inp = l.querySelector('input[type="checkbox"]');
-          var v = getChipValue(l);
-          var on = set.has(v);
-          if(inp) inp.checked = on;
-          setChipActive(l, on);
+      function clearSelections(){
+        document.querySelectorAll("#phcQuestions .opt.selected").forEach(function(el){
+          el.classList.remove("selected");
         });
       }
 
-      var __phcAutoT = null;
-      function autoPreviewDesktopResult(){
-        if(isMobile()) return;
-        if(!desktopRequiredReady()) return;
-        if(__phcAutoT) clearTimeout(__phcAutoT);
-        __phcAutoT = setTimeout(function(){
-          updateDesktopMulti('changes');
-          updateDesktopMulti('risks');
-          renderDesktopResult(computePHCResult());
-        }, 120);
-      }
-
-      var phcRun = el('phcRun');
-      if(phcRun){
-        phcRun.addEventListener('click', function(){
-          updateDesktopMulti('changes');
-          updateDesktopMulti('risks');
-          if(!validateDesktopRequired()) return;
-          renderDesktopResult(computePHCResult());
-        });
-      }
-
-      var finishDesktop = el('phcFinishDesktop');
-      if(finishDesktop){
-        finishDesktop.addEventListener('click', function(){
-          updateDesktopMulti('changes');
-          updateDesktopMulti('risks');
-          if(!validateDesktopRequired()) return;
-
-          renderDesktopResult(computePHCResult());
-          var box = el('phcResult');
-          if(box && box.scrollIntoView) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
-
-      function resetDesktopPHC(){
-        qsa('#phcChanges input[type="checkbox"]').forEach(function(i){ i.checked = false; });
-        qsa('#phcRisks input[type="checkbox"]').forEach(function(i){ i.checked = false; });
-        qsa('#phcChanges .phc-chip, #phcRisks .phc-chip').forEach(function(l){ l.classList.remove('active'); });
-
-        if(selProperty) selProperty.value = '';
-        if(selDed) selDed.value = '';
-        if(selLia) selLia.value = '';
-        if(selReview) selReview.value = '';
-
-        var box = el('phcResult');
-        if(box) box.classList.remove('show');
-        var loyalty = el('phcLoyalty');
-        if(loyalty) loyalty.classList.remove('show');
-
-        // Clear global state + hidden fields
-        window.PHC = window.PHC || {};
+      function resetPHC(){
         window.PHC.answers = {};
         window.PHC.result = {};
-        setHidden('policyHealthAnswers', '');
-        setHidden('policyHealthScore', '');
-        setHidden('policyHealthLabel', '');
-        setHidden('policyHealthTriggers', '');
-        setHidden('policyHealthCtaText', '');
+        hideStatus();
+        clearSelections();
+        syncFinishButton();
+
+        var res = document.getElementById("phcResults");
+        var actionRow = document.getElementById("phcActionRow");
+        if(res) res.style.display = "none";
+        if(actionRow) actionRow.style.display = "flex";
       }
 
-      var resetBtn = el('phcReset');
-      if(resetBtn) resetBtn.addEventListener('click', resetDesktopPHC);
+      function computeResult(){
+        // Simple scoring example
+        var score = 0;
 
-      qsa('#phcChanges input[type="checkbox"]').forEach(function(inp){
-        inp.addEventListener('change', function(){ updateDesktopMulti('changes'); autoPreviewDesktopResult(); });
-      });
-      qsa('#phcRisks input[type="checkbox"]').forEach(function(inp){
-        inp.addEventListener('change', function(){ updateDesktopMulti('risks'); autoPreviewDesktopResult(); });
-      });
-      [selProperty, selDed, selLia, selReview].forEach(function(s){
-        if(!s) return;
-        s.addEventListener('change', autoPreviewDesktopResult);
-      });
+        // q1: older review -> more risk
+        if(window.PHC.answers.q1 === "2plus" || window.PHC.answers.q1 === "unknown") score += 2;
+        else if(window.PHC.answers.q1 === "1to2y") score += 1;
 
-      updateDesktopMulti('changes');
-      updateDesktopMulti('risks');
+        // q2: coverage worry -> more risk
+        if(window.PHC.answers.q2 === "coverage") score += 2;
+        if(window.PHC.answers.q2 === "both") score += 2;
+        if(window.PHC.answers.q2 === "claims") score += 1;
 
-      // Seed button actives
-      markMulti(mChanges, selected.changes);
-      markMulti(mRisks, selected.risks);
-      markSingle(mProperty, selected.property);
-      markSingle(mDed, selected.deductible);
-      markSingle(mLia, selected.liability);
-      markSingle(mReview, selected.review);
-      updateMobileContinueState();
+        // q3: not bundled -> potential savings gap
+        if(window.PHC.answers.q3 === "no" || window.PHC.answers.q3 === "notSure") score += 1;
 
-      // ---- Expose "sync on open" so the modal open script can call it ----
-      window.__PHC_SYNC_ON_OPEN = function(){
-        // Rebuild actives + ensure we start at step 0 on mobile
-        try{
-          // Re-mark active buttons from current selected values
-          qsa('.phc-answer-btn', mChanges).forEach(function(b){ b.classList.toggle('active', selected.changes.has(b.dataset.value)); });
-          qsa('.phc-answer-btn', mRisks).forEach(function(b){ b.classList.toggle('active', selected.risks.has(b.dataset.value)); });
+        var label, headline, summary, triggers, ctaText;
 
-          qsa('.phc-answer-btn', mProperty).forEach(function(b){ b.classList.toggle('active', b.dataset.value === selected.property); });
-          qsa('.phc-answer-btn', mDed).forEach(function(b){ b.classList.toggle('active', b.dataset.value === selected.deductible); });
-          qsa('.phc-answer-btn', mLia).forEach(function(b){ b.classList.toggle('active', b.dataset.value === selected.liability); });
-          qsa('.phc-answer-btn', mReview).forEach(function(b){ b.classList.toggle('active', b.dataset.value === selected.review); });
-
-          updateMobileContinueState();
-
-          // On mobile, always restart at step 0 when opening the modal
-          if(isMobile()) showStep(0);
-        }catch(_){}
-      };
-
-      // When the PHC modal opens and we're on mobile, start at step 0
-      var phcModal = el('phcModal');
-      if(phcModal){
-        var observer = new MutationObserver(function(){
-          if(phcModal.style.display === 'flex' && isMobile()) showStep(0);
-        });
-        observer.observe(phcModal, { attributes:true, attributeFilter:['style'] });
-      }
-
-      showStep(0);
-    });
-  })();
-</script>
-
-  // =====================
-  // DISCLAIMER MODAL
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
-    }
-
-    onReady(function(){
-      var openBtn = document.getElementById('openDisclaimer');
-      var overlay = document.getElementById('discOverlay');
-      var modal = document.getElementById('discModal');
-      var close1 = document.getElementById('discClose');
-      var close2 = document.getElementById('discClose2');
-      var accept = document.getElementById('discAccept');
-
-      function open(){
-        if(overlay) overlay.style.display = 'block';
-        if(modal) modal.style.display = 'flex';
-        document.body.classList.add('modal-open');
-      }
-      function close(){
-        if(overlay) overlay.style.display = 'none';
-        if(modal) modal.style.display = 'none';
-        document.body.classList.remove('modal-open');
-      }
-
-      if(openBtn){
-        openBtn.addEventListener('click', open);
-        openBtn.addEventListener('touchend', function(e){ e.preventDefault(); open(); }, { passive:false });
-      }
-      if(overlay) overlay.addEventListener('click', close);
-      if(close1) close1.addEventListener('click', close);
-      if(close2) close2.addEventListener('click', close);
-      if(accept) accept.addEventListener('click', close);
-
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape') close();
-      });
-    });
-  })();
-</script>
-
-
-  // =====================
-  // HERO ROTATOR (simple crossfade)
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
-    }
-
-    onReady(function(){
-      var imgs = [document.getElementById('heroImg0'), document.getElementById('heroImg1'), document.getElementById('heroImg2')].filter(Boolean);
-      var header = document.getElementById('heroHeader');
-      if(imgs.length < 2) return;
-
-      var headers = ['Home Insurance', 'Car Insurance', 'Business Insurance'];
-      var idx = 0;
-
-      function show(i){
-        imgs.forEach(function(im, k){
-          if(!im) return;
-          im.classList.toggle('active', k === i);
-        });
-        if(header) header.textContent = headers[i] || headers[0];
-      }
-
-      show(0);
-      setInterval(function(){
-        idx = (idx + 1) % imgs.length;
-        show(idx);
-      }, 6000);
-    });
-  })();
-</script>
-  // =====================
-  // POLICYPRO CHAT WIDGET (FIXED)
-  // Fixes the original SyntaxError caused by an invalid string literal.
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
-    }
-    function el(id){ return document.getElementById(id); }
-
-    function esc(s){
-      return String(s||'')
-        .split('&').join('&amp;')
-        .split('<').join('&lt;')
-        .split('>').join('&gt;')
-        .split('"').join('&quot;')
-        .split("'").join('&#39;');
-    }
-
-    function addMsg(kind, text){
-      var wrap = el('chatMessages');
-      if(!wrap) return;
-      var row = document.createElement('div');
-      row.className = 'msg ' + (kind === 'user' ? 'user' : 'bot');
-      var bubble = document.createElement('div');
-      bubble.className = 'bubble ' + (kind === 'user' ? 'user' : 'bot');
-      bubble.innerHTML = esc(text).split('\n').join('<br>');
-      row.appendChild(bubble);
-      wrap.appendChild(row);
-      wrap.scrollTop = wrap.scrollHeight + 500;
-    }
-
-    function addTyping(){
-      var wrap = el('chatMessages');
-      if(!wrap) return null;
-      var row = document.createElement('div');
-      row.className = 'msg bot';
-      var bubble = document.createElement('div');
-      bubble.className = 'bubble bot';
-      bubble.innerHTML = '<span class="typing" aria-label="Typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
-      row.appendChild(bubble);
-      wrap.appendChild(row);
-      wrap.scrollTop = wrap.scrollHeight + 500;
-      return row;
-    }
-
-    function removeNode(node){ if(node && node.parentNode) node.parentNode.removeChild(node); }
-
-    function activateTab(which){
-      var screens = { home: el('ppScreenHome'), messages: el('ppScreenMessages'), settings: el('ppScreenSettings') };
-      var tabs = { home: el('ppTabHome'), messages: el('ppTabMessages'), settings: el('ppTabSettings') };
-
-      Object.keys(screens).forEach(function(k){
-        if(screens[k]) screens[k].classList.toggle('active', k === which);
-      });
-      Object.keys(tabs).forEach(function(k){
-        if(!tabs[k]) return;
-        tabs[k].classList.toggle('active', k === which);
-        tabs[k].setAttribute('aria-selected', k === which ? 'true' : 'false');
-      });
-
-      if(which === 'messages'){
-        var input = el('chatInput');
-        if(input) setTimeout(function(){ input.focus(); }, 60);
-        var wrap = el('chatMessages');
-        if(wrap) wrap.scrollTop = wrap.scrollHeight + 500;
-      }
-    }
-
-    function openChat(){
-      var w = el('chatWindow');
-      if(!w) return;
-      w.style.display = 'block';
-      activateTab('home');
-    }
-    function closeChat(){
-      var w = el('chatWindow');
-      if(!w) return;
-      w.style.display = 'none';
-    }
-    function isOpen(){
-      var w = el('chatWindow');
-      return !!(w && w.style.display === 'block');
-    }
-
-    function openOptions(){
-      if(window.__openLeadModal) window.__openLeadModal();
-      else {
-        var btn = el('openFunnel');
-        if(btn) btn.click();
-      }
-    }
-
-    var state = { turns: 0, askedEmail: false, email: '', lastNudgeTurn: 0 };
-
-    function looksLikeEmail(s){
-      s = String(s||'').trim();
-      if(s.length < 6) return false;
-      var at = s.indexOf('@');
-      var dot = s.lastIndexOf('.');
-      return at > 0 && dot > at + 1 && dot < s.length - 1;
-    }
-
-    // Intent detection: only ask for email when the user is asking for pricing/quotes,
-    // wants a review, or wants to talk to an agent.
-    function hasAny(hay, needles){
-      return needles.some(function(n){ return hay.indexOf(n) !== -1; });
-    }
-
-    function shouldRequestFollowUp(userText){
-      var t = String(userText||'').toLowerCase();
-
-      // Strong intent: pricing/quote/options/review
-      var pricing = ['quote','price','pricing','rate','rates','premium','cost','how much','cheaper','save','discount','deal','compare','comparison'];
-      var review = ['review','re-evaluate','re evaluate','check my options','options','shop','shopping','switch','change carriers','new policy','renewal'];
-      var agent  = ['agent','call me','text me','email me','reach out','follow up','talk to someone','speak to someone','contact me'];
-
-      // Exclude purely informational questions ("what is", "how does") unless they also include the above intent.
-      return hasAny(t, pricing) || hasAny(t, review) || hasAny(t, agent);
-    }
-
-    function shouldNudgeOptions(userText){
-      var t = String(userText||'').toLowerCase();
-
-      // Nudge only if they’re already in shopping mindset AND we haven’t nudged recently.
-      var intent = ['quote','price','pricing','rate','premium','cost','compare','switch','review','options','shop'];
-      if(!hasAny(t, intent)) return false;
-      if(state.turns - state.lastNudgeTurn < 3) return false;
-      state.lastNudgeTurn = state.turns;
-      return true;
-    }
-
-    function localReply(userText){
-      var q = String(userText||'').trim();
-      var lower = q.toLowerCase();
-
-      if(looksLikeEmail(q)){
-        state.email = q;
-        return "Perfect — got it. If you want a licensed agent to review options, tap 'Check My Options'.\n\nGeneral info only — a licensed agent must review before any quote, application, binding, or policy change.";
-      }
-
-      if(lower.indexOf('hail') !== -1){
-        return "Hail is often covered, but what you pay depends on your wind/hail deductible (flat $ or %).\n\nIf you tell me what your declarations page shows (ex: 1% wind/hail or $2,500), I’ll translate it.\n\nGeneral info only — agent review required.";
-      }
-      if(lower.indexOf('wildfire') !== -1 || lower.indexOf('fire') !== -1){
-        return "Wildfire eligibility can depend on distance to brush, mitigation, roof type, and defensible space. Some carriers require mitigation steps or inspections.\n\nShare your ZIP and whether it’s a home/condo/rental and I’ll outline common next steps.\n\nGeneral info only — agent review required.";
-      }
-      if(lower.indexOf('bundle') !== -1){
-        return "Bundling home + auto can improve pricing, but the best bundle depends on drivers, vehicles, roof age, claims, and wildfire/hail exposure.\n\nIf you want an agent to review, tap 'Check My Options' (2 minutes • not a quote).";
-      }
-      if(lower.indexOf('deduct') !== -1){
-        return "Deductibles are what you pay before coverage applies. In Colorado, wind/hail is the one to watch (sometimes a % of Coverage A).\n\nIf you paste what you see, I’ll explain it.\n\nGeneral info only — agent review required.";
-      }
-
-      return "Ask me about hail deductibles, wildfire, liability, bundling, or what to review after life changes.\n\nIf you want a licensed agent to review options, tap 'Check My Options' (2 minutes • not a quote).";
-    }
-
-    async function remoteReply(userText){
-      var endpoint = (window.POLICYPRO_LLM_ENDPOINT && String(window.POLICYPRO_LLM_ENDPOINT).trim()) || (window.GAS_WEBAPP_URL && String(window.GAS_WEBAPP_URL).trim());
-      if(!endpoint) return localReply(userText);
-
-      try{
-        var payload = {
-          mode: 'policypro_chat',
-          message: String(userText||''),
-          page: location.href,
-          lang: (el('ppLangSelect') && el('ppLangSelect').value) ? el('ppLangSelect').value : 'en',
-          agentEmail: window.AGENT_EMAIL || ''
-        };
-
-        var res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          mode: 'cors',
-          credentials: 'omit'
-        });
-
-        var outText = await res.text();
-        if(!res.ok) return localReply(userText);
-
-        if(outText && outText.trim().charAt(0) === '{'){
-          try{
-            var obj = JSON.parse(outText);
-            return obj.reply || obj.message || outText;
-          }catch(_){
-            return outText;
-          }
+        if(score >= 4){
+          label = "High Attention";
+          headline = "Loyalty isn't the same as protection.";
+          summary = "Your answers suggest it’s worth doing a quick review for gaps and avoidable cost. If you want, request a follow-up and we’ll look for better-fitting options.";
+          triggers = "review-gap,coverage-risk";
+          ctaText = "Check My Options";
+        }else if(score >= 2){
+          label = "Worth Reviewing";
+          headline = "A quick review could uncover savings or gaps.";
+          summary = "Nothing looks alarming, but a short review may help confirm you’re not overpaying or missing key protections.";
+          triggers = "review-recommended";
+          ctaText = "Check My Options";
+        }else{
+          label = "Looks Solid";
+          headline = "Your policy health looks relatively stable.";
+          summary = "Based on your answers, you’re likely in decent shape. If you still want a second set of eyes, you can request a follow-up.";
+          triggers = "optional-review";
+          ctaText = "Check My Options";
         }
-        return outText;
-      }catch(_e){
-        return localReply(userText);
-      }
-    }
 
-    async function send(userText){
-      var text = String(userText||'').trim();
-      if(!text) return;
+        window.PHC.result = { score: score, label: label, triggers: triggers, ctaText: ctaText };
 
-      state.turns += 1;
-      addMsg('user', text);
+        var res = document.getElementById("phcResults");
+        var actionRow = document.getElementById("phcActionRow");
+        if(res) res.style.display = "block";
+        if(actionRow) actionRow.style.display = "none";
 
-      var typing = addTyping();
-      var reply;
-      if(String(window.POLICYPRO_MODE||'local').toLowerCase() === 'remote') reply = await remoteReply(text);
-      else reply = localReply(text);
+        var h = document.getElementById("phcHeadline");
+        var l = document.getElementById("phcLabel");
+        var s = document.getElementById("phcSummary");
+        if(h) h.textContent = headline;
+        if(l) l.textContent = label + " • Score " + score;
+        if(s) s.textContent = summary;
 
-      removeNode(typing);
-      addMsg('bot', reply);
-
-      // Ask for email ONLY when the user signals they want a quote/pricing/options or an agent review.
-      if(!state.askedEmail && !state.email && shouldRequestFollowUp(text)){
-        state.askedEmail = true;
-        addMsg('bot', "If you’d like a licensed agent to review options, reply with your email — or tap 'Check My Options'.");
+        setStatus("✅ Completed. You can request options below.", "ok");
       }
 
-      // Light nudge only when relevant (don’t spam every few turns)
-      if(shouldNudgeOptions(text)){
-        addMsg('bot', "If you want an agent to compare options for you, tap 'Check My Options'.");
-      }
-    }
-
-    function assert(cond, msg){
-      if(!cond) console.error('[PP TEST FAIL]', msg);
-      console.assert(cond, msg);
-    }
-
-    onReady(function(){
-      var launcher = el('chatBtn');
-      var closeBtn = el('closeChat');
-      var w = el('chatWindow');
-
-      if(launcher){
-        launcher.addEventListener('click', function(){ isOpen() ? closeChat() : openChat(); });
-        launcher.addEventListener('touchend', function(e){ e.preventDefault(); isOpen() ? closeChat() : openChat(); }, { passive:false });
-      }
-      if(closeBtn){
-        closeBtn.addEventListener('click', function(){ closeChat(); });
-        closeBtn.addEventListener('touchend', function(e){ e.preventDefault(); closeChat(); }, { passive:false });
-      }
-
-      document.addEventListener('click', function(e){
-        if(!w || w.style.display !== 'block') return;
-        var inside = w.contains(e.target);
-        var onLauncher = launcher && launcher.contains(e.target);
-        if(!inside && !onLauncher) closeChat();
-      });
-
-      var tHome = el('ppTabHome');
-      var tMsg = el('ppTabMessages');
-      var tSet = el('ppTabSettings');
-      if(tHome) tHome.addEventListener('click', function(){ activateTab('home'); });
-      if(tMsg) tMsg.addEventListener('click', function(){ activateTab('messages'); });
-      if(tSet) tSet.addEventListener('click', function(){ activateTab('settings'); });
-
-      var start = el('ppStartChat');
-      if(start) start.addEventListener('click', function(){
-        activateTab('messages');
-        var wrap = el('chatMessages');
-        if(wrap && wrap.children.length === 0){
-          addMsg('bot', "Hi — I’m PolicyPro™. Ask me about hail deductibles, wildfire, bundling, liability, or what to review on your policy.\n\nGeneral info only — a licensed agent must review before any quote, application, binding, or policy change.");
-          addMsg('bot', "If you’d like an agent to review options, tap 'Check My Options'.");
+      document.addEventListener("DOMContentLoaded", function(){
+        // Open PHC from hero button
+        var openBtn = document.getElementById("openHealthCheck");
+        if(openBtn){
+          openBtn.addEventListener("click", function(e){ e.preventDefault(); openPHCModal(); });
+          openBtn.addEventListener("touchend", function(e){ e.preventDefault(); openPHCModal(); }, {passive:false});
         }
-      });
 
-      var agentEmail = el('ppAgentEmail');
-      if(agentEmail) agentEmail.textContent = window.AGENT_EMAIL || agentEmail.textContent;
-      if(agentEmail){
-        agentEmail.style.cursor = 'pointer';
-        agentEmail.title = 'Open Check My Options';
-        agentEmail.addEventListener('click', function(){ openOptions(); });
-      }
+        // Close PHC
+        var closeBtn = document.getElementById("phcCloseModal");
+        var overlay = document.getElementById("phcModalOverlay");
+        if(closeBtn) closeBtn.addEventListener("click", closePHCModal);
+        if(overlay) overlay.addEventListener("click", closePHCModal);
 
-      var openDiscLink = el('ppOpenDisclaimerLink');
-      if(openDiscLink) openDiscLink.addEventListener('click', function(e){
-        e.preventDefault();
-        var b = el('openDisclaimer');
-        if(b) b.click();
-      });
+        // Option selection (single-select per question)
+        document.querySelectorAll("#phcQuestions .qcard .opt").forEach(function(opt){
+          opt.addEventListener("click", function(){
+            var qcard = opt.closest(".qcard");
+            if(!qcard) return;
+            var q = qcard.getAttribute("data-q");
+            var v = opt.getAttribute("data-v");
+            if(!q || !v) return;
 
-      var form = el('chatForm');
-      var input = el('chatInput');
-      var sendBtn = el('chatSend');
-      if(form){
-        form.addEventListener('submit', function(e){
-          e.preventDefault();
-          if(sendBtn) sendBtn.disabled = true;
-          var v = input ? input.value : '';
-          if(input) input.value = '';
-          Promise.resolve(send(v)).finally(function(){
-            if(sendBtn) sendBtn.disabled = false;
-            if(input) input.focus();
+            // clear selection in this qcard
+            qcard.querySelectorAll(".opt").forEach(function(o){ o.classList.remove("selected"); });
+            opt.classList.add("selected");
+
+            window.PHC.answers[q] = v;
+            hideStatus();
+            syncFinishButton();
           });
         });
-      }
 
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape' && isOpen()) closeChat();
+        // Finish (only enabled when all required answered)
+        var finish = document.getElementById("phcFinish");
+        if(finish) finish.addEventListener("click", function(){
+          var required = ["q1","q2","q3"];
+          var ok = required.every(function(k){ return !!window.PHC.answers[k]; });
+          if(!ok){
+            setStatus("Please answer all required questions first.", "err");
+            return;
+          }
+          computeResult();
+        });
+
+        // Reset
+        var reset = document.getElementById("phcReset");
+        if(reset) reset.addEventListener("click", resetPHC);
+
+        // Back from results
+        var back = document.getElementById("phcBack");
+        if(back) back.addEventListener("click", function(){
+          hideStatus();
+          var res = document.getElementById("phcResults");
+          var actionRow = document.getElementById("phcActionRow");
+          if(res) res.style.display = "none";
+          if(actionRow) actionRow.style.display = "flex";
+        });
+
+        // CTA from results to lead modal
+        var openLead = document.getElementById("phcOpenLead");
+        if(openLead) openLead.addEventListener("click", function(){
+          closePHCModal();
+          if(typeof window.__openLeadModal === "function") window.__openLeadModal();
+        });
+
+        // Escape closes PHC
+        document.addEventListener("keydown", function(e){
+          if(e.key === "Escape") closePHCModal();
+        });
+
+        // Init state
+        resetPHC();
+
+        // Allow deep link
+        if(location.hash === "#phc") openPHCModal();
       });
 
-      if(input){
-        input.addEventListener('input', function(){
-          if(String(input.value||'').trim() === '/options'){
-            input.value = '';
-            addMsg('user', '/options');
-            addMsg('bot', 'Opening Check My Options…');
-            openOptions();
-          }
+      // Expose if needed
+      window.__openPHCModal = openPHCModal;
+      window.__closePHCModal = closePHCModal;
+      window.__PHCReset = resetPHC;
+    })();
+  </script>
+
+  <!-- Disclaimer modal -->
+  <script>
+    (function(){
+      function open(){
+        var o = document.getElementById("discOverlay");
+        var m = document.getElementById("discModal");
+        if(o) o.style.display = "block";
+        if(m) m.style.display = "flex";
+        document.body.classList.add("modal-open");
+        document.body.style.overflow = "hidden";
+      }
+      function close(){
+        var o = document.getElementById("discOverlay");
+        var m = document.getElementById("discModal");
+        if(o) o.style.display = "none";
+        if(m) m.style.display = "none";
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = "";
+      }
+
+      document.addEventListener("DOMContentLoaded", function(){
+        var openBtn = document.getElementById("openDisclaimer");
+        var overlay = document.getElementById("discOverlay");
+        var close1 = document.getElementById("discClose");
+        var close2 = document.getElementById("discClose2");
+        var accept = document.getElementById("discAccept");
+
+        if(openBtn){
+          openBtn.addEventListener("click", open);
+          openBtn.addEventListener("touchend", function(e){ e.preventDefault(); open(); }, {passive:false});
+        }
+        if(overlay) overlay.addEventListener("click", close);
+        if(close1) close1.addEventListener("click", close);
+        if(close2) close2.addEventListener("click", close);
+        if(accept) accept.addEventListener("click", close);
+
+        document.addEventListener("keydown", function(e){
+          if(e.key === "Escape") close();
         });
+      });
+    })();
+  </script>
+
+  <!-- Agent dropdown + language placeholder -->
+  <script>
+    (function(){
+      function toggle(el){
+        if(!el) return;
+        el.style.display = (el.style.display === "block") ? "none" : "block";
       }
 
-      // === Basic inline tests (adds coverage; safe in production) ===
-      assert(looksLikeEmail('a@b.co') === true, 'looksLikeEmail should accept a@b.co');
-      assert(looksLikeEmail('not-an-email') === false, 'looksLikeEmail should reject invalid strings');
-      assert(typeof localReply('hail deductible') === 'string', 'localReply returns a string');
-    });
-  })();
-</script>
-<!-- ================= PHC ANSWERS CAPTURE + LEAD FORM INTEGRATION (DROP-IN REPLACEMENT) ================= -->
-  (function () {
-    // 0) Canonical PHC store (your PHC scoring script can keep using this)
-    window.PHC = window.PHC || { answers: {}, result: {} };
-
-    function onReady(fn){
-      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
-      else fn();
-    }
-
-    function safeJson(obj){
-      try { return JSON.stringify(obj || {}); } catch(_) { return "{}"; }
-    }
-
-    function ensureHidden(form, name, value){
-      if (!form) return null;
-      var el = form.querySelector('input[name="' + name + '"]');
-      if (!el){
-        el = document.createElement("input");
-        el.type = "hidden";
-        el.name = name;
-        form.appendChild(el);
+      function openLang(){
+        var o = document.getElementById("langOverlay");
+        var m = document.getElementById("langModal");
+        if(o) o.style.display = "block";
+        if(m) m.style.display = "flex";
+        document.body.classList.add("modal-open");
+        document.body.style.overflow = "hidden";
       }
-      if (value !== undefined) el.value = String(value);
-      return el;
-    }
+      function closeLang(){
+        var o = document.getElementById("langOverlay");
+        var m = document.getElementById("langModal");
+        if(o) o.style.display = "none";
+        if(m) m.style.display = "none";
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = "";
+      }
 
-    function updateHiddenFromPHC(){
-      var form = document.getElementById("leadForm");
-      if (!form) return;
+      document.addEventListener("DOMContentLoaded", function(){
+        var agentToggle = document.getElementById("agentToggle");
+        var agentPanel = document.getElementById("agentPanel");
+        if(agentToggle) agentToggle.addEventListener("click", function(){ toggle(agentPanel); });
 
-      // Always request a prospect confirmation email from Apps Script (backend decides what to do)
-      ensureHidden(form, "sendConfirmation", "1");
+        var langBtn = document.getElementById("langBtn");
+        var langOverlay = document.getElementById("langOverlay");
+        var langClose = document.getElementById("langClose");
 
-      // Sync PHC result summary (these map to your Apps Script columns)
-      var r = window.PHC && window.PHC.result ? window.PHC.result : {};
-      ensureHidden(form, "policyHealthScore",    (r.score ?? ""));
-      ensureHidden(form, "policyHealthLabel",    (r.label ?? ""));
-      ensureHidden(form, "policyHealthTriggers", (r.triggers ?? ""));
-      ensureHidden(form, "policyHealthCtaText",  (r.ctaText ?? ""));
+        if(langBtn) langBtn.addEventListener("click", openLang);
+        if(langOverlay) langOverlay.addEventListener("click", closeLang);
+        if(langClose) langClose.addEventListener("click", closeLang);
 
-      // Sync PHC answers JSON
-      var a = window.PHC && window.PHC.answers ? window.PHC.answers : {};
-      ensureHidden(form, "policyHealthAnswers", safeJson(a));
-    }
-
-    // 1) Public helper you can call from anywhere (optional)
-    window.syncPhcToLeadForm = updateHiddenFromPHC;
-
-    // 2) Optional: granular answer capture (if you want to call it during taps)
-    // Example: setPhcAnswer('q1_changes', 'Any life changes?', 'Moved', 'Moved')
-    window.setPhcAnswer = function(questionId, questionText, answerValue, answerLabel){
-      window.PHC.answers = window.PHC.answers || {};
-      window.PHC.answers[String(questionId || "q")] = {
-        q: String(questionText || ""),
-        v: answerValue,
-        label: answerLabel || String(answerValue ?? ""),
-        ts: new Date().toISOString()
-      };
-      updateHiddenFromPHC();
-    };
-
-    // 3) Result setter (call this when PHC finishes)
-    // Example: setPhcResult({ score: 4, label: 'Yellow', triggers: '...', ctaText: 'Continue to Options' })
-    // NOTE: Your current PHC script can also just set window.PHC.result directly; this keeps it consistent.
-    var priorSetPhcResult = window.setPhcResult;
-    window.setPhcResult = function(resultObj){
-      // If something else defined setPhcResult earlier, we still support it
-      try { if (typeof priorSetPhcResult === "function") priorSetPhcResult(resultObj); } catch(_) {}
-
-      window.PHC.result = Object.assign({ ts: new Date().toISOString() }, (resultObj || {}));
-      updateHiddenFromPHC();
-    };
-
-    // 4) Make sure hidden fields exist as soon as the page loads
-    onReady(function(){
-      updateHiddenFromPHC();
-
-      // Also keep in sync if someone opens the lead modal after PHC completion
-      // (lightweight: update when the lead modal becomes visible)
-      var modal = document.getElementById("modal");
-      if (modal && window.MutationObserver){
-        var obs = new MutationObserver(function(){
-          // If modal is opened (flex), refresh hidden fields right then
-          if (modal.style && modal.style.display === "flex") updateHiddenFromPHC();
+        // simple selection highlight (placeholder)
+        document.querySelectorAll("#langModal .opt").forEach(function(opt){
+          opt.addEventListener("click", function(){
+            document.querySelectorAll("#langModal .opt").forEach(function(o){ o.classList.remove("selected"); });
+            opt.classList.add("selected");
+            // In a future step we can apply translations + persist to localStorage
+          });
         });
-        obs.observe(modal, { attributes:true, attributeFilter:["style"] });
-      }
-    });
-  })();
-</script>
-<!-- ================= END PHC ANSWERS CAPTURE + LEAD FORM INTEGRATION ================= -->
 
+        document.addEventListener("keydown", function(e){
+          if(e.key === "Escape") closeLang();
+        });
+      });
+    })();
+  </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
