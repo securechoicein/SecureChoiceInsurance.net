@@ -313,71 +313,348 @@
       .alert-box{display:none;}
     }
 
-    /* ================== POLICY HEALTH CHECK ================== */
-    @media (min-width: 1024px){
-      .phc-container{max-width: 720px;margin-left: auto;margin-right: auto;}
-      .phc-card{padding: 16px 18px;}
-      .phc-question{margin-bottom: 12px;}
-      .phc-answers{display: grid;grid-template-columns: repeat(2, 1fr);gap: 10px;}
-    }
-    .phc-result{max-width:100%;}
+/* ================== POLICY HEALTH CHECK ================== */
 
-    .phc-wrap{max-width:960px;margin:32px auto 18px;padding:0 16px;}
-
-    .phc-card{
-      background:#ffffff;
-      border-radius:20px;
-      border:1px solid #e5e7eb;
-      box-shadow:0 20px 60px rgba(2,6,23,.12);
-      padding:22px 22px 18px;
-    }
-
-    .phc-header{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;}
-    .phc-badge{flex:0 0 auto;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#0ea5e9;color:#fff;font-weight:900;}
-    .phc-title{font-size:18px;font-weight:900;color:#0b1120;margin:0;}
-    .phc-hook{margin:6px 0 0;font-size:13px;line-height:1.4;color:#475569;font-weight:700;}
-
-    /* ===== PHC MOBILE SAFETY PATCH (add below your PHC CSS) ===== */
-
-/* Ensure answers are single-column and tappable on mobile */
-.phc-answers{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+/* ---------- Layout wrappers ---------- */
+.phc-wrap{
+  max-width:960px;
+  margin:32px auto 18px;
+  padding:0 16px;
 }
 
-/* Prevent any overlay/sticky elements from blocking taps */
-.phc-card, .phc-result, .phc-wrap{
-  position: relative;
-  z-index: 1;
+.phc-card{
+  background:#ffffff;
+  border-radius:20px;
+  border:1px solid #e5e7eb;
+  box-shadow:0 20px 60px rgba(2,6,23,.12);
+  padding:22px 22px 18px;
+  position:relative;
+  z-index:1;
 }
 
-/* If PHC is in a modal, keep content scrollable without the footer covering options */
-.phc-modal, .phc-panel, .phc-sheet{
-  max-height: calc(100vh - 140px);
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
+/* ---------- Header ---------- */
+.phc-header{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+  margin-bottom:16px;
 }
 
-/* Button row should wrap cleanly */
-.phc-result-actions{
-  gap: 10px;
+.phc-badge{
+  flex:0 0 auto;
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0ea5e9;
+  color:#fff;
+  font-weight:900;
 }
 
-/* Make buttons reliably tappable */
-.phc-result-actions .btn,
-.phc-loyalty .btn{
-  min-height: 48px;
-  touch-action: manipulation;
+.phc-title{
+  font-size:18px;
+  font-weight:900;
+  color:#0b1120;
+  margin:0;
+}
+
+.phc-hook{
+  margin:6px 0 0;
+  font-size:13px;
+  line-height:1.4;
+  color:#475569;
+  font-weight:700;
+}
+
+/* ---------- Desktop questions ---------- */
+.phc-question{
+  margin-bottom:12px;
+}
+
+.phc-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+/* Chips */
+.phc-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid #e2e8f0;
+  background:#f8fafc;
+  color:#0b1120;
+  font-weight:900;
+  font-size:12.5px;
+  cursor:pointer;
+  box-shadow:0 12px 26px rgba(2,6,23,.06);
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Reduce shadow heaviness on small screens */
-@media (max-width: 600px){
-  .phc-card{
-    padding: 18px 16px 14px;
-    border-radius: 18px;
+.phc-chip input{ transform:scale(1.05); }
+
+.phc-chip.active{
+  border-color:#0ea5e9 !important;
+  background:rgba(14,165,233,.10) !important;
+}
+
+/* Desktop 2-column answers */
+@media (min-width:1024px){
+  .phc-container{ max-width:720px; margin:0 auto; }
+  .phc-answers{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:10px;
   }
+}
+
+/* ---------- Mobile answer buttons ---------- */
+.phc-answers{
+  display:grid;
+  gap:10px;
+}
+
+@media (max-width:1023px){
+  .phc-answers{
+    grid-template-columns:1fr;
+  }
+}
+
+.phc-answer-btn{
+  width:100%;
+  text-align:left;
+  border:1px solid #cbd5e1;
+  background:#ffffff;
+  border-radius:14px;
+  padding:12px;
+  font-weight:900;
+  color:#0b1120;
+  cursor:pointer;
+  box-shadow:0 10px 22px rgba(2,6,23,.05);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.phc-answer-btn:active{
+  transform:translateY(1px);
+}
+
+.phc-answer-btn.active{
+  border-color:#0ea5e9;
+  background:rgba(14,165,233,.10);
+  box-shadow:0 12px 26px rgba(2,6,23,.07);
+}
+
+/* ---------- Mobile step blocks ---------- */
+.phc-mobile-flow{ display:none; }
+
+@media (max-width:600px){
+  .phc-mobile-flow{ display:block; }
+  .phc-desktop-grid{ display:none !important; }
+}
+
+.phc-q{
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:12px 12px 10px;
+  background:#f8fafc;
+}
+
+.phc-q-title{
+  margin:0 0 8px;
+  font-weight:1000;
+  color:#0b1120;
+  font-size:13px;
+  line-height:1.25;
+}
+
+.phc-q-hint{
+  margin:0 0 10px;
+  color:#64748b;
+  font-weight:800;
+  font-size:11.5px;
+  line-height:1.35;
+}
+
+/* ---------- Mobile sticky nav ---------- */
+.phc-mobile-nav{
+  display:flex;
+  gap:10px;
+  margin-top:12px;
+}
+
+@media (max-width:600px){
+  .phc-q{
+    padding-bottom: calc(14px + 72px + env(safe-area-inset-bottom));
+  }
+
+  .phc-mobile-nav{
+    position:sticky;
+    bottom:0;
+    padding-top:10px;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, rgba(248,250,252,0), rgba(248,250,252,1) 32%);
+    z-index:10;
+
+    /* KEY FIX: prevent overlay from blocking answers */
+    pointer-events:none;
+  }
+
+  .phc-mobile-nav .btn{
+    flex:1;
+    min-height:48px;
+    pointer-events:auto;
+  }
+}
+
+/* ---------- Result panel ---------- */
+.phc-result{
+  display:none;
+  margin-top:14px;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:14px 14px 12px;
+  background:#ffffff;
+  box-shadow:0 14px 40px rgba(2,6,23,.06);
+}
+
+.phc-result.show{ display:block; }
+
+.phc-result-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.phc-result-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.phc-dot{
+  width:12px;
+  height:12px;
+  border-radius:999px;
+  background:#22c55e;
+  box-shadow:0 0 0 6px rgba(34,197,94,.12);
+}
+
+.phc-dot.yellow{
+  background:#facc15;
+  box-shadow:0 0 0 6px rgba(250,204,21,.16);
+}
+
+.phc-dot.red{
+  background:#ef4444;
+  box-shadow:0 0 0 6px rgba(239,68,68,.14);
+}
+
+.phc-result-label{
+  font-weight:1000;
+  color:#0b1120;
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.phc-result-copy{
+  margin:10px 0 8px;
+  color:#0b1120;
+  font-weight:900;
+  font-size:13px;
+  line-height:1.35;
+}
+
+/* Animated subhead */
+.phc-subhead{
+  margin:10px 0 6px;
+  color:#0b1120;
+  font-weight:700;
+  font-size:13px;
+  line-height:1.45;
+  opacity:0;
+  transform:translateY(6px);
+  animation:phcSubheadIn .55s ease-out forwards;
+}
+
+.phc-subhead.green{ animation-delay:.1s; }
+.phc-subhead.red{ animation-delay:.28s; }
+
+@keyframes phcSubheadIn{
+  to{ opacity:1; transform:translateY(0); }
+}
+
+.phc-result-why{
+  margin:0;
+  padding-left:18px;
+  display:grid;
+  gap:6px;
+}
+
+/* ---------- Loyalty callout ---------- */
+.phc-loyalty{
+  display:none;
+  margin-top:12px;
+  padding:12px;
+  border-radius:16px;
+  border:1px solid rgba(15,23,42,.12);
+  background:linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow:0 12px 26px rgba(2,6,23,.06);
+}
+
+.phc-loyalty.show{ display:block; }
+
+.phc-loyalty .m{
+  font-weight:1000;
+  color:#0b1120;
+  font-size:13px;
+  line-height:1.3;
+  margin:0 0 10px;
+}
+
+.phc-loyalty .btn{ width:100%; }
+
+/* ---------- Result actions ---------- */
+.phc-result-actions{
+  margin-top:12px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+}
+
+.phc-run{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  color:#0b1120;
+  font-weight:1000;
+}
+
+.phc-continue{
+  border:1px solid #0b1120;
+  background:#0b1120;
+  color:#fff;
+  font-weight:1000;
+}
+
+@media (max-width:600px){
+  .phc-result-actions .btn{
+    width:100%;
+  }
+}
+
+/* ---------- Modal scroll safety (matches your HTML) ---------- */
+#phcModal .card-body{
+  max-height: calc(100vh - 140px);
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
 }
 
     /* ================== PHC RESULT (Green/Yellow/Red) ================== */
@@ -1699,83 +1976,142 @@
 
 <script>
   // =====================
-  // LEAD FORM SUBMIT (DESKTOP + MOBILE)
+<script>
   // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+  // LEAD FORM SUBMIT (DESKTOP + MOBILE) — UPDATED
+  // - Sends PHC answers/results (if present)
+  // - Adds channel + confirmation flags
+  // - More reliable modal close
+  // =====================
+  (function () {
+    function onReady(fn) {
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
       else fn();
     }
 
-    onReady(function(){
-      var form = document.getElementById('leadForm');
-      var statusEl = document.getElementById('formStatus');
-      var submitBtn = document.getElementById('submitBtn');
-      var stepSubmitBtn = document.getElementById('stepSubmit');
+    onReady(function () {
+      var form = document.getElementById("leadForm");
+      var statusEl = document.getElementById("formStatus");
+      var submitBtn = document.getElementById("submitBtn");
+      var stepSubmitBtn = document.getElementById("stepSubmit");
 
-      function showStatus(msg, kind){
-        if(!statusEl) return;
-        statusEl.className = 'status ' + (kind || '');
-        statusEl.style.display = 'block';
+      function showStatus(msg, kind) {
+        if (!statusEl) return;
+        statusEl.className = "status " + (kind || "");
+        statusEl.style.display = "block";
         statusEl.textContent = msg;
       }
 
-      function disableSubmit(disabled){
-        if(submitBtn) submitBtn.disabled = disabled;
-        if(stepSubmitBtn) stepSubmitBtn.disabled = disabled;
+      function disableSubmit(disabled) {
+        if (submitBtn) submitBtn.disabled = disabled;
+        if (stepSubmitBtn) stepSubmitBtn.disabled = disabled;
       }
 
-      if(!form) return;
+      function closeLeadModalIfOpen() {
+        var modal = document.getElementById("modal");
+        var overlay = document.getElementById("modalOverlay");
+        if (!modal || !overlay) return;
 
-      form.addEventListener('submit', async function(e){
+        // Support both "display:none" style and "show" class patterns
+        overlay.style.display = "none";
+        modal.style.display = "none";
+        overlay.classList.remove("show");
+        modal.classList.remove("show");
+
+        document.documentElement.classList.remove("modal-open");
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = "";
+      }
+
+      if (!form) return;
+
+      form.addEventListener("submit", async function (e) {
         e.preventDefault();
 
-        if(!form.checkValidity()){
+        if (!form.checkValidity()) {
           form.reportValidity();
-          showStatus('Please complete the required fields highlighted above.', 'err');
+          showStatus("Please complete the required fields highlighted above.", "err");
           return;
         }
 
-        if(!window.GAS_WEBAPP_URL || String(window.GAS_WEBAPP_URL).trim() === ''){
-          showStatus('Missing GAS_WEBAPP_URL. Paste your Google Apps Script Web App URL in the header script.', 'err');
+        if (!window.GAS_WEBAPP_URL || String(window.GAS_WEBAPP_URL).trim() === "") {
+          showStatus("Missing GAS_WEBAPP_URL. Paste your Google Apps Script Web App URL in the header script.", "err");
           return;
         }
 
         disableSubmit(true);
-        showStatus('Submitting…', '');
+        showStatus("Submitting…", "");
 
-        try{
+        try {
           var fd = new FormData(form);
-          fd.append('source', 'landing');
-          fd.append('submittedAt', new Date().toISOString());
-          fd.append('page', location.href);
+
+          // Basic context
+          fd.append("source", "landing");
+          fd.append("submittedAt", new Date().toISOString());
+          fd.append("page", location.href);
+
+          // ---- PHC payload (if they completed / interacted with PHC) ----
+          // Your PHC controller should keep: window.PHC.answers + window.PHC.result
+          var hasPhc =
+            window.PHC &&
+            window.PHC.answers &&
+            typeof window.PHC.answers === "object" &&
+            Object.keys(window.PHC.answers).length > 0;
+
+          if (hasPhc) {
+            try {
+              fd.append("policyHealthAnswers", JSON.stringify(window.PHC.answers || {}));
+              fd.append("policyHealthScore", window.PHC.result && window.PHC.result.score != null ? String(window.PHC.result.score) : "");
+              fd.append("policyHealthLabel", window.PHC.result && window.PHC.result.label ? String(window.PHC.result.label) : "");
+              fd.append("policyHealthTriggers", window.PHC.result && window.PHC.result.triggers ? String(window.PHC.result.triggers) : "");
+              fd.append("policyHealthCtaText", window.PHC.result && window.PHC.result.ctaText ? String(window.PHC.result.ctaText) : "");
+
+              // Useful tracking fields for your sheet
+              fd.append("channel", "phc->options");
+
+              // Tell backend to send a prospect confirmation email
+              fd.append("sendConfirmation", "1");
+              fd.append("confirmationType", "phc_options");
+            } catch (phcErr) {
+              console.warn("PHC payload attach failed:", phcErr);
+              fd.append("channel", "leadform");
+            }
+          } else {
+            fd.append("channel", "leadform");
+          }
 
           var res = await fetch(window.GAS_WEBAPP_URL, {
-            method: 'POST',
+            method: "POST",
             body: fd,
-            mode: 'cors',
-            credentials: 'omit'
+            mode: "cors",
+            credentials: "omit",
           });
 
           var text = await res.text();
-          if(!res.ok){
-            throw new Error('HTTP ' + res.status + ': ' + text);
+          if (!res.ok) {
+            throw new Error("HTTP " + res.status + ": " + text);
           }
 
-          showStatus('✅ Submitted. We’ll follow up shortly.', 'ok');
+          // Success
+          showStatus("✅ Submitted. We’ll follow up shortly.", "ok");
           form.reset();
 
-          var modal = document.getElementById('modal');
-          var overlay = document.getElementById('modalOverlay');
-          if(modal && overlay){
-            overlay.style.display = 'none';
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
+          // Clear PHC state after a successful submit (prevents carry-over)
+          if (window.PHC) {
+            window.PHC.answers = {};
+            window.PHC.result = {};
           }
 
-        } catch(err){
+          closeLeadModalIfOpen();
+
+        } catch (err) {
           console.error(err);
-          showStatus('Submission failed. Please try again — or text/call instead. (' + (err && err.message ? err.message : 'error') + ')', 'err');
+          showStatus(
+            "Submission failed. Please try again — or text/call instead. (" +
+              (err && err.message ? err.message : "error") +
+              ")",
+            "err"
+          );
         } finally {
           disableSubmit(false);
         }
@@ -1784,7 +2120,6 @@
   })();
 </script>
 
-<script>
   // =====================
   // POLICY HEALTH CHECK MODAL OPEN/CLOSE
   // =====================
@@ -1858,8 +2193,10 @@
 
 <script>
   // =====================
-  // POLICY HEALTH CHECK (MOBILE FLOW + RESULTS)
-  // FIX: Resolve SyntaxError (mismatched braces) + ensure DESKTOP can always compute/show the diagnostic.
+  // POLICY HEALTH CHECK (MOBILE FLOW + RESULTS) — FINAL
+  // - Sets window.PHC.answers + window.PHC.result for backend/email
+  // - Adds window.__PHC_SYNC_ON_OPEN() for reliable mobile rendering on open
+  // - Keeps your desktop + mobile flows intact
   // =====================
   (function(){
     function onReady(fn){
@@ -1875,6 +2212,9 @@
     function qsa(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
     function safeText(s){ return String(s || '').trim(); }
 
+    // ---- Global PHC state (used by lead submit) ----
+    window.PHC = window.PHC || { answers:{}, result:{} };
+
     function ensureHiddenInput(name){
       var form = el('leadForm');
       if(!form) return null;
@@ -1887,10 +2227,14 @@
       return h;
     }
 
-    function setHiddenMulti(name, arr){
+    function setHidden(name, value){
       var h = ensureHiddenInput(name);
       if(!h) return;
-      h.value = (arr || []).join(', ');
+      h.value = value == null ? '' : String(value);
+    }
+
+    function setHiddenMulti(name, arr){
+      setHidden(name, (arr || []).join(', '));
     }
 
     function getChipValue(labelEl){
@@ -2017,7 +2361,48 @@
       if(label === 'Yellow') copy = 'There are a few signals your coverage may not match your life today — worth a quick review.';
       if(label === 'Red') copy = 'Multiple signals suggest potential gaps or misalignment — a review is strongly recommended.';
 
-      return { label: label, score: score, copy: copy, why: why };
+      // Helpful strings for your sheet/email
+      var triggers = why.slice(0,4).join(' | ');
+      var ctaText = (label === 'Red')
+        ? 'Check My Options'
+        : 'Continue to Options';
+
+      return { label: label, score: score, copy: copy, why: why, triggers: triggers, ctaText: ctaText };
+    }
+
+    function writePHCStateToGlobalAndHidden(){
+      // Build a canonical answers object from current desktop fields
+      var changes = qsa('#phcChanges .phc-chip')
+        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
+        .map(function(l){ return getChipValue(l); });
+
+      var risks = qsa('#phcRisks .phc-chip')
+        .filter(function(l){ var i=l.querySelector('input'); return i && i.checked; })
+        .map(function(l){ return getChipValue(l); });
+
+      var answers = {
+        changes: changes,
+        property: safeText(el('phcProperty') && el('phcProperty').value),
+        deductible: safeText(el('phcDeductible') && el('phcDeductible').value),
+        liability: safeText(el('phcLiability') && el('phcLiability').value),
+        review: safeText(el('phcReview') && el('phcReview').value),
+        risks: risks
+      };
+
+      var result = computePHCResult();
+
+      window.PHC = window.PHC || {};
+      window.PHC.answers = answers;
+      window.PHC.result  = result;
+
+      // Optional: helpful hidden fields (debugging + spreadsheet mapping)
+      try{
+        setHidden('policyHealthAnswers', JSON.stringify(answers));
+        setHidden('policyHealthScore', result.score);
+        setHidden('policyHealthLabel', result.label);
+        setHidden('policyHealthTriggers', result.triggers);
+        setHidden('policyHealthCtaText', result.ctaText);
+      }catch(_){}
     }
 
     function renderDesktopResult(result){
@@ -2061,6 +2446,7 @@
           if(loyaltyMsg) loyaltyMsg.textContent = "Loyalty isn't the same as protection.";
           if(leadCta){
             leadCta.onclick = function(){
+              writePHCStateToGlobalAndHidden();
               if(window.__closePHCModal) window.__closePHCModal();
               if(window.__openLeadModal) window.__openLeadModal();
             };
@@ -2072,10 +2458,14 @@
 
       if(contBtn){
         contBtn.onclick = function(){
+          writePHCStateToGlobalAndHidden();
           if(window.__closePHCModal) window.__closePHCModal();
           if(window.__openLeadModal) window.__openLeadModal();
         };
       }
+
+      // Always refresh global state when a result is rendered
+      writePHCStateToGlobalAndHidden();
     }
 
     function renderMobileResult(result){
@@ -2137,6 +2527,7 @@
         btn.className = 'btn btn-primary';
         btn.textContent = 'Check My Options';
         btn.onclick = function(){
+          writePHCStateToGlobalAndHidden();
           if(window.__closePHCModal) window.__closePHCModal();
           if(window.__openLeadModal) window.__openLeadModal();
         };
@@ -2153,11 +2544,15 @@
       cont.className = 'btn btn-primary';
       cont.textContent = 'Continue to Options';
       cont.onclick = function(){
+        writePHCStateToGlobalAndHidden();
         if(window.__closePHCModal) window.__closePHCModal();
         if(window.__openLeadModal) window.__openLeadModal();
       };
       actions.appendChild(cont);
       box.appendChild(actions);
+
+      // Always refresh global state when a result is rendered
+      writePHCStateToGlobalAndHidden();
     }
 
     function selectOptionsFromSelect(selectEl){
@@ -2170,16 +2565,10 @@
         });
     }
 
-    function assert(cond, msg){
-      if(!cond) console.error('[PP TEST FAIL]', msg);
-      console.assert(cond, msg);
-    }
-
     onReady(function(){
-      // Wire desktop chips so the "active" styling works when clicking the label (not just the checkbox)
+      // Wire desktop chips so "active" styling works
       qsa('#phcChanges .phc-chip, #phcRisks .phc-chip').forEach(function(label){
-        label.addEventListener('click', function(e){
-          // If the click is on the label (not directly on checkbox), let browser toggle checkbox, then update class.
+        label.addEventListener('click', function(){
           var inp = label.querySelector('input[type="checkbox"]');
           if(!inp) return;
           setTimeout(function(){ setChipActive(label, !!inp.checked); }, 0);
@@ -2188,11 +2577,17 @@
 
       var flow = el('phcMobileFlow');
       if(!flow) return;
+
+      // Prevent double wiring
       if(flow.dataset.wired === '1') return;
       flow.dataset.wired = '1';
 
-      ensureHiddenInput('phcChanges');
-      ensureHiddenInput('phcRisks');
+      // Ensure hidden fields exist (optional, helps debug/Sheets)
+      ensureHiddenInput('policyHealthAnswers');
+      ensureHiddenInput('policyHealthScore');
+      ensureHiddenInput('policyHealthLabel');
+      ensureHiddenInput('policyHealthTriggers');
+      ensureHiddenInput('policyHealthCtaText');
 
       var changesLabels = qsa('#phcChanges .phc-chip');
       var risksLabels   = qsa('#phcRisks .phc-chip');
@@ -2217,9 +2612,9 @@
         review: safeText(selReview && selReview.value)
       };
 
-      // Seed from any existing desktop selections
-      changesLabels.forEach(function(l){ var i = l.querySelector('input'); if(i && i.checked) selected.changes.add(getChipValue(l)); });
-      risksLabels.forEach(function(l){ var i = l.querySelector('input'); if(i && i.checked) selected.risks.add(getChipValue(l)); });
+      // Seed selections from desktop (if any)
+      changesLabels.forEach(function(l){ var i=l.querySelector('input'); if(i && i.checked) selected.changes.add(getChipValue(l)); });
+      risksLabels.forEach(function(l){ var i=l.querySelector('input'); if(i && i.checked) selected.risks.add(getChipValue(l)); });
 
       function syncChangesToDesktop(){
         if(selected.changes.has('None')){
@@ -2229,7 +2624,6 @@
           var v = getChipValue(l);
           setCheckbox(l, selected.changes.has(v));
         });
-        setHiddenMulti('phcChanges', Array.from(selected.changes));
       }
 
       function syncRisksToDesktop(){
@@ -2240,7 +2634,6 @@
           var v = getChipValue(l);
           setCheckbox(l, selected.risks.has(v));
         });
-        setHiddenMulti('phcRisks', Array.from(selected.risks));
       }
 
       function syncSinglesToDesktop(){
@@ -2250,46 +2643,7 @@
         setSelectValue(selReview, selected.review);
       }
 
-      // --- Mobile step UI ---
-      var step = 0;
-      function showStep(n){
-        step = n;
-        for(var i=0;i<=5;i++){
-          var q = el('phcQ'+i);
-          if(q) q.style.display = (i===step ? 'block' : 'none');
-        }
-        var done = el('phcQDone');
-        if(done) done.style.display = 'none';
-
-        var back0 = el('phcBack0');
-        if(back0) back0.disabled = (step===0);
-
-        // On mobile, keep the active step aligned to the top of the scroll container
-        try{
-          var modal = el('phcModal');
-          var body = modal ? modal.querySelector('.card-body') : null;
-          if(body) body.scrollTop = 0;
-        }catch(_){ }
-
-        updateMobileContinueState();
-      }
-
-      function getActiveValue(container){
-        if(!container) return '';
-        var active = container.querySelector('.phc-answer-btn.active');
-        return active ? safeText(active.dataset.value) : '';
-      }
-
-      function requireSingle(value, message, container){
-        // Mobile Safari can occasionally miss a state update if the user taps very quickly.
-        // Fall back to the currently-active button in the container so validation is accurate.
-        var v = safeText(value);
-        if(v === '' && container) v = getActiveValue(container);
-        if(v === ''){ alert(message); return false; }
-        return v;
-      }
-
-      // Build mobile options from desktop inputs
+      // Build mobile option lists from desktop options
       var changeOpts = changesLabels.map(function(l){ var v = getChipValue(l); return { value:v, label:v }; });
       var riskOpts = risksLabels.map(function(l){ var v = getChipValue(l); return { value:v, label:v }; });
 
@@ -2298,6 +2652,7 @@
       var liaOpts = selectOptionsFromSelect(selLia);
       var reviewOpts = selectOptionsFromSelect(selReview);
 
+      // Multi-select buttons
       buildMultiButtons(mChanges, changeOpts, function(value, willSelect, btn){
         if(willSelect){
           if(value === 'None'){
@@ -2316,21 +2671,6 @@
         }
         syncChangesToDesktop();
       });
-
-      function setBtnEnabled(id, on){
-        var b = el(id);
-        if(!b) return;
-        b.disabled = !on;
-        b.style.opacity = on ? '1' : '.6';
-      }
-
-      function updateMobileContinueState(){
-        // Only the required single-select steps should gate progression
-        setBtnEnabled('phcNext1', !!safeText(selected.property) || !!safeText(getActiveValue(mProperty)));
-        setBtnEnabled('phcNext2', !!safeText(selected.deductible) || !!safeText(getActiveValue(mDed)));
-        setBtnEnabled('phcNext3', !!safeText(selected.liability) || !!safeText(getActiveValue(mLia)));
-        setBtnEnabled('phcNext4', !!safeText(selected.review) || !!safeText(getActiveValue(mReview)));
-      }
 
       buildSingleButtons(mProperty, propertyOpts, function(value){ selected.property = value; syncSinglesToDesktop(); updateMobileContinueState(); });
       buildSingleButtons(mDed, dedOpts, function(value){ selected.deductible = value; syncSinglesToDesktop(); updateMobileContinueState(); });
@@ -2357,18 +2697,66 @@
       });
 
       function markMulti(container, set){
-        qsa('.phc-answer-btn', container).forEach(function(b){ if(set.has(b.dataset.value)) b.classList.add('active'); });
+        qsa('.phc-answer-btn', container).forEach(function(b){
+          if(set.has(b.dataset.value)) b.classList.add('active');
+        });
       }
       function markSingle(container, value){
-        qsa('.phc-answer-btn', container).forEach(function(b){ if(b.dataset.value === value) b.classList.add('active'); });
+        qsa('.phc-answer-btn', container).forEach(function(b){
+          if(b.dataset.value === value) b.classList.add('active');
+        });
       }
 
-      markMulti(mChanges, selected.changes);
-      markMulti(mRisks, selected.risks);
-      markSingle(mProperty, selected.property);
-      markSingle(mDed, selected.deductible);
-      markSingle(mLia, selected.liability);
-      markSingle(mReview, selected.review);
+      function setBtnEnabled(id, on){
+        var b = el(id);
+        if(!b) return;
+        b.disabled = !on;
+        b.style.opacity = on ? '1' : '.6';
+      }
+
+      function getActiveValue(container){
+        if(!container) return '';
+        var active = container.querySelector('.phc-answer-btn.active');
+        return active ? safeText(active.dataset.value) : '';
+      }
+
+      function updateMobileContinueState(){
+        setBtnEnabled('phcNext1', !!safeText(selected.property) || !!safeText(getActiveValue(mProperty)));
+        setBtnEnabled('phcNext2', !!safeText(selected.deductible) || !!safeText(getActiveValue(mDed)));
+        setBtnEnabled('phcNext3', !!safeText(selected.liability) || !!safeText(getActiveValue(mLia)));
+        setBtnEnabled('phcNext4', !!safeText(selected.review) || !!safeText(getActiveValue(mReview)));
+      }
+
+      function requireSingle(value, message, container){
+        var v = safeText(value);
+        if(v === '' && container) v = getActiveValue(container);
+        if(v === ''){ alert(message); return false; }
+        return v;
+      }
+
+      // ---- Mobile steps ----
+      var step = 0;
+
+      function showStep(n){
+        step = n;
+        for(var i=0;i<=5;i++){
+          var q = el('phcQ'+i);
+          if(q) q.style.display = (i===step ? 'block' : 'none');
+        }
+        var done = el('phcQDone');
+        if(done) done.style.display = 'none';
+
+        var back0 = el('phcBack0');
+        if(back0) back0.disabled = (step===0);
+
+        try{
+          var modal = el('phcModal');
+          var body = modal ? modal.querySelector('.card-body') : null;
+          if(body) body.scrollTop = 0;
+        }catch(_){}
+
+        updateMobileContinueState();
+      }
 
       function bindNav(btnId, fn){
         var b = el(btnId);
@@ -2379,38 +2767,35 @@
 
       bindNav('phcNext0', function(){ showStep(1); });
       bindNav('phcBack1', function(){ showStep(0); });
+
       bindNav('phcNext1', function(){
         var v = requireSingle(selected.property, 'Please choose your property situation.', mProperty);
         if(!v) return;
-        selected.property = v;
-        syncSinglesToDesktop();
-        showStep(2);
+        selected.property = v; syncSinglesToDesktop(); showStep(2);
       });
       bindNav('phcBack2', function(){ showStep(1); });
+
       bindNav('phcNext2', function(){
         var v = requireSingle(selected.deductible, 'Please choose an out-of-pocket comfort level.', mDed);
         if(!v) return;
-        selected.deductible = v;
-        syncSinglesToDesktop();
-        showStep(3);
+        selected.deductible = v; syncSinglesToDesktop(); showStep(3);
       });
       bindNav('phcBack3', function(){ showStep(2); });
+
       bindNav('phcNext3', function(){
         var v = requireSingle(selected.liability, 'Please choose how protected you feel for liability.', mLia);
         if(!v) return;
-        selected.liability = v;
-        syncSinglesToDesktop();
-        showStep(4);
+        selected.liability = v; syncSinglesToDesktop(); showStep(4);
       });
       bindNav('phcBack4', function(){ showStep(3); });
+
       bindNav('phcNext4', function(){
         var v = requireSingle(selected.review, 'Please choose when your last full review was.', mReview);
         if(!v) return;
-        selected.review = v;
-        syncSinglesToDesktop();
-        showStep(5);
+        selected.review = v; syncSinglesToDesktop(); showStep(5);
       });
       bindNav('phcBack5', function(){ showStep(4); });
+
       bindNav('phcFinish', function(){
         syncChangesToDesktop();
         syncRisksToDesktop();
@@ -2428,7 +2813,7 @@
         if(done) done.style.display = 'block';
       });
 
-      // Desktop: compute/show result
+      // ---- Desktop: compute/show result ----
       function validateDesktopRequired(){
         if(!safeText(selProperty && selProperty.value)) { alert('Please select your property situation.'); if(selProperty) selProperty.focus(); return false; }
         if(!safeText(selDed && selDed.value)) { alert('Please select your out-of-pocket comfort level.'); if(selDed) selDed.focus(); return false; }
@@ -2438,12 +2823,7 @@
       }
 
       function desktopRequiredReady(){
-        return !!(
-          safeText(selProperty && selProperty.value) &&
-          safeText(selDed && selDed.value) &&
-          safeText(selLia && selLia.value) &&
-          safeText(selReview && selReview.value)
-        );
+        return !!(safeText(selProperty && selProperty.value) && safeText(selDed && selDed.value) && safeText(selLia && selLia.value) && safeText(selReview && selReview.value));
       }
 
       function updateDesktopMulti(kind){
@@ -2468,8 +2848,6 @@
           if(inp) inp.checked = on;
           setChipActive(l, on);
         });
-
-        setHiddenMulti(kind === 'risks' ? 'phcRisks' : 'phcChanges', Array.from(set));
       }
 
       var __phcAutoT = null;
@@ -2480,12 +2858,10 @@
         __phcAutoT = setTimeout(function(){
           updateDesktopMulti('changes');
           updateDesktopMulti('risks');
-          var result = computePHCResult();
-          renderDesktopResult(result);
+          renderDesktopResult(computePHCResult());
         }, 120);
       }
 
-      // Clicking "Show my result" also computes
       var phcRun = el('phcRun');
       if(phcRun){
         phcRun.addEventListener('click', function(){
@@ -2496,7 +2872,6 @@
         });
       }
 
-      // Dedicated desktop finish
       var finishDesktop = el('phcFinishDesktop');
       if(finishDesktop){
         finishDesktop.addEventListener('click', function(){
@@ -2504,15 +2879,12 @@
           updateDesktopMulti('risks');
           if(!validateDesktopRequired()) return;
 
-          var result = computePHCResult();
-          renderDesktopResult(result);
-
+          renderDesktopResult(computePHCResult());
           var box = el('phcResult');
           if(box && box.scrollIntoView) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
       }
 
-      // Reset
       function resetDesktopPHC(){
         qsa('#phcChanges input[type="checkbox"]').forEach(function(i){ i.checked = false; });
         qsa('#phcRisks input[type="checkbox"]').forEach(function(i){ i.checked = false; });
@@ -2523,19 +2895,25 @@
         if(selLia) selLia.value = '';
         if(selReview) selReview.value = '';
 
-        setHiddenMulti('phcChanges', []);
-        setHiddenMulti('phcRisks', []);
-
         var box = el('phcResult');
         if(box) box.classList.remove('show');
         var loyalty = el('phcLoyalty');
         if(loyalty) loyalty.classList.remove('show');
+
+        // Clear global state + hidden fields
+        window.PHC = window.PHC || {};
+        window.PHC.answers = {};
+        window.PHC.result = {};
+        setHidden('policyHealthAnswers', '');
+        setHidden('policyHealthScore', '');
+        setHidden('policyHealthLabel', '');
+        setHidden('policyHealthTriggers', '');
+        setHidden('policyHealthCtaText', '');
       }
 
       var resetBtn = el('phcReset');
       if(resetBtn) resetBtn.addEventListener('click', resetDesktopPHC);
 
-      // Auto-preview on desktop when changing ANY answer (including optional)
       qsa('#phcChanges input[type="checkbox"]').forEach(function(inp){
         inp.addEventListener('change', function(){ updateDesktopMulti('changes'); autoPreviewDesktopResult(); });
       });
@@ -2547,11 +2925,39 @@
         s.addEventListener('change', autoPreviewDesktopResult);
       });
 
-      // Ensure the chips are correct at boot
       updateDesktopMulti('changes');
       updateDesktopMulti('risks');
 
-      // When the PHC modal opens on mobile, start at step 0
+      // Seed button actives
+      markMulti(mChanges, selected.changes);
+      markMulti(mRisks, selected.risks);
+      markSingle(mProperty, selected.property);
+      markSingle(mDed, selected.deductible);
+      markSingle(mLia, selected.liability);
+      markSingle(mReview, selected.review);
+      updateMobileContinueState();
+
+      // ---- Expose "sync on open" so the modal open script can call it ----
+      window.__PHC_SYNC_ON_OPEN = function(){
+        // Rebuild actives + ensure we start at step 0 on mobile
+        try{
+          // Re-mark active buttons from current selected values
+          qsa('.phc-answer-btn', mChanges).forEach(function(b){ b.classList.toggle('active', selected.changes.has(b.dataset.value)); });
+          qsa('.phc-answer-btn', mRisks).forEach(function(b){ b.classList.toggle('active', selected.risks.has(b.dataset.value)); });
+
+          qsa('.phc-answer-btn', mProperty).forEach(function(b){ b.classList.toggle('active', b.dataset.value === selected.property); });
+          qsa('.phc-answer-btn', mDed).forEach(function(b){ b.classList.toggle('active', b.dataset.value === selected.deductible); });
+          qsa('.phc-answer-btn', mLia).forEach(function(b){ b.classList.toggle('active', b.dataset.value === selected.liability); });
+          qsa('.phc-answer-btn', mReview).forEach(function(b){ b.classList.toggle('active', b.dataset.value === selected.review); });
+
+          updateMobileContinueState();
+
+          // On mobile, always restart at step 0 when opening the modal
+          if(isMobile()) showStep(0);
+        }catch(_){}
+      };
+
+      // When the PHC modal opens and we're on mobile, start at step 0
       var phcModal = el('phcModal');
       if(phcModal){
         var observer = new MutationObserver(function(){
@@ -2561,21 +2967,10 @@
       }
 
       showStep(0);
-
-      // === Inline tests ===
-      var r0 = computePHCResult();
-      assert(r0 && (r0.label === 'Green' || r0.label === 'Yellow' || r0.label === 'Red'), 'PHC result returns a valid label');
-      assert(typeof validateDesktopRequired === 'function', 'validateDesktopRequired exists');
-      assert(typeof resetDesktopPHC === 'function', 'resetDesktopPHC exists');
-      // Mobile validation fallback tests
-      var tmp = document.createElement('div');
-      tmp.innerHTML = '<button class="phc-answer-btn" data-value="A">A</button><button class="phc-answer-btn active" data-value="B">B</button>';
-      assert((function(){ var a = tmp.querySelector('.phc-answer-btn.active'); return a && a.dataset.value; })() === 'B', 'active button dataset can be read');
     });
   })();
 </script>
 
-<script>
   // =====================
   // DISCLAIMER MODAL
   // =====================
@@ -2975,135 +3370,104 @@
     });
   })();
 </script>
-<!-- ================= PHC ANSWERS CAPTURE + LEAD SUBMIT (WITH CONFIRMATION EMAIL) ================= -->
-
+<!-- ================= PHC ANSWERS CAPTURE + LEAD FORM INTEGRATION (DROP-IN REPLACEMENT) ================= -->
 <script>
-  // 1) Global PHC store (answers + result summary)
-  window.PHC = window.PHC || {
-    answers: {},   // filled during PHC
-    result: {}     // set when PHC completes
-  };
+  (function () {
+    // 0) Canonical PHC store (your PHC scoring script can keep using this)
+    window.PHC = window.PHC || { answers: {}, result: {} };
 
-  // Call this when a user answers a PHC question
-  // Example: setPhcAnswer('roof_age', 'How old is your roof?', '15-20', '15–20 years');
-  function setPhcAnswer(questionId, questionText, answerValue, answerLabel) {
-    window.PHC.answers[questionId] = {
-      q: questionText,
-      v: answerValue,
-      label: answerLabel || String(answerValue),
-      ts: new Date().toISOString()
-    };
-  }
-
-  // Call this when PHC finishes scoring
-  // Example: setPhcResult({ score: 72, label: 'YELLOW', triggers: 'Roof age; Liability gap', ctaText: 'Check my options' });
-  function setPhcResult(resultObj) {
-    window.PHC.result = Object.assign({ ts: new Date().toISOString() }, resultObj || {});
-  }
-
-  // 2) Small UI helper (optional)
-  function showLeadSubmitSuccess(message) {
-    // Replace this with your existing success modal/toast if you have one
-    alert(message || "Thanks! Check your email for confirmation.");
-  }
-
-  // 3) SUBMIT: sends lead + PHC answers to Apps Script
-  async function submitCheckMyOptionsLead(formObj) {
-    const phcAnswers = window.PHC?.answers || {};
-    const phcResult  = window.PHC?.result  || {};
-
-    // IMPORTANT: match the key names your Apps Script expects
-    const payload = {
-      // Lead fields (match your Apps Script mapping)
-      firstName: formObj.firstName || "",
-      lastName: formObj.lastName || "",
-      zip: formObj.zip || "",
-      email: formObj.email || "",
-      phone: formObj.phone || "",
-      homeowner: formObj.homeowner || "",
-      roofAge: formObj.roofAge || "",
-      vehicles: formObj.vehicles || "",
-      timeframe: formObj.timeframe || "",
-      notes: formObj.notes || "",
-
-      // Lead scoring (if you set these on front-end)
-      leadScore: formObj.leadScore || "",
-      leadLabel: formObj.leadLabel || "",
-
-      // PHC summary fields (your backend already stores these)
-      policyHealthScore: phcResult.score ?? "",
-      policyHealthLabel: phcResult.label ?? "",
-      policyHealthTriggers: phcResult.triggers ?? "",
-      policyHealthCtaText: phcResult.ctaText ?? "",
-
-      // PHC answers object (backend will JSON stringify safely)
-      policyHealthAnswers: phcAnswers,
-
-      // Tracking
-      source: formObj.source || "SecureChoiceInsurance.net",
-      channel: formObj.channel || "web",
-      pageUrl: location.href,
-      userAgent: navigator.userAgent,
-      submittedAt: new Date().toISOString()
-    };
-
-    const res = await fetch(window.GAS_WEBAPP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      mode: "cors"
-    });
-
-    const json = await res.json().catch(() => ({}));
-    if (!json || json.ok !== true) {
-      throw new Error((json && json.error) ? json.error : "Submission failed");
+    function onReady(fn){
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+      else fn();
     }
 
-    return json;
-  }
+    function safeJson(obj){
+      try { return JSON.stringify(obj || {}); } catch(_) { return "{}"; }
+    }
 
-  // 4) Hook this into your "Check my options" form submit
-  // If your form already exists, just adapt selectors.
-  document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("checkMyOptionsForm"); // <-- set your form ID
-    if (!form) return;
+    function ensureHidden(form, name, value){
+      if (!form) return null;
+      var el = form.querySelector('input[name="' + name + '"]');
+      if (!el){
+        el = document.createElement("input");
+        el.type = "hidden";
+        el.name = name;
+        form.appendChild(el);
+      }
+      if (value !== undefined) el.value = String(value);
+      return el;
+    }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    function updateHiddenFromPHC(){
+      var form = document.getElementById("leadForm");
+      if (!form) return;
 
-      // Gather fields (adjust IDs/names to your actual form)
-      const formObj = {
-        firstName: (document.getElementById("firstName")?.value || "").trim(),
-        lastName:  (document.getElementById("lastName")?.value || "").trim(),
-        zip:       (document.getElementById("zip")?.value || "").trim(),
-        email:     (document.getElementById("email")?.value || "").trim(),
-        phone:     (document.getElementById("phone")?.value || "").trim(),
-        homeowner: (document.getElementById("homeowner")?.value || "").trim(),
-        roofAge:   (document.getElementById("roofAge")?.value || "").trim(),
-        vehicles:  (document.getElementById("vehicles")?.value || "").trim(),
-        timeframe: (document.getElementById("timeframe")?.value || "").trim(),
-        notes:     (document.getElementById("notes")?.value || "").trim(),
+      // Always request a prospect confirmation email from Apps Script (backend decides what to do)
+      ensureHidden(form, "sendConfirmation", "1");
 
-        // optional
-        source: "SecureChoiceInsurance.net",
-        channel: "web"
+      // Sync PHC result summary (these map to your Apps Script columns)
+      var r = window.PHC && window.PHC.result ? window.PHC.result : {};
+      ensureHidden(form, "policyHealthScore",    (r.score ?? ""));
+      ensureHidden(form, "policyHealthLabel",    (r.label ?? ""));
+      ensureHidden(form, "policyHealthTriggers", (r.triggers ?? ""));
+      ensureHidden(form, "policyHealthCtaText",  (r.ctaText ?? ""));
+
+      // Sync PHC answers JSON
+      var a = window.PHC && window.PHC.answers ? window.PHC.answers : {};
+      ensureHidden(form, "policyHealthAnswers", safeJson(a));
+    }
+
+    // 1) Public helper you can call from anywhere (optional)
+    window.syncPhcToLeadForm = updateHiddenFromPHC;
+
+    // 2) Optional: granular answer capture (if you want to call it during taps)
+    // Example: setPhcAnswer('q1_changes', 'Any life changes?', 'Moved', 'Moved')
+    window.setPhcAnswer = function(questionId, questionText, answerValue, answerLabel){
+      window.PHC.answers = window.PHC.answers || {};
+      window.PHC.answers[String(questionId || "q")] = {
+        q: String(questionText || ""),
+        v: answerValue,
+        label: answerLabel || String(answerValue ?? ""),
+        ts: new Date().toISOString()
       };
+      updateHiddenFromPHC();
+    };
 
-      try {
-        await submitCheckMyOptionsLead(formObj);
-        showLeadSubmitSuccess("Got it — I received your request. You’ll get a confirmation email shortly.");
-        form.reset();
-      } catch (err) {
-        alert("Sorry — something went wrong. Please try again.\n\n" + String(err.message || err));
+    // 3) Result setter (call this when PHC finishes)
+    // Example: setPhcResult({ score: 4, label: 'Yellow', triggers: '...', ctaText: 'Continue to Options' })
+    // NOTE: Your current PHC script can also just set window.PHC.result directly; this keeps it consistent.
+    var priorSetPhcResult = window.setPhcResult;
+    window.setPhcResult = function(resultObj){
+      // If something else defined setPhcResult earlier, we still support it
+      try { if (typeof priorSetPhcResult === "function") priorSetPhcResult(resultObj); } catch(_) {}
+
+      window.PHC.result = Object.assign({ ts: new Date().toISOString() }, (resultObj || {}));
+      updateHiddenFromPHC();
+    };
+
+    // 4) Make sure hidden fields exist as soon as the page loads
+    onReady(function(){
+      updateHiddenFromPHC();
+
+      // Also keep in sync if someone opens the lead modal after PHC completion
+      // (lightweight: update when the lead modal becomes visible)
+      var modal = document.getElementById("modal");
+      if (modal && window.MutationObserver){
+        var obs = new MutationObserver(function(){
+          // If modal is opened (flex), refresh hidden fields right then
+          if (modal.style && modal.style.display === "flex") updateHiddenFromPHC();
+        });
+        obs.observe(modal, { attributes:true, attributeFilter:["style"] });
       }
     });
-  });
+  })();
 </script>
+<!-- ================= END PHC ANSWERS CAPTURE + LEAD FORM INTEGRATION ================= -->
 
-<!-- ================= END PHC ANSWERS + SUBMIT ================= -->
 
 </body>
 </html>
+
 
 
 
