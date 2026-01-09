@@ -337,6 +337,49 @@
     .phc-title{font-size:18px;font-weight:900;color:#0b1120;margin:0;}
     .phc-hook{margin:6px 0 0;font-size:13px;line-height:1.4;color:#475569;font-weight:700;}
 
+    /* ===== PHC MOBILE SAFETY PATCH (add below your PHC CSS) ===== */
+
+/* Ensure answers are single-column and tappable on mobile */
+.phc-answers{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+/* Prevent any overlay/sticky elements from blocking taps */
+.phc-card, .phc-result, .phc-wrap{
+  position: relative;
+  z-index: 1;
+}
+
+/* If PHC is in a modal, keep content scrollable without the footer covering options */
+.phc-modal, .phc-panel, .phc-sheet{
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Button row should wrap cleanly */
+.phc-result-actions{
+  gap: 10px;
+}
+
+/* Make buttons reliably tappable */
+.phc-result-actions .btn,
+.phc-loyalty .btn{
+  min-height: 48px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Reduce shadow heaviness on small screens */
+@media (max-width: 600px){
+  .phc-card{
+    padding: 18px 16px 14px;
+    border-radius: 18px;
+  }
+}
+
     /* ================== PHC RESULT (Green/Yellow/Red) ================== */
     .phc-result{
       display:none;
@@ -3061,6 +3104,7 @@
 
 </body>
 </html>
+
 
 
 
