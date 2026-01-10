@@ -1317,9 +1317,11 @@
   <button class="pp-close-fab" id="closeChat" aria-label="Close chat" type="button">✕</button>
 </div>
 
-<script><script>
+</script>
+
+  <script><script>
   // =====================
-  // CHECK MY OPTIONS (CTA) - FIXED + ROBUST
+  // CHECK MY OPTIONS (CTA) - SINGLE SOURCE OF TRUTH
   // =====================
   (function () {
     function onReady(fn){
@@ -1327,122 +1329,35 @@
       else fn();
     }
 
-    function qs(id){ return document.getElementById(id); }
-
-    onReady(function () {
-      // Support multiple ways to identify the CTA
-      function findOpenButton(){
-        return (
-          qs('openFunnel') ||
-          qs('checkMyOptionsBtn') ||
-          document.querySelector('[data-open="modal"]') ||
-          document.querySelector('a[href="#options"]')
-        );
+    function openLead(){
+      if (typeof window.__openLeadModal === 'function') {
+        window.__openLeadModal();
+        return;
       }
-
-      var modal   = qs('modal') || qs('leadModal') || qs('optionsModal');
-      var overlay = qs('modalOverlay') || qs('leadOverlay') || qs('optionsOverlay');
-      var closeBtn  = qs('closeModal') || (modal ? modal.querySelector('[data-close]') : null);
-      var cancelBtn = qs('cancelBtn')  || qs('cancel') || null;
-
-      function openModal(){
-        // If you intend to open ClickFunnels instead of modal
-        if (window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== '') {
-          // Use same-tab fallback if popup blocked
-          var w = window.open(String(window.CLICKFUNNEL_URL).trim(), '_blank', 'noopener');
-          if (!w) window.location.href = String(window.CLICKFUNNEL_URL).trim();
-          return;
-        }
-
-        if (!modal || !overlay) {
-          console.error('[CTA] Missing modal/overlay. Expected ids: modal + modalOverlay (or leadModal/leadOverlay/optionsModal/optionsOverlay).',
-            { modalFound: !!modal, overlayFound: !!overlay });
-          return;
-        }
-
-        overlay.style.display = 'block';
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        document.body.classList.add('modal-open');
-      }
-
-      function closeModal(){
-        if (overlay) overlay.style.display = 'none';
-        if (modal) modal.style.display = 'none';
-        document.body.style.overflow = '';
-        document.body.classList.remove('modal-open');
-      }
-
-      // Event delegation: works even if button is re-rendered
-      document.addEventListener('click', function (e) {
-        var btn = e.target.closest('#openFunnel, #checkMyOptionsBtn, [data-open="modal"], a[href="#options"]');
-        if (btn) {
-          e.preventDefault();
-          openModal();
-          return;
-        }
-
-        // Close when clicking overlay (or any element marked data-close)
-        if (e.target.closest('#modalOverlay, #leadOverlay, #optionsOverlay, [data-close]')) {
-          closeModal();
-        }
-      });
-
-      // Dedicated close buttons
-      if (closeBtn) closeBtn.addEventListener('click', function(e){ e.preventDefault(); closeModal(); });
-      if (cancelBtn) cancelBtn.addEventListener('click', function(e){ e.preventDefault(); closeModal(); });
-
-      document.addEventListener('keydown', function(e){
-        if (e.key === 'Escape') closeModal();
-      });
-
-      // Hash open support
-      if (location.hash === '#options') openModal();
-
-      // Helpful console diagnostics
-      var openBtn = findOpenButton();
-      if (!openBtn) console.warn('[CTA] No open button found. Add id="openFunnel" or id="checkMyOptionsBtn" or data-open="modal".');
-      if (!modal) console.warn('[CTA] No modal found. Add id="modal" (or leadModal/optionsModal).');
-      if (!overlay) console.warn('[CTA] No overlay found. Add id="modalOverlay" (or leadOverlay/optionsOverlay).');
-    });
-  })();
-</script>
-
-  <script><script>
-  // =====================
-  // CHECK MY OPTIONS (CTA) - unified with __openLeadModal
-  // =====================
-  (function () {
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
+      // Fallback if __openLeadModal isn't defined for some reason
+      var modal = document.getElementById('modal');
+      var overlay = document.getElementById('modalOverlay');
+      if (overlay) overlay.style.display = 'block';
+      if (modal) modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
+      console.warn('[CTA] __openLeadModal missing; used fallback modal open.');
     }
 
     onReady(function(){
-      // Accept ANY of these selectors for the CTA
-      function isOptionsButton(el){
-        return !!el.closest('#openFunnel, #checkMyOptionsBtn, #checkMyOptions, [data-open="lead"], a[href="#options"]');
-      }
-
-      // Single handler (avoid touchend + click double-fire)
       document.addEventListener('click', function(e){
-        if(!isOptionsButton(e.target)) return;
+        var btn = e.target.closest('#openFunnel, #checkMyOptionsBtn, #checkMyOptions, [data-open="lead"], a[href="#options"]');
+        if (!btn) return;
+
         e.preventDefault();
+        e.stopPropagation(); // prevent other click handlers from hijacking
 
-        if (typeof window.__openLeadModal === 'function') {
-          window.__openLeadModal();
-        } else {
-          console.error('window.__openLeadModal is not defined. Make sure the PHC/lead modal script loads BEFORE this.');
-        }
-      });
-
-      // Hash open support
-      if(location.hash === '#options' && typeof window.__openLeadModal === 'function'){
-        window.__openLeadModal();
-      }
+        openLead();
+      }, true); // capture phase beats other handlers
     });
   })();
 </script>
+
 
   <script>
   // =====================
@@ -2896,6 +2811,7 @@
 <!-- =============== END AGENT INFO BAR =============== -->
 
 </html>
+
 
 
 
