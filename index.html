@@ -1317,221 +1317,134 @@
   <button class="pp-close-fab" id="closeChat" aria-label="Close chat" type="button">✕</button>
 </div>
 
-<script>
+<script><script>
   // =====================
-  // CHECK MY OPTIONS (CTA)
+  // CHECK MY OPTIONS (CTA) - FIXED + ROBUST
   // =====================
-  (function(){
+  (function () {
     function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
       else fn();
     }
 
-    onReady(function(){
-      var openBtn = document.getElementById('openFunnel');
-      var modal = document.getElementById('modal');
-      var overlay = document.getElementById('modalOverlay');
-      var closeBtn = document.getElementById('closeModal');
-      var cancelBtn = document.getElementById('cancelBtn');
+    function qs(id){ return document.getElementById(id); }
 
-      if(!openBtn) return;
+    onReady(function () {
+      // Support multiple ways to identify the CTA
+      function findOpenButton(){
+        return (
+          qs('openFunnel') ||
+          qs('checkMyOptionsBtn') ||
+          document.querySelector('[data-open="modal"]') ||
+          document.querySelector('a[href="#options"]')
+        );
+      }
+
+      var modal   = qs('modal') || qs('leadModal') || qs('optionsModal');
+      var overlay = qs('modalOverlay') || qs('leadOverlay') || qs('optionsOverlay');
+      var closeBtn  = qs('closeModal') || (modal ? modal.querySelector('[data-close]') : null);
+      var cancelBtn = qs('cancelBtn')  || qs('cancel') || null;
 
       function openModal(){
-        if(window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== ''){
-          window.open(window.CLICKFUNNEL_URL, '_blank', 'noopener');
+        // If you intend to open ClickFunnels instead of modal
+        if (window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== '') {
+          // Use same-tab fallback if popup blocked
+          var w = window.open(String(window.CLICKFUNNEL_URL).trim(), '_blank', 'noopener');
+          if (!w) window.location.href = String(window.CLICKFUNNEL_URL).trim();
           return;
         }
-        if(overlay) overlay.style.display = 'block';
-        if(modal) modal.style.display = 'flex';
+
+        if (!modal || !overlay) {
+          console.error('[CTA] Missing modal/overlay. Expected ids: modal + modalOverlay (or leadModal/leadOverlay/optionsModal/optionsOverlay).',
+            { modalFound: !!modal, overlayFound: !!overlay });
+          return;
+        }
+
+        overlay.style.display = 'block';
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         document.body.classList.add('modal-open');
       }
 
       function closeModal(){
-        if(overlay) overlay.style.display = 'none';
-        if(modal) modal.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
+        if (modal) modal.style.display = 'none';
         document.body.style.overflow = '';
         document.body.classList.remove('modal-open');
       }
 
-      openBtn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
-      openBtn.addEventListener('touchend', function(e){ e.preventDefault(); openModal(); }, { passive:false });
+      // Event delegation: works even if button is re-rendered
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest('#openFunnel, #checkMyOptionsBtn, [data-open="modal"], a[href="#options"]');
+        if (btn) {
+          e.preventDefault();
+          openModal();
+          return;
+        }
 
-      if(overlay) overlay.addEventListener('click', closeModal);
-      if(closeBtn) closeBtn.addEventListener('click', closeModal);
-      if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
-
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape') closeModal();
+        // Close when clicking overlay (or any element marked data-close)
+        if (e.target.closest('#modalOverlay, #leadOverlay, #optionsOverlay, [data-close]')) {
+          closeModal();
+        }
       });
 
-      if(location.hash === '#options') openModal();
+      // Dedicated close buttons
+      if (closeBtn) closeBtn.addEventListener('click', function(e){ e.preventDefault(); closeModal(); });
+      if (cancelBtn) cancelBtn.addEventListener('click', function(e){ e.preventDefault(); closeModal(); });
 
-      openBtn.style.pointerEvents = 'auto';
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') closeModal();
+      });
+
+      // Hash open support
+      if (location.hash === '#options') openModal();
+
+      // Helpful console diagnostics
+      var openBtn = findOpenButton();
+      if (!openBtn) console.warn('[CTA] No open button found. Add id="openFunnel" or id="checkMyOptionsBtn" or data-open="modal".');
+      if (!modal) console.warn('[CTA] No modal found. Add id="modal" (or leadModal/optionsModal).');
+      if (!overlay) console.warn('[CTA] No overlay found. Add id="modalOverlay" (or leadOverlay/optionsOverlay).');
     });
   })();
 </script>
 
-<script>
+  <script><script>
   // =====================
-  // LEAD FORM SUBMIT (DESKTOP + MOBILE)
+  // CHECK MY OPTIONS (CTA) - unified with __openLeadModal
   // =====================
-  (function(){
+  (function () {
     function onReady(fn){
       if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
       else fn();
     }
 
     onReady(function(){
-      var form = document.getElementById('leadForm');
-      var statusEl = document.getElementById('formStatus');
-      var submitBtn = document.getElementById('submitBtn');
-      var stepSubmitBtn = document.getElementById('stepSubmit');
-
-      function showStatus(msg, kind){
-        if(!statusEl) return;
-        statusEl.className = 'status ' + (kind || '');
-        statusEl.style.display = 'block';
-        statusEl.textContent = msg;
+      // Accept ANY of these selectors for the CTA
+      function isOptionsButton(el){
+        return !!el.closest('#openFunnel, #checkMyOptionsBtn, #checkMyOptions, [data-open="lead"], a[href="#options"]');
       }
 
-      function disableSubmit(disabled){
-        if(submitBtn) submitBtn.disabled = disabled;
-        if(stepSubmitBtn) stepSubmitBtn.disabled = disabled;
-      }
-
-      if(!form) return;
-
-      form.addEventListener('submit', async function(e){
+      // Single handler (avoid touchend + click double-fire)
+      document.addEventListener('click', function(e){
+        if(!isOptionsButton(e.target)) return;
         e.preventDefault();
 
-        if(!form.checkValidity()){
-          form.reportValidity();
-          showStatus('Please complete the required fields highlighted above.', 'err');
-          return;
-        }
-
-        if(!window.GAS_WEBAPP_URL || String(window.GAS_WEBAPP_URL).trim() === ''){
-          showStatus('Missing GAS_WEBAPP_URL. Paste your Google Apps Script Web App URL in the header script.', 'err');
-          return;
-        }
-
-        disableSubmit(true);
-        showStatus('Submitting…', '');
-
-        try{
-          var fd = new FormData(form);
-          fd.append('source', 'landing');
-          fd.append('submittedAt', new Date().toISOString());
-          fd.append('page', location.href);
-
-          var res = await fetch(window.GAS_WEBAPP_URL, {
-            method: 'POST',
-            body: fd,
-            mode: 'cors',
-            credentials: 'omit'
-          });
-
-          var text = await res.text();
-          if(!res.ok){
-            throw new Error('HTTP ' + res.status + ': ' + text);
-          }
-
-          showStatus('✅ Submitted. We’ll follow up shortly.', 'ok');
-          form.reset();
-
-          var modal = document.getElementById('modal');
-          var overlay = document.getElementById('modalOverlay');
-          if(modal && overlay){
-            overlay.style.display = 'none';
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
-          }
-
-        } catch(err){
-          console.error(err);
-          showStatus('Submission failed. Please try again — or text/call instead. (' + (err && err.message ? err.message : 'error') + ')', 'err');
-        } finally {
-          disableSubmit(false);
+        if (typeof window.__openLeadModal === 'function') {
+          window.__openLeadModal();
+        } else {
+          console.error('window.__openLeadModal is not defined. Make sure the PHC/lead modal script loads BEFORE this.');
         }
       });
+
+      // Hash open support
+      if(location.hash === '#options' && typeof window.__openLeadModal === 'function'){
+        window.__openLeadModal();
+      }
     });
   })();
 </script>
 
-<script>
-  // =====================
-  // POLICY HEALTH CHECK MODAL OPEN/CLOSE
-  // =====================
-  (function(){
-    function onReady(fn){
-      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-      else fn();
-    }
-
-    function openLeadModal(){
-      if(window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== ''){
-        window.open(window.CLICKFUNNEL_URL, '_blank', 'noopener');
-        return;
-      }
-      var modal = document.getElementById('modal');
-      var overlay = document.getElementById('modalOverlay');
-      if(overlay) overlay.style.display = 'block';
-      if(modal) modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function openPHCModal(){
-      document.body.classList.add('modal-open');
-      var modal = document.getElementById('phcModal');
-      var overlay = document.getElementById('phcModalOverlay');
-      if(overlay) overlay.style.display = 'block';
-      if(modal) modal.style.display = 'flex';
-
-      // Ensure a clean start on mobile (no half-scrolled modal)
-      try{
-        var body = modal ? modal.querySelector('.card-body') : null;
-        if(body) body.scrollTop = 0;
-      }catch(_){ }
-
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closePHCModal(){
-      document.body.classList.remove('modal-open');
-      var modal = document.getElementById('phcModal');
-      var overlay = document.getElementById('phcModalOverlay');
-      if(overlay) overlay.style.display = 'none';
-      if(modal) modal.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-
-    window.__openLeadModal = openLeadModal;
-    window.__closePHCModal = closePHCModal;
-
-    onReady(function(){
-      var heroPHC = document.getElementById('openHealthCheck');
-      var closeBtn = document.getElementById('phcCloseModal');
-      var overlay = document.getElementById('phcModalOverlay');
-
-      if(heroPHC){
-        heroPHC.addEventListener('click', function(e){ e.preventDefault(); openPHCModal(); });
-        heroPHC.addEventListener('touchend', function(e){ e.preventDefault(); openPHCModal(); }, { passive:false });
-      }
-
-      if(closeBtn) closeBtn.addEventListener('click', closePHCModal);
-      if(overlay) overlay.addEventListener('click', closePHCModal);
-
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape') closePHCModal();
-      });
-
-      if(location.hash === '#phc') openPHCModal();
-    });
-  })();
-</script>
-
-<script>
+  <script>
   // =====================
   // POLICY HEALTH CHECK (MOBILE FLOW + RESULTS) — FINAL
   // - Sets window.PHC.answers + window.PHC.result for backend/email
@@ -2983,6 +2896,7 @@
 <!-- =============== END AGENT INFO BAR =============== -->
 
 </html>
+
 
 
 
