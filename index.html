@@ -1325,7 +1325,64 @@
 
   <script>
   // =====================
-  // CHECK MY OPTIONS (CTA) - SINGLE SOURCE OF TRUTH
+  // CHECK MY OPTIONS (CTA)
+  // =====================
+  (function(){
+    function onReady(fn){
+      if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+      else fn();
+    }
+
+    onReady(function(){
+      var openBtn = document.getElementById('openFunnel');
+      var modal = document.getElementById('modal');
+      var overlay = document.getElementById('modalOverlay');
+      var closeBtn = document.getElementById('closeModal');
+      var cancelBtn = document.getElementById('cancelBtn');
+
+      if(!openBtn) return;
+
+      function openModal(){
+        if(window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== ''){
+          window.open(window.CLICKFUNNEL_URL, '_blank', 'noopener');
+          return;
+        }
+        if(overlay) overlay.style.display = 'block';
+        if(modal) modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
+      }
+
+      function closeModal(){
+        if(overlay) overlay.style.display = 'none';
+        if(modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
+      }
+
+      openBtn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+      openBtn.addEventListener('touchend', function(e){ e.preventDefault(); openModal(); }, { passive:false });
+
+      if(overlay) overlay.addEventListener('click', closeModal);
+      if(closeBtn) closeBtn.addEventListener('click', closeModal);
+      if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape') closeModal();
+      });
+
+      if(location.hash === '#options') openModal();
+
+      openBtn.style.pointerEvents = 'auto';
+    });
+  })();
+</script>
+
+
+
+  <script>
+  // =====================
+  // CHECK MY OPTIONS (CTA) - SINGLE SOURCE OF TRUTH (FINAL)
   // =====================
   (function () {
     function onReady(fn){
@@ -1334,18 +1391,32 @@
     }
 
     function openLead(){
+      // Prefer shared function if present
       if (typeof window.__openLeadModal === 'function') {
         window.__openLeadModal();
+
+        // If __openLeadModal tried to open ClickFunnels in a new tab and it got blocked,
+        // you’ll still see nothing. So we also provide same-tab fallback if URL is set.
+        if (window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== '') {
+          var url = String(window.CLICKFUNNEL_URL).trim();
+          // If popups are blocked, force same-tab:
+          // (only do this if you WANT ClickFunnels behavior)
+          // window.location.href = url;
+        }
+
         return;
       }
-      // Fallback if __openLeadModal isn't defined for some reason
+
+      // Fallback: open local modal
       var modal = document.getElementById('modal');
       var overlay = document.getElementById('modalOverlay');
+
+      console.log('[CTA] fallback open modal/overlay:', !!modal, !!overlay);
+
       if (overlay) overlay.style.display = 'block';
       if (modal) modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
       document.body.classList.add('modal-open');
-      console.warn('[CTA] __openLeadModal missing; used fallback modal open.');
     }
 
     onReady(function(){
@@ -1353,11 +1424,13 @@
         var btn = e.target.closest('#openFunnel, #checkMyOptionsBtn, #checkMyOptions, [data-open="lead"], a[href="#options"]');
         if (!btn) return;
 
+        console.log('[CTA] matched button:', btn);
+
         e.preventDefault();
-        e.stopPropagation(); // prevent other click handlers from hijacking
+        e.stopPropagation();
 
         openLead();
-      }, true); // capture phase beats other handlers
+      }, true);
     });
   })();
 </script>
@@ -2815,6 +2888,7 @@
 <!-- =============== END AGENT INFO BAR =============== -->
 
 </html>
+
 
 
 
