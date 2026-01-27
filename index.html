@@ -2617,7 +2617,7 @@
   })();
 </script>
 
-<!-- ================= AGENT INFO BAR (iOS GLASS) ================= -->
+<!-- ================= AGENT INFO BAR (iOS GLASS + LANGUAGE DROPDOWN) ================= -->
 <style>
   :root{
     /* iOS frosted glass */
@@ -2675,7 +2675,7 @@
   }
 
   .agent-toggle,
-  .language-btn{
+  .lang-trigger{
     min-height: 40px;
     background: transparent;
     border: none;
@@ -2692,10 +2692,7 @@
     color: var(--agent-bar-text);
     font-weight: 650;
   }
-
-  .agent-toggle:hover{
-    background: rgba(15,23,42,0.06);
-  }
+  .agent-toggle:hover{ background: rgba(15,23,42,0.06); }
 
   /* Hamburger icon */
   .hamburger{
@@ -2707,7 +2704,6 @@
     border: 1px solid rgba(0,0,0,0.08);
     background: rgba(255,255,255,0.55);
   }
-
   .hamburger span{
     display: block;
     width: 12px;
@@ -2717,41 +2713,128 @@
     margin: 2px 0;
     transition: transform .18s ease, opacity .18s ease;
   }
+  .agent-toggle[aria-expanded="true"] .hamburger span:nth-child(1){ transform: translateY(4px) rotate(45deg); }
+  .agent-toggle[aria-expanded="true"] .hamburger span:nth-child(2){ opacity: 0; }
+  .agent-toggle[aria-expanded="true"] .hamburger span:nth-child(3){ transform: translateY(-4px) rotate(-45deg); }
 
-  .agent-toggle[aria-expanded="true"] .hamburger span:nth-child(1){
-    transform: translateY(4px) rotate(45deg);
-  }
-  .agent-toggle[aria-expanded="true"] .hamburger span:nth-child(2){
-    opacity: 0;
-  }
-  .agent-toggle[aria-expanded="true"] .hamburger span:nth-child(3){
-    transform: translateY(-4px) rotate(-45deg);
-  }
-
-  .agent-toggle .label{
-    display: flex;
-    flex-direction: column;
-    line-height: 1.05;
-  }
-
+  .agent-toggle .label{ display:flex; flex-direction:column; line-height:1.05; }
   .agent-toggle .title{ font-size: 12.5px; }
   .agent-toggle .hint{ font-size: 11px; color: var(--agent-bar-subtext); }
 
-  .language-btn{
-    width: 40px;
+  /* Language trigger: shows EN + globe so users know current language */
+  .agent-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .lang-trigger{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+
     height: 40px;
+    padding: 0 10px;
     border-radius: 12px;
+
     border: 1px solid rgba(0,0,0,0.08);
-    display: grid;
-    place-items: center;
-    font-size: 18px;
+    background: rgba(255,255,255,0.55);
     color: var(--agent-bar-text);
+    font-weight: 700;
+  }
+  .lang-trigger:hover{ background: rgba(15,23,42,0.06); }
+  .lang-pill{
+    font-size: 12px;
+    letter-spacing: .4px;
+  }
+  .lang-globe{
+    font-size: 18px;
+    line-height: 1;
+  }
+  .chev{
+    font-size: 12px;
+    opacity: .75;
+    transform: translateY(-1px);
   }
 
-  .language-btn:hover{
+  /* Language dropdown (PolicyPro-like floating menu) */
+  .lang-menu[hidden]{ display:none !important; }
+  .lang-menu{
+    position: fixed;
+    z-index: 10000;
+
+    min-width: 220px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(0,0,0,0.10);
+    border-radius: 16px;
+    box-shadow: 0 22px 60px rgba(0,0,0,0.18);
+
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+
+    overflow: hidden;
+  }
+
+  .lang-menu .menu-head{
+    padding: 10px 12px;
+    font-weight: 800;
+    font-size: 12px;
+    color: rgba(15,23,42,0.72);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .lang-option{
+    width: 100%;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding: 12px 12px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+
+    color: rgba(15,23,42,0.92);
+    font-weight: 700;
+    text-align: left;
+  }
+  .lang-option:hover{ background: rgba(15,23,42,0.06); }
+
+  .lang-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width: 0;
+  }
+
+  .flag{
+    width: 22px;
+    height: 16px;
+    border-radius: 4px;
+    display:grid;
+    place-items:center;
+    font-size: 14px;
     background: rgba(15,23,42,0.06);
+    border: 1px solid rgba(0,0,0,0.06);
+    flex: 0 0 auto;
   }
 
+  .lang-names{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width: 0;
+  }
+  .lang-name{ font-size: 13px; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+  .lang-native{ font-size: 11px; color: rgba(15,23,42,0.60); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+
+  .check{
+    font-size: 14px;
+    opacity: .9;
+  }
+
+  /* Agent panel */
   .agent-info-panel{
     position: fixed;
     top: calc(var(--agent-top-gap) + env(safe-area-inset-top, 0px) + var(--agent-bar-h) + 10px);
@@ -2787,9 +2870,7 @@
   }
 
   @media (max-width: 560px){
-    .agent-info-content{
-      grid-template-columns: 1fr;
-    }
+    .agent-info-content{ grid-template-columns: 1fr; }
     .agent-toggle .hint{ display:none; }
   }
 
@@ -2827,7 +2908,63 @@
     </span>
   </button>
 
-  <button class="language-btn" id="topLangBtn" type="button" aria-label="Change language">🌐</button>
+  <div class="agent-right">
+    <!-- Shows current language clearly -->
+    <button class="lang-trigger" id="topLangBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu" aria-label="Language: English">
+      <span class="lang-pill" id="langPill">EN</span>
+      <span class="lang-globe" aria-hidden="true">🌐</span>
+      <span class="chev" aria-hidden="true">▾</span>
+    </button>
+  </div>
+</div>
+
+<!-- Language dropdown menu -->
+<div id="langMenu" class="lang-menu" hidden role="menu" aria-label="Choose language">
+  <div class="menu-head">Language</div>
+
+  <button class="lang-option" type="button" role="menuitemradio" data-lang="en" aria-checked="true">
+    <span class="lang-left">
+      <span class="flag" aria-hidden="true">🇺🇸</span>
+      <span class="lang-names">
+        <span class="lang-name">English</span>
+        <span class="lang-native">English</span>
+      </span>
+    </span>
+    <span class="check" aria-hidden="true">✓</span>
+  </button>
+
+  <button class="lang-option" type="button" role="menuitemradio" data-lang="es" aria-checked="false">
+    <span class="lang-left">
+      <span class="flag" aria-hidden="true">🇲🇽</span>
+      <span class="lang-names">
+        <span class="lang-name">Spanish</span>
+        <span class="lang-native">Español</span>
+      </span>
+    </span>
+    <span class="check" aria-hidden="true" style="opacity:0;">✓</span>
+  </button>
+
+  <button class="lang-option" type="button" role="menuitemradio" data-lang="vi" aria-checked="false">
+    <span class="lang-left">
+      <span class="flag" aria-hidden="true">🇻🇳</span>
+      <span class="lang-names">
+        <span class="lang-name">Vietnamese</span>
+        <span class="lang-native">Tiếng Việt</span>
+      </span>
+    </span>
+    <span class="check" aria-hidden="true" style="opacity:0;">✓</span>
+  </button>
+
+  <button class="lang-option" type="button" role="menuitemradio" data-lang="zh" aria-checked="false">
+    <span class="lang-left">
+      <span class="flag" aria-hidden="true">🇨🇳</span>
+      <span class="lang-names">
+        <span class="lang-name">Chinese</span>
+        <span class="lang-native">中文</span>
+      </span>
+    </span>
+    <span class="check" aria-hidden="true" style="opacity:0;">✓</span>
+  </button>
 </div>
 
 <div id="agentInfoPanel" class="agent-info-panel" hidden aria-hidden="true">
@@ -2852,7 +2989,12 @@
   const toggle = document.getElementById("agentToggle");
   const panel  = document.getElementById("agentInfoPanel");
   const bar    = document.querySelector(".agent-bar");
-  if (!toggle || !panel || !bar) return;
+
+  const langBtn   = document.getElementById("topLangBtn");
+  const langMenu  = document.getElementById("langMenu");
+  const langPill  = document.getElementById("langPill");
+
+  if (!bar) return;
 
   function syncBarHeight(){
     document.documentElement.style.setProperty(
@@ -2861,39 +3003,129 @@
     );
   }
 
-  function openPanel(){
-    toggle.setAttribute("aria-expanded","true");
-    panel.hidden = false;
-    panel.setAttribute("aria-hidden","false");
-    syncBarHeight();
+  // ---------- Agent panel ----------
+  if (toggle && panel){
+    function openAgent(){
+      toggle.setAttribute("aria-expanded","true");
+      panel.hidden = false;
+      panel.setAttribute("aria-hidden","false");
+      syncBarHeight();
+    }
+    function closeAgent(){
+      toggle.setAttribute("aria-expanded","false");
+      panel.hidden = true;
+      panel.setAttribute("aria-hidden","true");
+    }
+    toggle.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      toggle.getAttribute("aria-expanded")==="true" ? closeAgent() : openAgent();
+    });
+
+    document.addEventListener("keydown",(e)=>{
+      if (e.key==="Escape") closeAgent();
+    });
   }
 
-  function closePanel(){
-    toggle.setAttribute("aria-expanded","false");
-    panel.hidden = true;
-    panel.setAttribute("aria-hidden","true");
+  // ---------- Language dropdown ----------
+  const LANGS = {
+    en: { pill:"EN", label:"English" },
+    es: { pill:"ES", label:"Spanish" },
+    vi: { pill:"VI", label:"Vietnamese" },
+    zh: { pill:"中文", label:"Chinese" }
+  };
+
+  function setLangUI(code){
+    const cfg = LANGS[code] || LANGS.en;
+    if (langPill) langPill.textContent = cfg.pill;
+    if (langBtn)  langBtn.setAttribute("aria-label", "Language: " + cfg.label);
+
+    // Update menu checkmarks + aria-checked
+    if (langMenu){
+      langMenu.querySelectorAll(".lang-option").forEach(btn=>{
+        const is = btn.getAttribute("data-lang") === code;
+        btn.setAttribute("aria-checked", is ? "true" : "false");
+        const check = btn.querySelector(".check");
+        if (check) check.style.opacity = is ? "1" : "0";
+      });
+    }
   }
 
+  function openLangMenu(){
+    if (!langBtn || !langMenu) return;
+
+    // Position menu under the language button (fixed positioning)
+    const r = langBtn.getBoundingClientRect();
+    const menuW = 240;
+    const left = Math.min(
+      Math.max(10, r.right - menuW),
+      window.innerWidth - menuW - 10
+    );
+    const top = Math.min(r.bottom + 10, window.innerHeight - 20);
+
+    langMenu.style.width = menuW + "px";
+    langMenu.style.left = left + "px";
+    langMenu.style.top = top + "px";
+
+    langMenu.hidden = false;
+    langBtn.setAttribute("aria-expanded","true");
+  }
+
+  function closeLangMenu(){
+    if (!langBtn || !langMenu) return;
+    langMenu.hidden = true;
+    langBtn.setAttribute("aria-expanded","false");
+  }
+
+  function toggleLangMenu(e){
+    e.stopPropagation();
+    if (!langMenu) return;
+    langMenu.hidden ? openLangMenu() : closeLangMenu();
+  }
+
+  if (langBtn && langMenu){
+    langBtn.addEventListener("click", toggleLangMenu);
+
+    // Choose language
+    langMenu.addEventListener("click", (e)=>{
+      const btn = e.target.closest(".lang-option");
+      if (!btn) return;
+      const code = btn.getAttribute("data-lang") || "en";
+
+      localStorage.setItem("sci_lang", code);
+      setLangUI(code);
+      closeLangMenu();
+
+      // Hook: if you have a translation engine, call it
+      if (typeof window.setLanguage === "function") {
+        window.setLanguage(code);
+      }
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e)=>{
+      if (!langMenu.hidden){
+        if (langMenu.contains(e.target) || langBtn.contains(e.target)) return;
+        closeLangMenu();
+      }
+    });
+
+    // Close on ESC
+    document.addEventListener("keydown",(e)=>{
+      if (e.key==="Escape") closeLangMenu();
+    });
+
+    // On load: default to EN or saved selection
+    const saved = localStorage.getItem("sci_lang") || "en";
+    setLangUI(saved);
+  }
+
+  // Keep spacing correct
   syncBarHeight();
   window.addEventListener("resize", syncBarHeight, { passive:true });
-
-  toggle.addEventListener("click", (e)=>{
-    e.stopPropagation();
-    toggle.getAttribute("aria-expanded")==="true" ? closePanel() : openPanel();
-  });
-
-  document.addEventListener("click", (e)=>{
-    if (panel.hidden) return;
-    if (panel.contains(e.target) || bar.contains(e.target)) return;
-    closePanel();
-  });
-
-  document.addEventListener("keydown",(e)=>{
-    if (e.key==="Escape") closePanel();
-  });
 })();
 </script>
 <!-- =============== END AGENT INFO BAR =============== -->
+
 
 </html>
 
@@ -3052,6 +3284,7 @@
   });
 })();
 </script>
+
 
 
 
