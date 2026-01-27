@@ -2891,6 +2891,164 @@
 
 </html>
 
+<script>
+/*
+  ============================================================
+  FIX SCRIPT ONLY (NO OTHER EDITS)
+  - Fixes PHC not opening
+  - Fixes lead modal opening/closing reliably
+  - Provides global functions your PHC/CTA code expects:
+      window.__openPHCModal / window.__closePHCModal
+      window.__openLeadModal / window.__closeLeadModal
+  - Closes modals on overlay click + Esc
+  - Calls window.__PHC_SYNC_ON_OPEN() if your PHC script defined it
+  ============================================================
+*/
+(function () {
+  function onReady(fn){
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+  function el(id){ return document.getElementById(id); }
+
+  function showModal(overlayEl, modalEl){
+    if (overlayEl) overlayEl.style.display = 'block';
+    if (modalEl) modalEl.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+  }
+
+  function hideModal(overlayEl, modalEl){
+    if (overlayEl) overlayEl.style.display = 'none';
+    if (modalEl) modalEl.style.display = 'none';
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open');
+  }
+
+  onReady(function () {
+    // ===== LEAD MODAL (Check My Options) =====
+    var leadBtn     = el('openFunnel');
+    var leadModal   = el('modal');
+    var leadOverlay = el('modalOverlay');
+    var leadCloseX  = el('closeModal');
+    var leadCancel  = el('cancelBtn');
+
+    window.__openLeadModal = function () {
+      if (window.CLICKFUNNEL_URL && String(window.CLICKFUNNEL_URL).trim() !== '') {
+        window.open(String(window.CLICKFUNNEL_URL).trim(), '_blank', 'noopener');
+        return;
+      }
+      showModal(leadOverlay, leadModal);
+    };
+
+    window.__closeLeadModal = function () {
+      hideModal(leadOverlay, leadModal);
+    };
+
+    // Bind lead button (if present)
+    if (leadBtn) {
+      // avoid double-binding if script is pasted twice
+      if (leadBtn.dataset.boundLead !== '1') {
+        leadBtn.dataset.boundLead = '1';
+
+        leadBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          window.__openLeadModal();
+        });
+
+        leadBtn.addEventListener('touchend', function (e) {
+          e.preventDefault();
+          window.__openLeadModal();
+        }, { passive: false });
+      }
+    }
+
+    if (leadOverlay && leadOverlay.dataset.boundLeadOverlay !== '1') {
+      leadOverlay.dataset.boundLeadOverlay = '1';
+      leadOverlay.addEventListener('click', window.__closeLeadModal);
+    }
+    if (leadCloseX && leadCloseX.dataset.boundLeadClose !== '1') {
+      leadCloseX.dataset.boundLeadClose = '1';
+      leadCloseX.addEventListener('click', window.__closeLeadModal);
+    }
+    if (leadCancel && leadCancel.dataset.boundLeadCancel !== '1') {
+      leadCancel.dataset.boundLeadCancel = '1';
+      leadCancel.addEventListener('click', window.__closeLeadModal);
+    }
+
+    // Deep-link support
+    if (location.hash === '#options') {
+      window.__openLeadModal();
+    }
+
+    // ===== PHC MODAL (Policy Health Check) =====
+    var phcBtn     = el('openHealthCheck');
+    var phcModal   = el('phcModal');
+    var phcOverlay = el('phcModalOverlay');
+    var phcCloseX  = el('phcCloseModal');
+
+    window.__openPHCModal = function () {
+      showModal(phcOverlay, phcModal);
+
+      // If your PHC script exposes a sync-on-open hook, call it
+      if (typeof window.__PHC_SYNC_ON_OPEN === 'function') {
+        try { window.__PHC_SYNC_ON_OPEN(); } catch (_) {}
+      }
+    };
+
+    window.__closePHCModal = function () {
+      hideModal(phcOverlay, phcModal);
+    };
+
+    if (phcBtn) {
+      if (phcBtn.dataset.boundPhc !== '1') {
+        phcBtn.dataset.boundPhc = '1';
+
+        phcBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          window.__openPHCModal();
+        });
+
+        phcBtn.addEventListener('touchend', function (e) {
+          e.preventDefault();
+          window.__openPHCModal();
+        }, { passive: false });
+      }
+    }
+
+    if (phcOverlay && phcOverlay.dataset.boundPhcOverlay !== '1') {
+      phcOverlay.dataset.boundPhcOverlay = '1';
+      phcOverlay.addEventListener('click', window.__closePHCModal);
+    }
+    if (phcCloseX && phcCloseX.dataset.boundPhcClose !== '1') {
+      phcCloseX.dataset.boundPhcClose = '1';
+      phcCloseX.addEventListener('click', window.__closePHCModal);
+    }
+
+    // ===== ESC closes the top-most open modal =====
+    if (document.documentElement.dataset.boundEscClose !== '1') {
+      document.documentElement.dataset.boundEscClose = '1';
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+
+        // Close PHC first if open
+        if (phcModal && phcModal.style.display === 'flex') {
+          window.__closePHCModal();
+          return;
+        }
+        // Then close Lead modal if open
+        if (leadModal && leadModal.style.display === 'flex') {
+          window.__closeLeadModal();
+          return;
+        }
+      });
+    }
+  });
+})();
+</script>
+
+
+
 
 
 
