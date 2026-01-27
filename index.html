@@ -3244,13 +3244,20 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
-  padding: 14px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.14);
-  border: 1px solid rgba(255,255,255,0.35);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
-  box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+
+  padding: 12px 14px;
+  border-radius: 999px; /* pill shape like hero-line */
+
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.30);
+
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+
+  /* remove heavy card feeling */
+  box-shadow: none;
+}
+
 }
 
 @media (min-width: 860px){
@@ -3399,6 +3406,7 @@
   },3000);
 })();
 </script>
+
 
 
 
