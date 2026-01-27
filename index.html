@@ -3229,43 +3229,185 @@
     }
   });
 })();
+
 </script>
 
 <!-- ================= TRUST STRIP ================= -->
+<style>
+/* ================= TRUST STRIP ================= */
+.trust-strip{
+  width: min(1100px, calc(100% - 24px));
+  margin: 28px auto 40px;
+}
+
+.trust-card{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.35);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+}
+
+@media (min-width: 860px){
+  .trust-card{
+    grid-template-columns: 360px 1px 1fr;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.trust-left{
+  display:flex;
+  gap:14px;
+  align-items:center;
+}
+
+.trust-stars{
+  font-size:18px;
+  letter-spacing:2px;
+  color:rgba(255,255,255,0.92);
+}
+
+.trust-score-num{
+  font-size:22px;
+  font-weight:900;
+}
+
+.trust-score-out{
+  font-size:12px;
+  opacity:.7;
+}
+
+.trust-source{
+  display:flex;
+  gap:8px;
+  margin-top:6px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.trust-source-badge{
+  width:28px;
+  height:22px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.26);
+}
+
+.trust-divider{
+  display:none;
+  width:1px;
+  height:100%;
+  background:rgba(255,255,255,0.24);
+}
+
+@media (min-width:860px){
+  .trust-divider{display:block;}
+}
+
+.trust-quote{
+  font-size:13px;
+  line-height:1.45;
+  transition:opacity .3s ease;
+}
+
+.trust-meta{
+  font-size:11.5px;
+  opacity:.75;
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.trust-name{
+  font-weight:900;
+}
+
+.trust-verified{
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.10);
+  border:1px solid rgba(255,255,255,0.22);
+  font-weight:800;
+}
+</style>
+
 <section class="trust-strip" aria-label="Customer trust and testimonial">
   <div class="trust-card">
     <div class="trust-left">
-      <div class="trust-stars" aria-label="4.67 out of 5 stars">
-        <span aria-hidden="true">★★★★☆</span>
-      </div>
+      <div class="trust-stars" aria-label="4.67 out of 5 stars">★★★★☆</div>
+
       <div class="trust-score">
-        <div class="trust-score-top">
+        <div>
           <span class="trust-score-num">4.67</span>
           <span class="trust-score-out">/ 5</span>
         </div>
         <div class="trust-source">
-          <span class="trust-source-badge" aria-hidden="true">TP</span>
-          <span class="trust-source-text">
-            Trustpilot-style rating
-          </span>
+          <span class="trust-source-badge">TP</span>
+          <span>Trustpilot-style rating</span>
         </div>
       </div>
     </div>
 
-    <div class="trust-divider" aria-hidden="true"></div>
+    <div class="trust-divider"></div>
 
-    <div class="trust-right">
+    <div>
       <div class="trust-quote" id="trustQuote">
         “The Policy Health Check took under a minute and showed we were under-insured on liability. No pressure, just clear next steps.”
       </div>
       <div class="trust-meta">
         <span class="trust-name" id="trustName">— Emily R., Fort Collins, CO</span>
-        <span class="trust-dot">•</span>
+        <span>•</span>
         <span class="trust-verified">Sample feedback</span>
       </div>
     </div>
   </div>
 </section>
+
+<script>
+(function(){
+  const testimonials = [
+    { quote:"The Policy Health Check took under a minute and showed we were under-insured on liability. No pressure, just clear next steps.", name:"Emily R., Fort Collins, CO" },
+    { quote:"I didn’t realize our deductible no longer made sense. The tool explained it in plain English.", name:"Jason M., Colorado Springs, CO" },
+    { quote:"We used the Health Check after a remodel and caught a coverage gap I would’ve missed.", name:"Sarah L., Littleton, CO" },
+    { quote:"Quick, straightforward, and not salesy at all.", name:"Mark D., Loveland, CO" },
+    { quote:"It simply showed what changed since we started our policy years ago.", name:"Nicole K., Castle Rock, CO" }
+  ];
+
+  let i = 0;
+  const q = document.getElementById("trustQuote");
+  const n = document.getElementById("trustName");
+  if(!q || !n) return;
+
+  setInterval(()=>{
+    i = (i + 1) % testimonials.length;
+    q.style.opacity = 0;
+    n.style.opacity = 0;
+    setTimeout(()=>{
+      q.textContent = "“" + testimonials[i].quote + "”";
+      n.textContent = "— " + testimonials[i].name;
+      q.style.opacity = 1;
+      n.style.opacity = 1;
+    },300);
+  },3000);
+})();
+</script>
+
+
+
+
+
+
+
+
+
 
 
 
