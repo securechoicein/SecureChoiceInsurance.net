@@ -1873,28 +1873,20 @@
           launcher.setAttribute('aria-expanded', 'false');
         }
 
-        // Chat launcher - click and touchend
+        // Chat launcher - click handler (works on both desktop and mobile)
         launcher.addEventListener('click', function(e){
           e.preventDefault();
+          e.stopPropagation();
           isOpen() ? closeChat() : openChat();
         });
-
-        launcher.addEventListener('touchend', function(e){
-          e.preventDefault();
-          isOpen() ? closeChat() : openChat();
-        }, { passive: false });
 
         // Close button
         if(closeBtn){
           closeBtn.addEventListener('click', function(e){
             e.preventDefault();
+            e.stopPropagation();
             closeChat();
           });
-
-          closeBtn.addEventListener('touchend', function(e){
-            e.preventDefault();
-            closeChat();
-          }, { passive: false });
         }
 
         // ESC key closes chat
