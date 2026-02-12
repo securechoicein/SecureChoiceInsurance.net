@@ -693,6 +693,48 @@
 
     /* Hide the floating Disclaimer button while any modal is open (prevents overlap on mobile) */
     body.modal-open .disc-btn{display:none !important;}
+
+    /* ================== PHC MOBILE FULLSCREEN PATCH ================== */
+    @media (max-width: 600px){
+      #phcModal{
+        align-items:stretch !important;
+        padding:0 !important;
+      }
+      #phcModal .card{
+        width:100vw !important;
+        height:100dvh !important;
+        height:100vh !important;
+        max-width:100% !important;
+        max-height:none !important;
+        border-radius:0 !important;
+        margin:0 !important;
+      }
+      #phcModal .card-body{
+        height:100%;
+        overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+      /* Ensure mobile nav stays visible */
+      .phc-mobile-nav{
+        position:sticky;
+        bottom:0;
+        background:linear-gradient(180deg, rgba(248,250,252,0), rgba(248,250,252,1) 32%);
+        padding-top:10px;
+        padding-bottom:calc(10px + env(safe-area-inset-bottom));
+        z-index:10;
+      }
+      /* Result section on mobile */
+      #phcResultMobile{
+        display:block;
+        width:100%;
+      }
+      #phcResultMobile .phc-loyalty{
+        margin-top:12px;
+      }
+      #phcResultMobile .phc-loyalty .btn{
+        width:100%;
+      }
+    }
   </style>
 </head>
 
@@ -1762,11 +1804,520 @@
   </script>
 
   <script>
-    // =====================
-    // POLICY HEALTH CHECK (MOBILE FLOW + RESULTS) — FINAL
-    // (Unchanged from your pasted version)
-    // =====================
-    /* [your entire PHC script block unchanged] */
+    /* ================== PHC + MODAL CONTROLLER CONSOLIDATED ================== */
+    (function(){
+      function onReady(fn){
+        if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+        else fn();
+      }
+
+      onReady(function(){
+        // Initialize PHC state
+        window.PHC = {
+          answers: {
+            changes: [],
+            property: '',
+            deductible: '',
+            liability: '',
+            review: '',
+            risks: []
+          },
+          result: null
+        };
+
+        var isMobile = window.matchMedia && window.matchMedia('(max-width: 600px)').matches;
+
+        // ===== MOBILE FLOW SETUP =====
+        if(isMobile){
+          // Q0: Life changes (checkbox multi-select)
+          var changesOpts = ['Moved', 'New vehicle', 'New drivers', 'Home upgrades', 'Business use', 'Claims', 'None'];
+          var mobileChangesEl = document.getElementById('phcMobileChanges');
+          if(mobileChangesEl){
+            changesOpts.forEach(function(opt){
+              var btn = document.createElement('button');
+              btn.className = 'phc-answer-btn';
+              btn.type = 'button';
+              btn.textContent = opt;
+              btn.dataset.value = opt;
+              btn.addEventListener('click', function(){
+                btn.classList.toggle('active');
+                updateChangesAnswer();
+              });
+              mobileChangesEl.appendChild(btn);
+            });
+          }
+
+          function updateChangesAnswer(){
+            var selected = Array.from(mobileChangesEl.querySelectorAll('.phc-answer-btn.active')).map(function(b){ return b.dataset.value; });
+            window.PHC.answers.changes = selected;
+            // Q0 is always continuable (no required)
+            document.getElementById('phcNext0').disabled = false;
+          }
+
+          // Q1: Property (single select, required)
+          var propertyOpts = ['Primary home', 'Condo / Townhome', 'Landlord / Rental property', 'Renters policy', 'Not sure'];
+          var mobilePropertyEl = document.getElementById('phcMobileProperty');
+          if(mobilePropertyEl){
+            propertyOpts.forEach(function(opt){
+              var btn = document.createElement('button');
+              btn.className = 'phc-answer-btn';
+              btn.type = 'button';
+              btn.textContent = opt;
+              btn.dataset.value = opt;
+              btn.addEventListener('click', function(){
+                mobilePropertyEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                window.PHC.answers.property = opt;
+                document.getElementById('phcNext1').disabled = false;
+              });
+              mobilePropertyEl.appendChild(btn);
+            });
+          }
+          document.getElementById('phcNext1').disabled = true;
+
+          // Q2: Deductible (single select, required)
+          var deductibleOpts = ['$500–$1,000', '$1,500–$2,500', '$2,500–$5,000+', 'Not sure'];
+          var mobileDeductibleEl = document.getElementById('phcMobileDeductible');
+          if(mobileDeductibleEl){
+            deductibleOpts.forEach(function(opt){
+              var btn = document.createElement('button');
+              btn.className = 'phc-answer-btn';
+              btn.type = 'button';
+              btn.textContent = opt;
+              btn.dataset.value = opt;
+              btn.addEventListener('click', function(){
+                mobileDeductibleEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                window.PHC.answers.deductible = opt;
+                document.getElementById('phcNext2').disabled = false;
+              });
+              mobileDeductibleEl.appendChild(btn);
+            });
+          }
+          document.getElementById('phcNext2').disabled = true;
+
+          // Q3: Liability (single select, required)
+          var liabilityOpts = ['Very protected', 'Somewhat protected', 'Not protected', 'Not sure'];
+          var mobileLiabilityEl = document.getElementById('phcMobileLiability');
+          if(mobileLiabilityEl){
+            liabilityOpts.forEach(function(opt){
+              var btn = document.createElement('button');
+              btn.className = 'phc-answer-btn';
+              btn.type = 'button';
+              btn.textContent = opt;
+              btn.dataset.value = opt;
+              btn.addEventListener('click', function(){
+                mobileLiabilityEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                window.PHC.answers.liability = opt;
+                document.getElementById('phcNext3').disabled = false;
+              });
+              mobileLiabilityEl.appendChild(btn);
+            });
+          }
+          document.getElementById('phcNext3').disabled = true;
+
+          // Q4: Review (single select, required)
+          var reviewOpts = ['Within 12 months', '1–3 years', '3+ years', 'Not sure'];
+          var mobileReviewEl = document.getElementById('phcMobileReview');
+          if(mobileReviewEl){
+            reviewOpts.forEach(function(opt){
+              var btn = document.createElement('button');
+              btn.className = 'phc-answer-btn';
+              btn.type = 'button';
+              btn.textContent = opt;
+              btn.dataset.value = opt;
+              btn.addEventListener('click', function(){
+                mobileReviewEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                window.PHC.answers.review = opt;
+                document.getElementById('phcNext4').disabled = false;
+              });
+              mobileReviewEl.appendChild(btn);
+            });
+          }
+          document.getElementById('phcNext4').disabled = true;
+
+          // Q5: Risks (checkbox multi-select, optional)
+          var risksOpts = ['Wildfire exposure', 'Roof age 15+', 'Prior hail claims', 'Vacant / seasonal', 'Trampoline / pool', 'Dog liability', 'None'];
+          var mobileRisksEl = document.getElementById('phcMobileRisks');
+          if(mobileRisksEl){
+            risksOpts.forEach(function(opt){
+              var btn = document.createElement('button');
+              btn.className = 'phc-answer-btn';
+              btn.type = 'button';
+              btn.textContent = opt;
+              btn.dataset.value = opt;
+              btn.addEventListener('click', function(){
+                btn.classList.toggle('active');
+                updateRisksAnswer();
+              });
+              mobileRisksEl.appendChild(btn);
+            });
+          }
+
+          function updateRisksAnswer(){
+            var selected = Array.from(mobileRisksEl.querySelectorAll('.phc-answer-btn.active')).map(function(b){ return b.dataset.value; });
+            window.PHC.answers.risks = selected;
+          }
+
+          // Mobile navigation
+          function showQuestion(qNum){
+            for(var i = 0; i <= 5; i++){
+              var q = document.getElementById('phcQ' + i);
+              if(q) q.style.display = (i === qNum) ? 'block' : 'none';
+            }
+            var qDone = document.getElementById('phcQDone');
+            if(qDone) qDone.style.display = 'none';
+          }
+
+          // Back buttons
+          document.getElementById('phcBack1').addEventListener('click', function(){ showQuestion(0); });
+          document.getElementById('phcBack2').addEventListener('click', function(){ showQuestion(1); });
+          document.getElementById('phcBack3').addEventListener('click', function(){ showQuestion(2); });
+          document.getElementById('phcBack4').addEventListener('click', function(){ showQuestion(3); });
+          document.getElementById('phcBack5').addEventListener('click', function(){ showQuestion(4); });
+
+          // Next/Continue buttons
+          document.getElementById('phcNext0').addEventListener('click', function(){ showQuestion(1); });
+          document.getElementById('phcNext1').addEventListener('click', function(){ showQuestion(2); });
+          document.getElementById('phcNext2').addEventListener('click', function(){ showQuestion(3); });
+          document.getElementById('phcNext3').addEventListener('click', function(){ showQuestion(4); });
+          document.getElementById('phcNext4').addEventListener('click', function(){ showQuestion(5); });
+
+          // Finish button
+          document.getElementById('phcFinish').addEventListener('click', function(){
+            computeResult();
+            showMobileResult();
+          });
+
+          function showMobileResult(){
+            for(var i = 0; i <= 5; i++){
+              var q = document.getElementById('phcQ' + i);
+              if(q) q.style.display = 'none';
+            }
+            var qDone = document.getElementById('phcQDone');
+            if(qDone) qDone.style.display = 'block';
+
+            var resultMobileEl = document.getElementById('phcResultMobile');
+            if(resultMobileEl && window.PHC.result){
+              var r = window.PHC.result;
+              var html = '';
+              html += '<div class="phc-result-top">';
+              html += '<div class="phc-result-left">';
+              html += '<span class="phc-dot ' + r.color + '"></span>';
+              html += '<div><div class="phc-result-label">' + r.label + '</div></div>';
+              html += '</div></div>';
+              html += '<div class="phc-result-copy">' + r.copy + '</div>';
+              if(r.subhead){
+                html += '<div class="phc-subhead ' + r.color + '">' + r.subhead + '</div>';
+              }
+              if(r.triggers && r.triggers.length > 0){
+                html += '<ul class="phc-result-why">';
+                r.triggers.forEach(function(t){
+                  html += '<li>' + t + '</li>';
+                });
+                html += '</ul>';
+              }
+              if(r.color === 'red'){
+                html += '<div class="phc-loyalty show">';
+                html += '<p class="m">Loyalty isn\'t the same as protection.</p>';
+                html += '<button class="btn btn-primary" id="phcLeadCtaMobile" type="button">Check My Options</button>';
+                html += '</div>';
+              }
+              html += '<div class="phc-result-actions">';
+              html += '<button class="btn btn-primary phc-continue" id="phcCtaMobile" type="button">Continue to Options</button>';
+              html += '</div>';
+              resultMobileEl.innerHTML = html;
+
+              // Wire up CTA buttons
+              var phcLeadCtaMobile = document.getElementById('phcLeadCtaMobile');
+              if(phcLeadCtaMobile){
+                phcLeadCtaMobile.addEventListener('click', function(){
+                  window.__closePHCModal();
+                  setTimeout(function(){ window.__openLeadModal(); }, 100);
+                });
+              }
+              var phcCtaMobile = document.getElementById('phcCtaMobile');
+              if(phcCtaMobile){
+                phcCtaMobile.addEventListener('click', function(){
+                  window.__closePHCModal();
+                  setTimeout(function(){ window.__openLeadModal(); }, 100);
+                });
+              }
+            }
+          }
+
+          // Sync desktop if switched
+          window.__PHC_SYNC_ON_OPEN = function(){
+            showQuestion(0);
+            // Clear mobile selections
+            if(mobileChangesEl){
+              mobileChangesEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+            }
+            if(mobilePropertyEl){
+              mobilePropertyEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+            }
+            if(mobileDeductibleEl){
+              mobileDeductibleEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+            }
+            if(mobileLiabilityEl){
+              mobileLiabilityEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+            }
+            if(mobileReviewEl){
+              mobileReviewEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+            }
+            if(mobileRisksEl){
+              mobileRisksEl.querySelectorAll('.phc-answer-btn').forEach(function(b){ b.classList.remove('active'); });
+            }
+            // Reset state
+            window.PHC.answers = { changes:[], property:'', deductible:'', liability:'', review:'', risks:[] };
+            document.getElementById('phcNext1').disabled = true;
+            document.getElementById('phcNext2').disabled = true;
+            document.getElementById('phcNext3').disabled = true;
+            document.getElementById('phcNext4').disabled = true;
+          };
+        }
+
+        // ===== DESKTOP FLOW SETUP =====
+        if(!isMobile){
+          var phcChangesEl = document.getElementById('phcChanges');
+          var phcPropertyEl = document.getElementById('phcProperty');
+          var phcDeductibleEl = document.getElementById('phcDeductible');
+          var phcLiabilityEl = document.getElementById('phcLiability');
+          var phcReviewEl = document.getElementById('phcReview');
+          var phcRisksEl = document.getElementById('phcRisks');
+
+          // Desktop Finish button
+          var phcFinishDesktop = document.getElementById('phcFinishDesktop');
+          if(phcFinishDesktop){
+            phcFinishDesktop.addEventListener('click', function(){
+              // Collect answers from desktop grid
+              var changesChecked = [];
+              if(phcChangesEl){
+                phcChangesEl.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb){
+                  changesChecked.push(cb.value);
+                });
+              }
+              window.PHC.answers.changes = changesChecked;
+              window.PHC.answers.property = phcPropertyEl ? phcPropertyEl.value : '';
+              window.PHC.answers.deductible = phcDeductibleEl ? phcDeductibleEl.value : '';
+              window.PHC.answers.liability = phcLiabilityEl ? phcLiabilityEl.value : '';
+              window.PHC.answers.review = phcReviewEl ? phcReviewEl.value : '';
+              var risksChecked = [];
+              if(phcRisksEl){
+                phcRisksEl.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb){
+                  risksChecked.push(cb.value);
+                });
+              }
+              window.PHC.answers.risks = risksChecked;
+
+              // Check required fields
+              if(!window.PHC.answers.property || !window.PHC.answers.deductible || !window.PHC.answers.liability || !window.PHC.answers.review){
+                alert('Please fill in all required fields (*).');
+                return;
+              }
+
+              computeResult();
+              showDesktopResult();
+            });
+          }
+
+          function showDesktopResult(){
+            var phcResult = document.getElementById('phcResult');
+            if(phcResult && window.PHC.result){
+              var r = window.PHC.result;
+              phcResult.classList.add('show');
+
+              var phcDot = document.getElementById('phcDot');
+              if(phcDot){
+                phcDot.className = 'phc-dot ' + r.color;
+              }
+
+              var phcLabel = document.getElementById('phcLabel');
+              if(phcLabel){
+                phcLabel.textContent = r.label;
+              }
+
+              var phcCopy = document.getElementById('phcCopy');
+              if(phcCopy){
+                phcCopy.textContent = r.copy;
+              }
+
+              var phcSubhead = document.getElementById('phcSubhead');
+              if(phcSubhead){
+                phcSubhead.textContent = r.subhead || '';
+                phcSubhead.className = 'phc-subhead ' + r.color;
+              }
+
+              var phcWhy = document.getElementById('phcWhy');
+              if(phcWhy){
+                phcWhy.innerHTML = '';
+                if(r.triggers && r.triggers.length > 0){
+                  r.triggers.forEach(function(t){
+                    var li = document.createElement('li');
+                    li.textContent = t;
+                    phcWhy.appendChild(li);
+                  });
+                }
+              }
+
+              var phcLoyalty = document.getElementById('phcLoyalty');
+              if(phcLoyalty){
+                if(r.color === 'red'){
+                  phcLoyalty.classList.add('show');
+                } else {
+                  phcLoyalty.classList.remove('show');
+                }
+              }
+            }
+          }
+
+          // Desktop Reset button
+          var phcReset = document.getElementById('phcReset');
+          if(phcReset){
+            phcReset.addEventListener('click', function(){
+              if(phcChangesEl) phcChangesEl.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ cb.checked = false; });
+              if(phcPropertyEl) phcPropertyEl.value = '';
+              if(phcDeductibleEl) phcDeductibleEl.value = '';
+              if(phcLiabilityEl) phcLiabilityEl.value = '';
+              if(phcReviewEl) phcReviewEl.value = '';
+              if(phcRisksEl) phcRisksEl.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ cb.checked = false; });
+              window.PHC.answers = { changes:[], property:'', deductible:'', liability:'', review:'', risks:[] };
+              var phcResult = document.getElementById('phcResult');
+              if(phcResult) phcResult.classList.remove('show');
+            });
+          }
+
+          // Desktop CTA buttons (already in DOM)
+          var phcLeadCta = document.getElementById('phcLeadCta');
+          if(phcLeadCta){
+            phcLeadCta.addEventListener('click', function(){
+              window.__closePHCModal();
+              setTimeout(function(){ window.__openLeadModal(); }, 100);
+            });
+          }
+
+          var phcCta = document.getElementById('phcCta');
+          if(phcCta){
+            phcCta.addEventListener('click', function(){
+              window.__closePHCModal();
+              setTimeout(function(){ window.__openLeadModal(); }, 100);
+            });
+          }
+        }
+
+        // ===== RESULT COMPUTATION (Green <3, Yellow 3-5, Red >=6) =====
+        function computeResult(){
+          var score = 0;
+          var triggers = [];
+          var ans = window.PHC.answers;
+
+          // Scoring logic
+          // 1) Life changes: each non-None adds +1
+          if(ans.changes && ans.changes.length > 0){
+            var nonNoneChanges = ans.changes.filter(function(c){ return c !== 'None'; });
+            if(nonNoneChanges.length > 0){
+              score += nonNoneChanges.length;
+              triggers.push('Recent life changes (' + nonNoneChanges.join(', ') + ')');
+            }
+          }
+
+          // 2) Property: certain answers add +1
+          if(ans.property && (ans.property.indexOf('Landlord') !== -1 || ans.property === 'Not sure')){
+            score += 1;
+            triggers.push('Property situation: ' + ans.property);
+          }
+
+          // 3) Deductible: "Not sure" adds +1
+          if(ans.deductible === 'Not sure'){
+            score += 1;
+            triggers.push('Unsure about deductible comfort level');
+          }
+
+          // 4) Liability: "Not protected" or "Not sure" adds +1
+          if(ans.liability === 'Not protected' || ans.liability === 'Not sure'){
+            score += 1;
+            triggers.push('Liability coverage concern: ' + ans.liability);
+          }
+
+          // 5) Review: 1-3 years = +1, 3+ years or Not sure = +2
+          if(ans.review === '1–3 years'){
+            score += 1;
+            triggers.push('Last review 1–3 years ago');
+          } else if(ans.review === '3+ years' || ans.review === 'Not sure'){
+            score += 2;
+            triggers.push('Last review 3+ years ago or unsure');
+          }
+
+          // 6) Risks: each non-None adds +1
+          if(ans.risks && ans.risks.length > 0){
+            var nonNoneRisks = ans.risks.filter(function(r){ return r !== 'None'; });
+            if(nonNoneRisks.length > 0){
+              score += nonNoneRisks.length;
+              triggers.push('Property risk flags: ' + nonNoneRisks.join(', '));
+            }
+          }
+
+          // Determine color and label
+          var color, label, copy, subhead;
+          if(score < 3){
+            color = 'green';
+            label = 'Green';
+            copy = 'Your coverage likely matches your current situation.';
+            subhead = 'Most people don\'t switch because they\'re happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.';
+          } else if(score >= 3 && score <= 5){
+            color = 'yellow';
+            label = 'Yellow';
+            copy = 'Some changes suggest a review could help optimize your coverage.';
+            subhead = 'Most people don\'t switch because they\'re happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.';
+          } else {
+            color = 'red';
+            label = 'Red';
+            copy = 'Multiple flags suggest your coverage may have gaps.';
+            subhead = 'Most people don\'t switch because they\'re happy — they stay because nothing triggered a review. We help you check if your coverage still makes sense today.';
+          }
+
+          window.PHC.result = {
+            score: score,
+            color: color,
+            label: label,
+            copy: copy,
+            subhead: subhead,
+            triggers: triggers
+          };
+
+          // Populate hidden inputs in lead form
+          populateLeadFormInputs();
+        }
+
+        function populateLeadFormInputs(){
+          var leadForm = document.getElementById('leadForm');
+          if(!leadForm) return;
+
+          var r = window.PHC.result;
+          if(!r) return;
+
+          // Remove existing hidden inputs
+          leadForm.querySelectorAll('input[name^="policyHealth"]').forEach(function(inp){ inp.remove(); });
+
+          // Create new hidden inputs
+          function addHidden(name, value){
+            var inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = name;
+            inp.value = value;
+            leadForm.appendChild(inp);
+          }
+
+          addHidden('policyHealthAnswers', JSON.stringify(window.PHC.answers));
+          addHidden('policyHealthScore', String(r.score));
+          addHidden('policyHealthLabel', r.label);
+          addHidden('policyHealthTriggers', r.triggers.join('; '));
+          addHidden('policyHealthCtaText', 'Check My Options');
+        }
+      });
+    })();
   </script>
 
   <script>
