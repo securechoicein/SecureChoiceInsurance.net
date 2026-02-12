@@ -1,0 +1,21 @@
+# Node modules
+node_modules/
+
+# clasp auth
+.clasprc.json
+
+# Temporary files
+*.tmp
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
