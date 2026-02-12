@@ -1863,11 +1863,13 @@
 
         function openChat(){
           chatWindow.style.display = 'block';
+          launcher.style.display = 'none';
           launcher.setAttribute('aria-expanded', 'true');
         }
 
         function closeChat(){
           chatWindow.style.display = 'none';
+          launcher.style.display = 'flex';
           launcher.setAttribute('aria-expanded', 'false');
         }
 
