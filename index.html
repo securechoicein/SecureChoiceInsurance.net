@@ -565,6 +565,30 @@
       .card-body{overflow:auto;-webkit-overflow-scrolling:touch;}
     }
 
+    /* PHC Modal specific mobile adjustments */
+    @media (max-width: 600px){
+      #phcModal{
+        align-items:flex-end;
+        padding: 0 0 env(safe-area-inset-bottom);
+      }
+      #phcModal .card{
+        width:100%;
+        max-width:100%;
+        max-height:90vh;
+        border-radius:18px 18px 0 0;
+      }
+      #phcModal .card-head{
+        position:sticky;
+        top:0;
+        z-index:2;
+      }
+      #phcModal .card-body{
+        max-height:calc(90vh - 70px);
+        overflow:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+    }
+
     /* Stepper (used mainly on mobile) */
     .stepper{display:none;padding:12px 2px 10px;margin:0 0 8px;}
     .stepper-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
@@ -1820,7 +1844,59 @@
     // =====================
     // POLICYPRO CHAT WIDGET (FIXED)
     // =====================
-    /* [your entire PolicyPro script block unchanged] */
+    (function(){
+      function onReady(fn){
+        if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+        else fn();
+      }
+
+      onReady(function(){
+        var launcher = document.getElementById('chatBtn');
+        var chatWindow = document.getElementById('chatWindow');
+        var closeBtn = document.getElementById('closeChat');
+
+        if(!launcher || !chatWindow) return;
+
+        function isOpen(){
+          return chatWindow.style.display === 'block';
+        }
+
+        function openChat(){
+          chatWindow.style.display = 'block';
+          launcher.style.display = 'none';
+          launcher.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeChat(){
+          chatWindow.style.display = 'none';
+          launcher.style.display = 'flex';
+          launcher.setAttribute('aria-expanded', 'false');
+        }
+
+        // Chat launcher - click handler (works on both desktop and mobile)
+        launcher.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          isOpen() ? closeChat() : openChat();
+        });
+
+        // Close button
+        if(closeBtn){
+          closeBtn.addEventListener('click', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            closeChat();
+          });
+        }
+
+        // ESC key closes chat
+        document.addEventListener('keydown', function(e){
+          if(e.key === 'Escape' && isOpen()){
+            closeChat();
+          }
+        });
+      });
+    })();
   </script>
 
   <script>
