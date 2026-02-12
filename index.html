@@ -1714,6 +1714,7 @@
       justify-content: space-between;
       padding: 6px 8px;
       border-radius: var(--agent-radius);
+      min-height: 48px; /* Use min-height to prevent clipping */
 
       /* OUTLINE LOOK */
       background: var(--agent-bar-bg);
@@ -1759,6 +1760,7 @@
       padding: 8px 12px;
       border-radius: 14px;
       font-weight: 700;
+      min-height: 40px; /* Prevent clipping */
     }
     .agent-toggle:hover{ background: rgba(255,255,255,0.08); }
 
@@ -1771,6 +1773,7 @@
       place-items: center;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.22);
+      flex-shrink: 0; /* Prevent shrinking */
     }
     .hamburger span{
       display:block;
@@ -1795,7 +1798,7 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
-      height: 40px;
+      min-height: 40px; /* Use min-height to prevent clipping */
       padding: 0 10px;
       border-radius: 14px;
       background: rgba(255,255,255,0.08);
@@ -1893,7 +1896,7 @@
       .agent-info-content{ grid-template-columns: 1fr; }
       .agent-toggle .hint{ display:none; }
     }
-    .agent-logo{ width: 110px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.18)); }
+    .agent-logo{ max-width: 110px; height: auto; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.18)); }
     .agent-name{ font-size: 15px; font-weight: 900; margin-bottom: 6px; color: rgba(15,23,42,0.92); }
     .agent-details{ font-size: 13px; line-height: 1.55; color: rgba(15,23,42,0.90); }
     .agent-motto{ font-size: 12px; color: rgba(15,23,42,0.62); margin-top: 4px; }
@@ -2019,7 +2022,7 @@
       grid-template-columns: 1fr;
       gap: 12px;
 
-      padding: 12px 14px;
+      padding: 14px 16px; /* Slightly more padding to prevent clipping */
       border-radius: 999px; /* pill shape like hero-line */
 
       background: rgba(255,255,255,0.10);
@@ -2040,13 +2043,13 @@
       }
     }
 
-    .trust-left{ display:flex; gap:14px; align-items:center; }
-    .trust-stars{ font-size:18px; letter-spacing:2px; color:rgba(255,255,255,0.92); }
+    .trust-left{ display:flex; gap:14px; align-items:center; flex-wrap: wrap; }
+    .trust-stars{ font-size:18px; letter-spacing:2px; color:rgba(255,255,255,0.92); line-height: 1.3; }
     .trust-score-num{ font-size:22px; font-weight:900; }
     .trust-score-out{ font-size:12px; opacity:.7; }
     .trust-source{ display:flex; gap:8px; margin-top:6px; font-size:12px; font-weight:800; }
     .trust-source-badge{
-      width:28px; height:22px; border-radius:8px; display:grid; place-items:center;
+      width:28px; min-height:22px; border-radius:8px; display:grid; place-items:center;
       background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.26);
     }
     .trust-divider{ display:none; width:1px; height:100%; background:rgba(255,255,255,0.24); }
@@ -3773,6 +3776,9 @@
         }
       }
 
+      // Expose setLangUI globally so window.setLanguage can sync the agent bar
+      window.setLangUI = setLangUI;
+
       function openLangMenu(){
         if (!langBtn || !langMenu) return;
         const r = langBtn.getBoundingClientRect();
@@ -3793,28 +3799,33 @@
       }
 
       if (langBtn && langMenu){
-        langBtn.addEventListener("click", (e)=>{
-          e.stopPropagation();
-          langMenu.hidden ? openLangMenu() : closeLangMenu();
-        });
+        // Prevent duplicate binding
+        if (!langBtn.dataset.langBound) {
+          langBtn.dataset.langBound = "1";
 
-        langMenu.addEventListener("click", (e)=>{
-          const btn = e.target.closest(".lang-option");
-          if (!btn) return;
-          const code = btn.getAttribute("data-lang") || "en";
-          localStorage.setItem("sci_lang", code);
-          setLangUI(code);
-          closeLangMenu();
-          if (typeof window.setLanguage === "function") window.setLanguage(code);
-        });
+          langBtn.addEventListener("click", (e)=>{
+            e.stopPropagation();
+            langMenu.hidden ? openLangMenu() : closeLangMenu();
+          });
 
-        document.addEventListener("click", (e)=>{
-          if (langMenu.hidden) return;
-          if (langMenu.contains(e.target) || langBtn.contains(e.target)) return;
-          closeLangMenu();
-        });
+          langMenu.addEventListener("click", (e)=>{
+            const btn = e.target.closest(".lang-option");
+            if (!btn) return;
+            const code = btn.getAttribute("data-lang") || "en";
+            localStorage.setItem("sci_lang", code);
+            setLangUI(code);
+            closeLangMenu();
+            if (typeof window.setLanguage === "function") window.setLanguage(code);
+          });
 
-        document.addEventListener("keydown",(e)=>{ if (e.key==="Escape") closeLangMenu(); });
+          document.addEventListener("click", (e)=>{
+            if (langMenu.hidden) return;
+            if (langMenu.contains(e.target) || langBtn.contains(e.target)) return;
+            closeLangMenu();
+          });
+
+          document.addEventListener("keydown",(e)=>{ if (e.key==="Escape") closeLangMenu(); });
+        }
 
         const saved = localStorage.getItem("sci_lang") || "en";
         setLangUI(saved);
