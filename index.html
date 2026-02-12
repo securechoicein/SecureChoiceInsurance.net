@@ -3799,7 +3799,7 @@
       }
 
       if (langBtn && langMenu){
-        // Prevent duplicate binding
+        // Prevent duplicate binding for element-specific listeners
         if (!langBtn.dataset.langBound) {
           langBtn.dataset.langBound = "1";
 
@@ -3817,15 +3817,18 @@
             closeLangMenu();
             if (typeof window.setLanguage === "function") window.setLanguage(code);
           });
-
-          document.addEventListener("click", (e)=>{
-            if (langMenu.hidden) return;
-            if (langMenu.contains(e.target) || langBtn.contains(e.target)) return;
-            closeLangMenu();
-          });
-
-          document.addEventListener("keydown",(e)=>{ if (e.key==="Escape") closeLangMenu(); });
         }
+
+        // Document-level listeners (outside duplicate check as they don't cause issues)
+        document.addEventListener("click", (e)=>{
+          if (!langMenu || langMenu.hidden) return;
+          if (langMenu.contains(e.target) || langBtn.contains(e.target)) return;
+          closeLangMenu();
+        });
+
+        document.addEventListener("keydown",(e)=>{ 
+          if (e.key==="Escape" && langMenu && !langMenu.hidden) closeLangMenu(); 
+        });
 
         const saved = localStorage.getItem("sci_lang") || "en";
         setLangUI(saved);
