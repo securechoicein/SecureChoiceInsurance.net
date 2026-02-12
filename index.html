@@ -1650,7 +1650,7 @@
           document.body.style.overflow = 'hidden';
           document.body.classList.add('modal-open');
           if(typeof window.__PHC_SYNC_ON_OPEN === 'function'){
-            try{ window.__PHC_SYNC_ON_OPEN(); }catch(_){}
+            try{ window.__PHC_SYNC_ON_OPEN(); }catch(e){ console.error('PHC sync failed:', e); }
           }
         };
 
