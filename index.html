@@ -571,8 +571,8 @@
       }
       #modal .card{
         width:100vw !important;
-        height:100dvh !important;
         height:100vh !important;
+        height:100dvh !important;
         max-width:100% !important;
         max-height:none !important;
         border-radius:0 !important;
@@ -1865,7 +1865,8 @@
         var leadForm = document.getElementById('leadForm');
         if(!leadForm) return;
 
-        var isMobile = window.matchMedia && window.matchMedia('(max-width: 600px)').matches;
+        var MOBILE_BREAKPOINT = 600; // Match CSS @media (max-width: 600px)
+        var isMobile = window.matchMedia && window.matchMedia('(max-width: ' + MOBILE_BREAKPOINT + 'px)').matches;
         var currentStep = 0;
         var totalSteps = 4;
         
@@ -2063,17 +2064,16 @@
           var email = emailField ? emailField.value : '';
           
           if(!email || email.trim() === ''){
-            // Show email gate
-            if(pdfEmailGate){
-              pdfEmailGate.style.display = 'block';
-              if(pdfEmailInput) pdfEmailInput.focus();
-            }
-            
-            // Check if email is provided in gate
+            // Check if email was provided in gate
             if(pdfEmailInput && pdfEmailInput.value && pdfEmailInput.value.trim() !== ''){
               email = pdfEmailInput.value.trim();
             } else {
-              return; // Wait for user to enter email
+              // Show email gate if not already visible
+              if(pdfEmailGate && pdfEmailGate.style.display !== 'block'){
+                pdfEmailGate.style.display = 'block';
+                if(pdfEmailInput) pdfEmailInput.focus();
+              }
+              return; // Wait for user to enter email and click again
             }
           }
           
@@ -2113,34 +2113,24 @@
             downloadPdfBtn.disabled = true;
             downloadPdfBtn.textContent = 'Generating...';
             
+            // Use no-cors mode for consistency with form submission
+            // Note: This means we can't read the response properly, so we'll need to rely on fallback
             fetch(url, {
               method: 'POST',
-              mode: 'cors',
+              mode: 'no-cors',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(pdfPayload)
             })
-            .then(function(response){
-              if(response.ok) return response.json();
-              throw new Error('Backend PDF generation not available');
-            })
-            .then(function(data){
-              if(data.pdfUrl){
-                // Download from URL
-                window.open(data.pdfUrl, '_blank');
-                downloadPdfBtn.textContent = '✓ Downloaded';
-              } else if(data.pdfBase64){
-                // Download from base64
-                var link = document.createElement('a');
-                link.href = 'data:application/pdf;base64,' + data.pdfBase64;
-                link.download = 'Policy-Options-Summary.pdf';
-                link.click();
-                downloadPdfBtn.textContent = '✓ Downloaded';
-              } else {
-                throw new Error('Invalid response');
-              }
+            .then(function(){
+              // Since we can't read the response in no-cors mode, assume it worked
+              // In a production environment, the backend would need to support CORS
+              // or this should use client-side PDF generation
+              console.log('PDF request sent to backend');
+              // Use client-side generation as the reliable method
+              generateClientSidePdf(pdfPayload);
             })
             .catch(function(err){
-              console.warn('Backend PDF generation failed, using client-side fallback:', err);
+              console.warn('Backend PDF request failed, using client-side fallback:', err);
               generateClientSidePdf(pdfPayload);
             });
           } else {
@@ -2151,9 +2141,13 @@
         
         function generateClientSidePdf(data){
           // Load jsPDF if not already loaded
+          // Note: In production, consider hosting jsPDF locally or using SRI hashes
           if(typeof window.jspdf === 'undefined'){
             var script = document.createElement('script');
+            // Using CDN with integrity hash for security
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            script.integrity = 'sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==';
+            script.crossOrigin = 'anonymous';
             script.onload = function(){
               createPdf(data);
             };
