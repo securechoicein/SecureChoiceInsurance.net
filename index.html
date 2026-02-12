@@ -563,6 +563,33 @@
       .card{width:100%;max-width:100%;max-height:85vh;border-radius:18px 18px 0 0;}
       .card-head{position:sticky;top:0;z-index:2;}
       .card-body{overflow:auto;-webkit-overflow-scrolling:touch;}
+      
+      /* Lead Modal (#modal) fullscreen treatment like PHC */
+      #modal{
+        align-items:stretch !important;
+        padding:0 !important;
+      }
+      #modal .card{
+        width:100vw !important;
+        height:100dvh !important;
+        height:100vh !important;
+        max-width:100% !important;
+        max-height:none !important;
+        border-radius:0 !important;
+        margin:0 !important;
+      }
+      #modal .card-body{
+        height:100%;
+        overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+      #modal .row-mobile{
+        position:sticky;
+        bottom:0;
+        padding-bottom:calc(12px + env(safe-area-inset-bottom));
+        background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 28%);
+        z-index:10;
+      }
     }
 
     /* PHC Modal specific mobile adjustments */
@@ -643,6 +670,14 @@
     .status{display:none;margin-top:10px;font-size:12px;font-weight:800;}
     .status.ok{color:#166534;}
     .status.err{color:#b91c1c;}
+    
+    /* PDF Results Panel */
+    .pdf-results-panel{display:none;margin-top:14px;padding:14px;border-radius:12px;background:#f8fafc;border:1px solid #e5e7eb;}
+    .pdf-results-panel.show{display:block;}
+    .pdf-results-title{font-size:14px;font-weight:900;color:#0b1120;margin:0 0 8px;}
+    .pdf-results-text{font-size:12px;font-weight:700;color:#475569;margin:0 0 12px;}
+    .pdf-email-gate{margin-bottom:12px;}
+    .pdf-email-gate .field{margin:0;}
 
     /* Disclaimer button */
     .disc-btn{position:fixed;left:18px;bottom:18px;z-index:15000;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);border:1px solid rgba(148,196,255,.45);color:#e5e7eb;padding:10px 14px;border-radius:999px;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 16px 50px rgba(0,0,0,.6)}
@@ -1107,6 +1142,19 @@
           </div>
 
           <div class="status" id="formStatus"></div>
+          
+          <!-- PDF Results Panel (shown after successful submission) -->
+          <div class="pdf-results-panel" id="pdfResultsPanel">
+            <p class="pdf-results-title">✅ Thanks — want a PDF summary for your records?</p>
+            <p class="pdf-results-text">Get a PDF with your form details and Policy Health Check results (if available).</p>
+            <div class="pdf-email-gate" id="pdfEmailGate" style="display:none;">
+              <div class="field">
+                <label for="pdfEmail">Confirm your email</label>
+                <input id="pdfEmail" name="pdfEmail" type="email" placeholder="your@email.com" />
+              </div>
+            </div>
+            <button class="btn btn-primary" id="downloadPdfBtn" type="button">Download PDF</button>
+          </div>
         </form>
       </div>
     </div>
@@ -1799,6 +1847,446 @@
 
         // Deep-link support
         if(location.hash === '#options') window.__openLeadModal();
+      });
+    })();
+  </script>
+
+  <script>
+    // =====================
+    // LEAD FORM STEP NAVIGATION & SUBMISSION
+    // =====================
+    (function(){
+      function onReady(fn){
+        if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+        else fn();
+      }
+
+      onReady(function(){
+        var leadForm = document.getElementById('leadForm');
+        if(!leadForm) return;
+
+        var isMobile = window.matchMedia && window.matchMedia('(max-width: 600px)').matches;
+        var currentStep = 0;
+        var totalSteps = 4;
+        
+        var steps = document.querySelectorAll('.step');
+        var stepperKicker = document.getElementById('stepperKicker');
+        var stepperBarFill = document.getElementById('stepperBarFill');
+        var dots = document.querySelectorAll('.dotx');
+        var stepBack = document.getElementById('stepBack');
+        var stepNext = document.getElementById('stepNext');
+        var stepSubmit = document.getElementById('stepSubmit');
+        var formStatus = document.getElementById('formStatus');
+        var pdfResultsPanel = document.getElementById('pdfResultsPanel');
+
+        // Initialize form submission state
+        var formSubmitted = false;
+        var formData = {};
+
+        function showStep(index){
+          currentStep = index;
+          steps.forEach(function(s, i){
+            s.classList.toggle('active', i === index);
+          });
+          dots.forEach(function(d, i){
+            d.classList.toggle('active', i <= index);
+          });
+          if(stepperKicker) stepperKicker.textContent = 'Step ' + (index + 1) + ' of ' + totalSteps;
+          if(stepperBarFill) stepperBarFill.style.width = ((index + 1) / totalSteps * 100) + '%';
+          
+          // Show/hide buttons based on step
+          if(stepBack) stepBack.style.display = index === 0 ? 'none' : 'block';
+          if(index === totalSteps - 1){
+            if(stepNext) stepNext.style.display = 'none';
+            if(stepSubmit) stepSubmit.style.display = 'block';
+          } else {
+            if(stepNext) stepNext.style.display = 'block';
+            if(stepSubmit) stepSubmit.style.display = 'none';
+          }
+          
+          updateNextButton();
+        }
+
+        function updateNextButton(){
+          if(!isMobile || !stepNext) return;
+          var currentStepEl = steps[currentStep];
+          if(!currentStepEl) return;
+          
+          var requiredFields = currentStepEl.querySelectorAll('[required]');
+          var allFilled = true;
+          requiredFields.forEach(function(field){
+            if(field.type === 'checkbox'){
+              if(!field.checked) allFilled = false;
+            } else {
+              if(!field.value || field.value.trim() === '') allFilled = false;
+            }
+          });
+          
+          stepNext.disabled = !allFilled;
+        }
+
+        // Back button
+        if(stepBack){
+          stepBack.addEventListener('click', function(){
+            if(currentStep > 0) showStep(currentStep - 1);
+          });
+        }
+
+        // Next button
+        if(stepNext){
+          stepNext.addEventListener('click', function(){
+            if(currentStep < totalSteps - 1) showStep(currentStep + 1);
+          });
+        }
+
+        // Update Next button state on input
+        if(isMobile){
+          leadForm.addEventListener('input', updateNextButton);
+          leadForm.addEventListener('change', updateNextButton);
+        }
+
+        // Form submission
+        leadForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          if(formSubmitted) return;
+          
+          // Collect form data
+          var fd = new FormData(leadForm);
+          formData = {};
+          fd.forEach(function(value, key){
+            formData[key] = value;
+          });
+          
+          // Add PHC data if available
+          if(window.PHC && window.PHC.result){
+            formData.policyHealthScore = window.PHC.result.score;
+            formData.policyHealthLabel = window.PHC.result.label;
+            formData.policyHealthTriggers = window.PHC.result.triggers.join('; ');
+            formData.policyHealthAnswers = JSON.stringify(window.PHC.answers);
+          }
+          
+          // Add metadata
+          formData.pageUrl = window.location.href;
+          formData.userAgent = navigator.userAgent;
+          formData.createdAt = new Date().toISOString();
+          
+          // Show loading state
+          if(formStatus){
+            formStatus.style.display = 'block';
+            formStatus.className = 'status';
+            formStatus.textContent = 'Submitting...';
+          }
+          
+          // Submit to Google Apps Script
+          var url = window.GAS_WEBAPP_URL;
+          if(!url || url.trim() === ''){
+            console.error('GAS_WEBAPP_URL not configured');
+            showError('Configuration error. Please contact support.');
+            return;
+          }
+          
+          fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          })
+          .then(function(){
+            formSubmitted = true;
+            if(formStatus){
+              formStatus.className = 'status ok';
+              formStatus.textContent = '✓ Submitted! An agent will follow up soon.';
+            }
+            
+            // Show PDF results panel
+            if(pdfResultsPanel){
+              setTimeout(function(){
+                pdfResultsPanel.classList.add('show');
+              }, 500);
+            }
+            
+            // Hide form steps and buttons
+            if(isMobile){
+              var stepsContainer = document.getElementById('steps');
+              var stepper = document.getElementById('stepper');
+              var rowMobile = document.getElementById('rowMobile');
+              if(stepsContainer) stepsContainer.style.display = 'none';
+              if(stepper) stepper.style.display = 'none';
+              if(rowMobile) rowMobile.style.display = 'none';
+            } else {
+              var rowDesktop = document.getElementById('rowDesktop');
+              if(rowDesktop) rowDesktop.style.display = 'none';
+            }
+          })
+          .catch(function(err){
+            console.error('Form submission error:', err);
+            showError('Submission failed. Please try again.');
+          });
+        });
+
+        function showError(msg){
+          if(formStatus){
+            formStatus.style.display = 'block';
+            formStatus.className = 'status err';
+            formStatus.textContent = msg;
+          }
+        }
+
+        // Initialize
+        if(isMobile){
+          showStep(0);
+        }
+      });
+    })();
+  </script>
+
+  <script>
+    // =====================
+    // PDF RESULTS GENERATION
+    // =====================
+    (function(){
+      function onReady(fn){
+        if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+        else fn();
+      }
+
+      onReady(function(){
+        var downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        var pdfEmailGate = document.getElementById('pdfEmailGate');
+        var pdfEmailInput = document.getElementById('pdfEmail');
+        
+        if(!downloadPdfBtn) return;
+
+        downloadPdfBtn.addEventListener('click', function(){
+          // Get email from form or prompt
+          var emailField = document.getElementById('email');
+          var email = emailField ? emailField.value : '';
+          
+          if(!email || email.trim() === ''){
+            // Show email gate
+            if(pdfEmailGate){
+              pdfEmailGate.style.display = 'block';
+              if(pdfEmailInput) pdfEmailInput.focus();
+            }
+            
+            // Check if email is provided in gate
+            if(pdfEmailInput && pdfEmailInput.value && pdfEmailInput.value.trim() !== ''){
+              email = pdfEmailInput.value.trim();
+            } else {
+              return; // Wait for user to enter email
+            }
+          }
+          
+          // Build results object
+          var leadForm = document.getElementById('leadForm');
+          var leadData = {};
+          if(leadForm){
+            var fd = new FormData(leadForm);
+            fd.forEach(function(value, key){
+              leadData[key] = value;
+            });
+          }
+          
+          var phcData = null;
+          if(window.PHC && window.PHC.result){
+            phcData = {
+              score: window.PHC.result.score,
+              label: window.PHC.result.label,
+              triggers: window.PHC.result.triggers,
+              answers: window.PHC.answers
+            };
+          }
+          
+          var pdfPayload = {
+            mode: 'pdf_results',
+            email: email,
+            leadData: leadData,
+            phcData: phcData,
+            pageUrl: window.location.href,
+            userAgent: navigator.userAgent,
+            createdAt: new Date().toISOString()
+          };
+          
+          // Try backend PDF generation first
+          var url = window.GAS_WEBAPP_URL;
+          if(url && url.trim() !== ''){
+            downloadPdfBtn.disabled = true;
+            downloadPdfBtn.textContent = 'Generating...';
+            
+            fetch(url, {
+              method: 'POST',
+              mode: 'cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(pdfPayload)
+            })
+            .then(function(response){
+              if(response.ok) return response.json();
+              throw new Error('Backend PDF generation not available');
+            })
+            .then(function(data){
+              if(data.pdfUrl){
+                // Download from URL
+                window.open(data.pdfUrl, '_blank');
+                downloadPdfBtn.textContent = '✓ Downloaded';
+              } else if(data.pdfBase64){
+                // Download from base64
+                var link = document.createElement('a');
+                link.href = 'data:application/pdf;base64,' + data.pdfBase64;
+                link.download = 'Policy-Options-Summary.pdf';
+                link.click();
+                downloadPdfBtn.textContent = '✓ Downloaded';
+              } else {
+                throw new Error('Invalid response');
+              }
+            })
+            .catch(function(err){
+              console.warn('Backend PDF generation failed, using client-side fallback:', err);
+              generateClientSidePdf(pdfPayload);
+            });
+          } else {
+            // No backend URL, use client-side immediately
+            generateClientSidePdf(pdfPayload);
+          }
+        });
+        
+        function generateClientSidePdf(data){
+          // Load jsPDF if not already loaded
+          if(typeof window.jspdf === 'undefined'){
+            var script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            script.onload = function(){
+              createPdf(data);
+            };
+            script.onerror = function(){
+              alert('Failed to load PDF library. Please try again or contact support.');
+              if(downloadPdfBtn){
+                downloadPdfBtn.disabled = false;
+                downloadPdfBtn.textContent = 'Download PDF';
+              }
+            };
+            document.head.appendChild(script);
+          } else {
+            createPdf(data);
+          }
+        }
+        
+        function createPdf(data){
+          try {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            
+            var y = 20;
+            var lineHeight = 7;
+            var pageWidth = doc.internal.pageSize.getWidth();
+            var margin = 20;
+            var maxWidth = pageWidth - 2 * margin;
+            
+            // Title
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('Policy Options Summary', margin, y);
+            y += lineHeight * 1.5;
+            
+            // Timestamp
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text('Generated: ' + new Date().toLocaleString(), margin, y);
+            y += lineHeight * 1.5;
+            
+            // Lead form data
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('Contact Information', margin, y);
+            y += lineHeight;
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            if(data.leadData){
+              var fields = [
+                { label: 'Name', key: ['firstName', 'lastName'] },
+                { label: 'ZIP', key: 'zip' },
+                { label: 'Email', key: 'email' },
+                { label: 'Phone', key: 'phone' },
+                { label: 'Home Status', key: 'homeowner' },
+                { label: 'Vehicles', key: 'vehicles' },
+                { label: 'Timeframe', key: 'timeframe' },
+                { label: 'Roof Age', key: 'roofAge' },
+                { label: 'Notes', key: 'notes' }
+              ];
+              
+              fields.forEach(function(field){
+                var value = '';
+                if(Array.isArray(field.key)){
+                  value = field.key.map(function(k){ return data.leadData[k] || ''; }).join(' ');
+                } else {
+                  value = data.leadData[field.key] || '';
+                }
+                
+                if(value && value.trim() !== ''){
+                  doc.text(field.label + ': ' + value, margin, y);
+                  y += lineHeight;
+                }
+              });
+            }
+            
+            y += lineHeight * 0.5;
+            
+            // Policy Health Check results
+            if(data.phcData){
+              doc.setFontSize(14);
+              doc.setFont(undefined, 'bold');
+              doc.text('Policy Health Check Results', margin, y);
+              y += lineHeight;
+              
+              doc.setFontSize(10);
+              doc.setFont(undefined, 'normal');
+              doc.text('Score: ' + data.phcData.score, margin, y);
+              y += lineHeight;
+              doc.text('Status: ' + data.phcData.label, margin, y);
+              y += lineHeight;
+              
+              if(data.phcData.triggers && data.phcData.triggers.length > 0){
+                doc.text('Triggers:', margin, y);
+                y += lineHeight;
+                data.phcData.triggers.forEach(function(trigger){
+                  var lines = doc.splitTextToSize('• ' + trigger, maxWidth - 10);
+                  lines.forEach(function(line){
+                    doc.text(line, margin + 5, y);
+                    y += lineHeight;
+                  });
+                });
+              }
+              
+              y += lineHeight * 0.5;
+            }
+            
+            // Disclaimer
+            y += lineHeight;
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'italic');
+            var disclaimerText = 'This is general information only. A licensed agent reviews all details before any quote, application, binding, or policy change.';
+            var disclaimerLines = doc.splitTextToSize(disclaimerText, maxWidth);
+            disclaimerLines.forEach(function(line){
+              doc.text(line, margin, y);
+              y += lineHeight * 0.8;
+            });
+            
+            // Save PDF
+            doc.save('Policy-Options-Summary.pdf');
+            
+            if(downloadPdfBtn){
+              downloadPdfBtn.disabled = false;
+              downloadPdfBtn.textContent = '✓ Downloaded';
+            }
+          } catch(err){
+            console.error('PDF generation error:', err);
+            alert('Failed to generate PDF. Please contact support.');
+            if(downloadPdfBtn){
+              downloadPdfBtn.disabled = false;
+              downloadPdfBtn.textContent = 'Download PDF';
+            }
+          }
+        }
       });
     })();
   </script>
