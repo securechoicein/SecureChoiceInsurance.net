@@ -3302,7 +3302,10 @@
           launcher.style.display = 'none';
           launcher.setAttribute('aria-expanded', 'true');
           // Always open to Home tab
-          switchTab(document.getElementById('ppScreenHome'));
+          var homeScreen = document.getElementById('ppScreenHome');
+          if(homeScreen){
+            switchTab(homeScreen);
+          }
           // Lock body scroll on mobile
           if(isMobile()){
             document.body.style.overflow = 'hidden';
