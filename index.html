@@ -770,6 +770,125 @@
         width:100%;
       }
     }
+
+    /* ================== POLICYPRO MOBILE FULLSCREEN PATCH ================== */
+    @media (max-width: 600px){
+      /* Hide floating Disclaimer button on mobile (access via PolicyPro widget instead) */
+      .disc-btn{
+        display:none !important;
+      }
+
+      /* PolicyPro chat opens fullscreen on mobile */
+      .chat-window{
+        position:fixed !important;
+        inset:0 !important;
+        left:0 !important;
+        right:0 !important;
+        top:0 !important;
+        bottom:0 !important;
+        width:100vw !important;
+        height:100vh !important;
+        height:100dvh !important;
+        max-height:none !important;
+        max-width:none !important;
+        border-radius:0 !important;
+        z-index:27000 !important; /* Above agent bar, trust strip, and other elements */
+      }
+
+      /* Widget container as flex column */
+      .pp-widget{
+        display:flex !important;
+        flex-direction:column !important;
+        height:100%;
+        border-radius:0 !important;
+      }
+
+      /* Top area stays fixed */
+      .pp-top{
+        flex:0 0 auto;
+      }
+
+      /* Body takes remaining space */
+      .pp-body{
+        flex:1 1 auto;
+        overflow:hidden;
+        display:flex;
+        flex-direction:column;
+      }
+
+      /* Screens fill available space */
+      .pp-screen{
+        flex:1 1 auto;
+        overflow:hidden;
+        display:flex;
+        flex-direction:column;
+      }
+
+      /* Home screen stays scrollable if needed */
+      #ppScreenHome{
+        overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+
+      /* Messages screen as flex column */
+      #ppScreenMessages{
+        display:flex;
+        flex-direction:column;
+      }
+
+      /* Messages wrap takes full space */
+      .pp-messages-wrap{
+        flex:1 1 auto;
+        display:flex;
+        flex-direction:column;
+        overflow:hidden;
+      }
+
+      /* Chat main fills wrap */
+      .chat-main{
+        flex:1 1 auto;
+        display:flex;
+        flex-direction:column;
+        height:auto !important;
+        min-height:0 !important;
+      }
+
+      /* Message area scrolls with touch support */
+      .chat-messages{
+        flex:1 1 auto;
+        overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+
+      /* Input bar stays at bottom */
+      .chat-inputbar{
+        flex:0 0 auto;
+        padding-bottom:calc(10px + env(safe-area-inset-bottom));
+      }
+
+      /* Settings screen scrollable */
+      #ppScreenSettings{
+        overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+
+      /* Tabs stay at bottom */
+      .pp-tabs{
+        flex:0 0 auto;
+        padding-bottom:calc(8px + env(safe-area-inset-bottom));
+      }
+
+      /* Close FAB positioned properly on mobile */
+      .pp-close-fab{
+        bottom:calc(68px + env(safe-area-inset-bottom));
+      }
+    }
+
+    /* Touch-friendly improvements for all sizes */
+    .pp-tab, .pp-primary, .send-btn, .chat-input, .pp-setting-link, .pp-close-fab, .bubble button{
+      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation;
+    }
   </style>
 </head>
 
@@ -1291,6 +1410,8 @@
             </div>
             <button class="pp-primary" id="ppStartChat" type="button"><span data-i18n="pp_start_chat">Start a chat</span> <span aria-hidden="true">➤</span></button>
           </div>
+          <!-- POLICYPRO DISCLAIMER INTEGRATION (mobile access) -->
+          <a class="pp-setting-link" href="#" id="ppHomeDisclaimerLink" style="margin-top:12px;display:block;text-align:center;" data-i18n="pp_disclaimer_link">View Disclaimer</a>
           <div class="pp-footer-note" data-i18n="pp_powered">Powered by PolicyPro</div>
         </div>
 
@@ -2879,7 +3000,7 @@
 
   <script>
     // =====================
-    // POLICYPRO CHAT WIDGET (FIXED)
+    // POLICYPRO CHAT WIDGET (COMPLETE WITH MOBILE FIX)
     // =====================
     (function(){
       function onReady(fn){
@@ -2888,50 +3009,456 @@
       }
 
       onReady(function(){
+        // Prevent double-binding
+        if(window.__POLICYPRO_INITIALIZED) return;
+        window.__POLICYPRO_INITIALIZED = true;
+
         var launcher = document.getElementById('chatBtn');
         var chatWindow = document.getElementById('chatWindow');
         var closeBtn = document.getElementById('closeChat');
+        var startChatBtn = document.getElementById('ppStartChat');
+        var chatForm = document.getElementById('chatForm');
+        var chatInput = document.getElementById('chatInput');
+        var chatMessages = document.getElementById('chatMessages');
+        var ppHomeDisclaimerLink = document.getElementById('ppHomeDisclaimerLink');
+        var ppOpenDisclaimerLink = document.getElementById('ppOpenDisclaimerLink');
 
         if(!launcher || !chatWindow) return;
+
+        // === POLICYPRO TURN-BASED PHC NUDGE ===
+        // Configuration constants
+        var PHC_SUGGEST_MIN_TURNS = 3;
+        var PHC_SUGGEST_MAX_TURNS = 4; // Suggest on turns 3-4
+        var TYPING_DELAY_BASE_MS = 1200;
+        var TYPING_DELAY_RANDOM_MS = 600;
+        
+        // Track conversation state
+        var chatState = {
+          userTurns: 0,
+          botTurns: 0,
+          context: {
+            mentionedZip: false,
+            mentionedHome: false,
+            mentionedAuto: false,
+            mentionedHail: false,
+            mentionedWildfire: false,
+            mentionedDeductible: false,
+            mentionedLiability: false,
+            mentionedBundle: false,
+            mentionedClaims: false,
+            mentionedRoof: false
+          },
+          phcSuggested: false
+        };
+
+        function isMobile(){
+          return window.innerWidth <= 600;
+        }
 
         function isOpen(){
           return chatWindow.style.display === 'block';
         }
 
-        function openChat(){
+        // === GLOBAL HELPERS (SINGLE SOURCE OF TRUTH) ===
+        window.__openChat = function(){
           chatWindow.style.display = 'block';
           launcher.style.display = 'none';
           launcher.setAttribute('aria-expanded', 'true');
-        }
+          // Lock body scroll on mobile
+          if(isMobile()){
+            document.body.style.overflow = 'hidden';
+            document.body.classList.add('modal-open');
+          }
+        };
 
-        function closeChat(){
+        window.__closeChat = function(){
           chatWindow.style.display = 'none';
           launcher.style.display = 'flex';
           launcher.setAttribute('aria-expanded', 'false');
-        }
+          // Restore body scroll
+          document.body.style.overflow = '';
+          document.body.classList.remove('modal-open');
+        };
 
-        // Chat launcher - click handler (works on both desktop and mobile)
-        launcher.addEventListener('click', function(e){
-          e.preventDefault();
-          e.stopPropagation();
-          isOpen() ? closeChat() : openChat();
-        });
+        // === TAB SWITCHING ===
+        var tabs = [
+          { btn: document.getElementById('ppTabHome'), screen: document.getElementById('ppScreenHome') },
+          { btn: document.getElementById('ppTabMessages'), screen: document.getElementById('ppScreenMessages') },
+          { btn: document.getElementById('ppTabSettings'), screen: document.getElementById('ppScreenSettings') }
+        ];
 
-        // Close button
-        if(closeBtn){
-          closeBtn.addEventListener('click', function(e){
-            e.preventDefault();
-            e.stopPropagation();
-            closeChat();
+        function switchTab(targetScreen){
+          tabs.forEach(function(tab){
+            if(tab.btn && tab.screen){
+              var isActive = tab.screen === targetScreen;
+              tab.btn.classList.toggle('active', isActive);
+              tab.screen.classList.toggle('active', isActive);
+              tab.btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            }
           });
+          // Scroll messages to bottom if switching to messages tab
+          if(targetScreen === document.getElementById('ppScreenMessages') && chatMessages){
+            setTimeout(function(){ chatMessages.scrollTop = chatMessages.scrollHeight; }, 50);
+          }
         }
 
-        // ESC key closes chat
-        document.addEventListener('keydown', function(e){
-          if(e.key === 'Escape' && isOpen()){
-            closeChat();
+        tabs.forEach(function(tab){
+          if(tab.btn && tab.screen){
+            // Prevent double-binding
+            if(tab.btn.dataset.ppBound) return;
+            tab.btn.dataset.ppBound = 'true';
+
+            tab.btn.addEventListener('click', function(e){
+              e.preventDefault();
+              e.stopPropagation();
+              switchTab(tab.screen);
+            });
+
+            // Touch support for mobile
+            tab.btn.addEventListener('touchend', function(e){
+              e.preventDefault();
+              e.stopPropagation();
+              switchTab(tab.screen);
+            }, { passive: false });
           }
         });
+
+        // === START CHAT BUTTON ===
+        if(startChatBtn){
+          if(!startChatBtn.dataset.ppBound){
+            startChatBtn.dataset.ppBound = 'true';
+            
+            startChatBtn.addEventListener('click', function(e){
+              e.preventDefault();
+              e.stopPropagation();
+              switchTab(document.getElementById('ppScreenMessages'));
+            });
+
+            startChatBtn.addEventListener('touchend', function(e){
+              e.preventDefault();
+              e.stopPropagation();
+              switchTab(document.getElementById('ppScreenMessages'));
+            }, { passive: false });
+          }
+        }
+
+        // === DISCLAIMER LINKS ===
+        function openDisclaimerModal(){
+          var openDisclaimerBtn = document.getElementById('openDisclaimer');
+          if(openDisclaimerBtn){
+            openDisclaimerBtn.click();
+          }
+        }
+
+        if(ppHomeDisclaimerLink){
+          if(!ppHomeDisclaimerLink.dataset.ppBound){
+            ppHomeDisclaimerLink.dataset.ppBound = 'true';
+            ppHomeDisclaimerLink.addEventListener('click', function(e){
+              e.preventDefault();
+              openDisclaimerModal();
+            });
+          }
+        }
+
+        if(ppOpenDisclaimerLink){
+          if(!ppOpenDisclaimerLink.dataset.ppBound){
+            ppOpenDisclaimerLink.dataset.ppBound = 'true';
+            ppOpenDisclaimerLink.addEventListener('click', function(e){
+              e.preventDefault();
+              openDisclaimerModal();
+            });
+          }
+        }
+
+        // === CHAT MESSAGING ===
+        function addMessage(text, isUser, options){
+          if(!chatMessages) return;
+          
+          options = options || {};
+          
+          var msgDiv = document.createElement('div');
+          msgDiv.className = 'msg ' + (isUser ? 'user' : 'bot');
+          
+          var bubbleDiv = document.createElement('div');
+          bubbleDiv.className = 'bubble ' + (isUser ? 'user' : 'bot');
+          
+          if(options.html){
+            bubbleDiv.innerHTML = text;
+          } else {
+            bubbleDiv.textContent = text;
+          }
+          
+          msgDiv.appendChild(bubbleDiv);
+          chatMessages.appendChild(msgDiv);
+          
+          // Scroll to bottom
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator(){
+          if(!chatMessages) return;
+          
+          var typingDiv = document.createElement('div');
+          typingDiv.className = 'msg bot';
+          typingDiv.id = 'typingIndicator';
+          
+          var bubbleDiv = document.createElement('div');
+          bubbleDiv.className = 'bubble bot';
+          
+          var typingSpan = document.createElement('span');
+          typingSpan.className = 'typing';
+          typingSpan.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+          
+          bubbleDiv.appendChild(typingSpan);
+          typingDiv.appendChild(bubbleDiv);
+          chatMessages.appendChild(typingDiv);
+          
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator(){
+          var typing = document.getElementById('typingIndicator');
+          if(typing) typing.remove();
+        }
+
+        // === CONTEXT DETECTION ===
+        function detectContext(text){
+          var lower = text.toLowerCase();
+          
+          if(/\b\d{5}\b/.test(text)) chatState.context.mentionedZip = true;
+          if(/\b(home|house|property|dwelling|residence)\b/.test(lower)) chatState.context.mentionedHome = true;
+          if(/\b(auto|car|vehicle|driving)\b/.test(lower)) chatState.context.mentionedAuto = true;
+          if(/\b(hail|storm|damage)\b/.test(lower)) chatState.context.mentionedHail = true;
+          if(/\b(wildfire|fire|smoke)\b/.test(lower)) chatState.context.mentionedWildfire = true;
+          if(/\b(deductible|out.?of.?pocket)\b/.test(lower)) chatState.context.mentionedDeductible = true;
+          if(/\b(liability|sued|lawsuit)\b/.test(lower)) chatState.context.mentionedLiability = true;
+          if(/\b(bundle|discount|multi.?policy)\b/.test(lower)) chatState.context.mentionedBundle = true;
+          if(/\b(claim|filed|payout)\b/.test(lower)) chatState.context.mentionedClaims = true;
+          if(/\b(roof|shingle|age)\b/.test(lower)) chatState.context.mentionedRoof = true;
+        }
+
+        // === LOCAL REPLY LOGIC (IMPROVED) ===
+        function generateLocalReply(userText){
+          detectContext(userText);
+          
+          var lower = userText.toLowerCase();
+          var reply = '';
+          var followUp = '';
+          var includeDisclaimer = false;
+          
+          // Hail coverage
+          if(/hail/.test(lower)){
+            reply = 'For hail coverage in Colorado, most policies use a <strong>percentage deductible</strong> (often 1-2% of your dwelling value). For a $400K home, that\'s $4K-$8K out-of-pocket per claim. Some insurers offer a <strong>$2,500 flat hail deductible</strong> rider for $80-150/year — worth checking if you\'re in a high-hail area.';
+            followUp = 'Is your home in a high-hail zone? Do you know your current hail deductible?';
+            includeDisclaimer = (chatState.userTurns <= 1);
+          }
+          // Wildfire
+          else if(/wildfire|fire|smoke/.test(lower)){
+            reply = 'Colorado wildfire coverage typically includes <strong>dwelling, other structures, and loss of use</strong>. Wildfire mitigation can help: defensible space, Class A roof, fire-resistant siding. Some insurers offer discounts for <strong>Firewise certification</strong>.';
+            followUp = 'Are you in a wildfire-prone area? Have you taken any mitigation steps?';
+            includeDisclaimer = (chatState.userTurns <= 1);
+          }
+          // Deductible
+          else if(/deductible/.test(lower)){
+            reply = 'Deductibles in Colorado vary: <strong>flat dollar amounts</strong> ($500-$2,500) or <strong>percentage</strong> (1-2% of dwelling). Hail/wind may have separate higher deductibles. Increasing your deductible can lower premiums, but make sure you can afford the out-of-pocket cost.';
+            followUp = 'What\'s your current deductible? Are you comfortable with that amount in an emergency?';
+            includeDisclaimer = false;
+          }
+          // Liability
+          else if(/liability/.test(lower)){
+            reply = 'Colorado homeowners liability typically starts at <strong>$100K-$300K</strong>. If you have significant assets (home equity, savings, investments), consider <strong>$500K-$1M liability</strong> or a separate umbrella policy. This protects you if someone is injured on your property.';
+            followUp = 'Do you know your current liability limit? Do you have an umbrella policy?';
+            includeDisclaimer = false;
+          }
+          // Bundling
+          else if(/bundle|discount|multi/.test(lower)){
+            reply = 'Bundling home + auto insurance can save <strong>10-25%</strong> on both policies. Most Colorado insurers offer multi-policy discounts. You may also get discounts for <strong>claims-free history, security systems, or new home construction</strong>.';
+            followUp = 'Are you currently bundling home and auto? Do you have a security system?';
+            includeDisclaimer = false;
+          }
+          // Roof age
+          else if(/roof/.test(lower)){
+            reply = 'Roof age matters in Colorado, especially for hail claims. Many insurers require <strong>roof inspections for roofs 12+ years old</strong>. Some only offer <strong>actual cash value (ACV)</strong> for older roofs, not replacement cost. If your roof is 15+ years, consider a replacement before shopping for insurance.';
+            followUp = 'How old is your roof? Do you know if it\'s replacement cost or ACV?';
+            includeDisclaimer = false;
+          }
+          // Claims
+          else if(/claim/.test(lower)){
+            reply = 'Filing a claim can affect your premiums. In Colorado, insurers typically look at your <strong>5-year claims history</strong>. Multiple claims (especially for water damage or liability) can lead to non-renewal. Some insurers offer <strong>claims-free discounts</strong>.';
+            followUp = 'Have you filed any claims in the past 5 years? What type?';
+            includeDisclaimer = false;
+          }
+          // Quote/pricing
+          else if(/quote|price|cost|how much/.test(lower)){
+            reply = 'I can\'t provide quotes directly, but I can help you understand what affects pricing in Colorado: <strong>location (wildfire/hail zones), dwelling value, roof age, claims history, deductibles, and coverage limits</strong>. A licensed agent can run personalized quotes for you.';
+            followUp = 'Would you like to check your policy health first to identify potential gaps?';
+            includeDisclaimer = true;
+          }
+          // General help
+          else if(/hi|hello|help|start/.test(lower)){
+            reply = 'Hi! I can help with Colorado home and auto insurance questions. Ask about <strong>hail deductibles, wildfire coverage, bundling discounts, liability limits, or roof requirements</strong>. Keep in mind, this is general info only — a licensed agent reviews before any quote or binding.';
+            followUp = 'What insurance question can I help with today?';
+            includeDisclaimer = true;
+          }
+          // Fallback
+          else {
+            reply = 'That\'s a great question about Colorado insurance. While I provide general information, a <strong>licensed agent</strong> can give you specific guidance tailored to your situation.';
+            followUp = 'Can you tell me more about your home or auto insurance situation?';
+            includeDisclaimer = (chatState.userTurns <= 2);
+          }
+          
+          // Build final reply
+          var fullReply = reply;
+          if(followUp) fullReply += '<br><br>' + followUp;
+          if(includeDisclaimer){
+            fullReply += '<br><br><em style="font-size:11px;opacity:0.8;">General info only — licensed agent review required before any quote, application, or binding.</em>';
+          }
+          
+          return fullReply;
+        }
+
+        // === PHC SUGGESTION LOGIC ===
+        function shouldSuggestPHC(){
+          // Suggest PHC after 3-4 user turns, but only once
+          return !chatState.phcSuggested && chatState.userTurns >= PHC_SUGGEST_MIN_TURNS && chatState.userTurns <= PHC_SUGGEST_MAX_TURNS;
+        }
+
+        function addPHCSuggestion(){
+          if(!chatMessages) return;
+          
+          chatState.phcSuggested = true;
+          
+          var msgDiv = document.createElement('div');
+          msgDiv.className = 'msg bot';
+          
+          var bubbleDiv = document.createElement('div');
+          bubbleDiv.className = 'bubble bot';
+          bubbleDiv.style.background = 'linear-gradient(135deg, rgba(56,189,248,0.08), rgba(34,197,94,0.06))';
+          bubbleDiv.style.borderColor = 'rgba(56,189,248,0.25)';
+          
+          bubbleDiv.innerHTML = '<strong>💡 Quick tip:</strong> Want to run the <strong>30-Second Policy Health Check</strong>? It can spot common coverage gaps and help you know if your policy still matches your situation.<br><br><button id="phcCtaBtn" style="margin-top:8px;padding:10px 14px;border-radius:12px;border:1px solid #0ea5e9;background:#0ea5e9;color:#fff;font-weight:900;cursor:pointer;font-size:12px;">Run Policy Health Check</button>';
+          
+          msgDiv.appendChild(bubbleDiv);
+          chatMessages.appendChild(msgDiv);
+          
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          
+          // Wire up PHC CTA
+          setTimeout(function(){
+            var phcCtaBtn = document.getElementById('phcCtaBtn');
+            if(phcCtaBtn){
+              phcCtaBtn.addEventListener('click', function(e){
+                e.preventDefault();
+                if(typeof window.__openPHCModal === 'function'){
+                  window.__closeChat();
+                  setTimeout(function(){ window.__openPHCModal(); }, 100);
+                }
+              });
+              phcCtaBtn.addEventListener('touchend', function(e){
+                e.preventDefault();
+                if(typeof window.__openPHCModal === 'function'){
+                  window.__closeChat();
+                  setTimeout(function(){ window.__openPHCModal(); }, 100);
+                }
+              }, { passive: false });
+            }
+          }, 50);
+        }
+
+        // === FORM SUBMISSION ===
+        if(chatForm && chatInput){
+          if(!chatForm.dataset.ppBound){
+            chatForm.dataset.ppBound = 'true';
+            
+            chatForm.addEventListener('submit', function(e){
+              e.preventDefault();
+              
+              var text = chatInput.value.trim();
+              if(!text) return;
+              
+              // Add user message
+              addMessage(text, true);
+              chatInput.value = '';
+              
+              // Update state
+              chatState.userTurns++;
+              
+              // Show typing
+              showTypingIndicator();
+              
+              // Generate reply after delay
+              setTimeout(function(){
+                hideTypingIndicator();
+                
+                var reply = generateLocalReply(text);
+                addMessage(reply, false, { html: true });
+                
+                chatState.botTurns++;
+                
+                // Check if should suggest PHC
+                if(shouldSuggestPHC()){
+                  setTimeout(function(){
+                    addPHCSuggestion();
+                  }, 800);
+                }
+              }, TYPING_DELAY_BASE_MS + Math.random() * TYPING_DELAY_RANDOM_MS);
+            });
+          }
+        }
+
+        // === CHAT LAUNCHER (TOGGLE) ===
+        if(!launcher.dataset.ppBound){
+          launcher.dataset.ppBound = 'true';
+          
+          launcher.addEventListener('click', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            isOpen() ? window.__closeChat() : window.__openChat();
+          });
+
+          launcher.addEventListener('touchend', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            isOpen() ? window.__closeChat() : window.__openChat();
+          }, { passive: false });
+        }
+
+        // === CLOSE BUTTON ===
+        if(closeBtn){
+          if(!closeBtn.dataset.ppBound){
+            closeBtn.dataset.ppBound = 'true';
+            
+            closeBtn.addEventListener('click', function(e){
+              e.preventDefault();
+              e.stopPropagation();
+              window.__closeChat();
+            });
+
+            closeBtn.addEventListener('touchend', function(e){
+              e.preventDefault();
+              e.stopPropagation();
+              window.__closeChat();
+            }, { passive: false });
+          }
+        }
+
+        // === ESC KEY CLOSES CHAT ===
+        document.addEventListener('keydown', function(e){
+          if(e.key === 'Escape' && isOpen()){
+            window.__closeChat();
+          }
+        });
+
+        // === CLICK OUTSIDE TO CLOSE (desktop only) ===
+        document.addEventListener('click', function(e){
+          if(!isOpen()) return;
+          if(isMobile()) return; // Don't close on mobile (fullscreen)
+          if(chatWindow.contains(e.target)) return;
+          if(launcher.contains(e.target)) return;
+          window.__closeChat();
+        });
+
+        console.log('✅ PolicyPro chat initialized with mobile touch support, PHC suggestions, and disclaimer integration');
       });
     })();
   </script>
