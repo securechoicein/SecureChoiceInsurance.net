@@ -885,7 +885,7 @@
     }
 
     /* Touch-friendly improvements for all sizes */
-    .pp-tab, .pp-primary, .send-btn, .chat-input{
+    .pp-tab, .pp-primary, .send-btn, .chat-input, .pp-setting-link, .pp-close-fab, .bubble button{
       -webkit-tap-highlight-color:transparent;
       touch-action:manipulation;
     }
@@ -3026,6 +3026,12 @@
         if(!launcher || !chatWindow) return;
 
         // === POLICYPRO TURN-BASED PHC NUDGE ===
+        // Configuration constants
+        var PHC_SUGGEST_MIN_TURNS = 3;
+        var PHC_SUGGEST_MAX_TURNS = 5;
+        var TYPING_DELAY_BASE_MS = 1200;
+        var TYPING_DELAY_RANDOM_MS = 600;
+        
         // Track conversation state
         var chatState = {
           userTurns: 0,
@@ -3314,7 +3320,7 @@
         // === PHC SUGGESTION LOGIC ===
         function shouldSuggestPHC(){
           // Suggest PHC after 3-4 user turns, but only once
-          return !chatState.phcSuggested && chatState.userTurns >= 3 && chatState.userTurns <= 5;
+          return !chatState.phcSuggested && chatState.userTurns >= PHC_SUGGEST_MIN_TURNS && chatState.userTurns <= PHC_SUGGEST_MAX_TURNS;
         }
 
         function addPHCSuggestion(){
@@ -3395,7 +3401,7 @@
                     addPHCSuggestion();
                   }, 800);
                 }
-              }, 1200 + Math.random() * 600);
+              }, TYPING_DELAY_BASE_MS + Math.random() * TYPING_DELAY_RANDOM_MS);
             });
           }
         }
